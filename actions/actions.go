@@ -48,12 +48,62 @@ func Power(stkOp *stack.StackOperator) error {
 		return stkOp.Fail("cannot raise negative number to non-integer power", base, exponent)
 	}
 	stkOp.Stack.Push(math.Pow(base, exponent))
-    stkOp.Stack.Display()
+	stkOp.Stack.Display()
+	return nil
+}
+
+func Log(stkOp *stack.StackOperator) error {
+	x := stkOp.Stack.Pop()
+	if x <= 0 {
+		return stkOp.Fail("cannot take logarithm of non-positive number", x)
+	}
+	stkOp.Stack.Push(math.Log10(x))
+	stkOp.Stack.Display()
+	return nil
+}
+
+func Ln(stkOp *stack.StackOperator) error {
+	x := stkOp.Stack.Pop()
+	if x <= 0 {
+		return stkOp.Fail("cannot take logarithm of non-positive number", x)
+	}
+	stkOp.Stack.Push(math.Log(x))
+	stkOp.Stack.Display()
+	return nil
+}
+
+func Round(stkOp *stack.StackOperator) error {
+	precision := stkOp.Stack.Pop()
+	if precision < 0 || precision != float64(int(precision)) {
+		return stkOp.Fail("precision must be non-negative integer")
+	}
+	ratio := math.Pow(10, precision)
+	stkOp.Stack.Push(math.Round(stkOp.Stack.Pop()*ratio) / ratio)
+	stkOp.Stack.Display()
+	return nil
+}
+
+func Stash(stkOp *stack.StackOperator) error {
+	stkOp.Stack.SetStash(stkOp.Stack.Pop())
+	stkOp.Stack.Display()
+	return nil
+}
+
+func Pull(stkOp *stack.StackOperator) error {
+	stkOp.Stack.Push(stkOp.Stack.GetStash())
+	stkOp.Stack.Display()
 	return nil
 }
 
 func Display(stkOp *stack.StackOperator) error {
 	stkOp.Stack.Display()
+	return nil
+}
+
+func Words(stkOp *stack.StackOperator) error {
+	for word, def := range stkOp.Words {
+		fmt.Printf("%s: \"%s\"\n", word, def)
+	}
 	return nil
 }
 
@@ -65,6 +115,6 @@ func Pop(stkOp *stack.StackOperator) error {
 
 func Clear(stkOp *stack.StackOperator) error {
 	fmt.Printf("cleared %d values\n", stkOp.Stack.Len())
-	stkOp.Stack.SetValues(make([]float64, 0, stkOp.MaxStack))
+	stkOp.Stack.SetValues(make([]float64, 0, stkOp.Stack.Cap()))
 	return nil
 }

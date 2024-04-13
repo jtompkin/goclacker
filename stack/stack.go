@@ -8,9 +8,10 @@ import (
 	"strings"
 )
 
-// Contains a slice of values and methods to operate on that slice.
+// Stack contains a slice of values and methods to operate on that slice.
 type Stack struct {
 	values []float64
+    stash float64
 }
 
 func (stk *Stack) Pop() float64 {
@@ -40,15 +41,27 @@ func (stk *Stack) Len() int {
 	return len(stk.values)
 }
 
+func (stk *Stack) Cap() int {
+	return cap(stk.values)
+}
+
+func (stk *Stack) SetStash(value float64) {
+    stk.stash = value
+}
+
+func (stk *Stack) GetStash() float64 {
+    return stk.stash
+}
+
 func NewStack(values []float64) *Stack {
 	stk := Stack{}
 	stk.values = values
 	return &stk
 }
 
-// Contains a function to operate on a StackOperator instance. `Pops` and
-// `Pushes` represent the number of values the functions pops from and pushes to
-// the stack.
+// Operation contains a function to operate on a StackOperator instance. `Pops`
+// and `Pushes` represent the number of values the functions pops from and
+// pushes to the stack.
 type Operation struct {
 	action func(*StackOperator) error
 	Pops   int
@@ -60,17 +73,24 @@ func NewOperation(action func(*StackOperator) error, pops int, pushes int) *Oper
 	return &op
 }
 
-// Contains map for converting string tokens into operations that can be called
-// to operate on the stack.
+// StackOperator contains map for converting string tokens into operations that
+// can be called to operate on the stack.
 type StackOperator struct {
 	operators map[string]*Operation
+	Words     map[string]string
 	Stack     Stack
-	MaxStack  int
 }
 
 func (stkOp *StackOperator) ParseInput(input string) {
 	split := strings.Split(input, " ")
 	for i, s := range split {
+		if s == "=" {
+			dErr := stkOp.DefWord(split[i+1:])
+			if dErr != nil {
+				fmt.Fprintf(os.Stderr, "definition error: %s\n", dErr)
+			}
+			return
+		}
 		var pErr error
 		f, err := strconv.ParseFloat(s, 64)
 		if err != nil {
@@ -87,16 +107,40 @@ func (stkOp *StackOperator) ParseInput(input string) {
 	}
 }
 
+func (stkOp *StackOperator) DefWord(def []string) error {
+	if len(def) == 0 {
+		return nil
+	}
+	word := def[0]
+	if len(def) == 1 {
+		delete(stkOp.Words, word)
+		return nil
+	}
+	if strings.Contains("0123456789=", string(word[0])) {
+		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot start word with digit or '='", word))
+	}
+	if _, pres := stkOp.operators[word]; pres {
+		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot redifine operator", word))
+	}
+	stkOp.Words[word] = strings.Join(def[1:], " ")
+	return nil
+}
+
 func (stkOp *StackOperator) ParseToken(token string) error {
 	op := stkOp.operators[token]
 	if op == nil {
+		def := stkOp.Words[token]
+		if def == "" {
+			return nil
+		}
+		stkOp.ParseInput(def)
 		return nil
 	}
 	stkLen := stkOp.Stack.Len()
 	if stkLen < op.Pops {
 		return stkOp.Fail(fmt.Sprintf("operation needs %d values in stack", op.Pops))
 	}
-	if stkLen-op.Pops+op.Pushes > stkOp.MaxStack {
+	if stkLen-op.Pops+op.Pushes > stkOp.Stack.Cap() {
 		return stkOp.Fail("operation would overflow stack")
 	}
 	if err := op.action(stkOp); err != nil {
@@ -105,7 +149,7 @@ func (stkOp *StackOperator) ParseToken(token string) error {
 	return nil
 }
 
-// Pushes all `values` to the stack and returns an error containing `message`
+// Fail pushes all `values` to the stack and returns an error containing `message`
 func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 	for _, value := range values {
 		stkOp.Stack.Push(value)
@@ -116,7 +160,7 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 func NewStackOperator(operators map[string]*Operation, maxStack int) *StackOperator {
 	stkOp := StackOperator{
 		operators: operators,
-		MaxStack:  maxStack,
+        Words:     map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
 		Stack:     *NewStack(make([]float64, 0, maxStack)),
 	}
 	return &stkOp
