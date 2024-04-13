@@ -2,17 +2,18 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jtompkin/goclacker/actions"
 	"github.com/jtompkin/goclacker/stack"
 )
 
-const StackLimit int = 8
 
-func interactive() {
+func makeStackOperator(stackLimit int) *stack.StackOperator {
 	operationMap := map[string]*stack.Operation{
 		"+":     stack.NewOperation(actions.Add, 2, 1),
 		"-":     stack.NewOperation(actions.Subtract, 2, 1),
@@ -29,23 +30,57 @@ func interactive() {
 		"words": stack.NewOperation(actions.Words, 0, 0),
 		"clear": stack.NewOperation(actions.Clear, 0, 0),
 	}
-	stkOp := stack.NewStackOperator(operationMap, StackLimit)
+	return stack.NewStackOperator(operationMap, stackLimit)
+}
+
+func interactive(stkOp *stack.StackOperator) {
 	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		fmt.Print("  > ")
-		// Catch EOF
-		if !scanner.Scan() {
-			fmt.Println()
-			return
-		}
-		if err := scanner.Err(); err != nil {
-			fmt.Println()
-			log.Fatal(err)
-		}
+	fmt.Print("  > ")
+	for scanner.Scan() {
 		stkOp.ParseInput(scanner.Text())
+		fmt.Print("  > ")
+	}
+	fmt.Println()
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func parseWordsFile(stkOp *stack.StackOperator, path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err := stkOp.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
 	}
 }
 
 func main() {
-	interactive()
+	wordsPath := flag.String("w", "", "path to file containing word definitions")
+    stackLimit := flag.Int("s", 8, "stack size limit")
+
+	flag.Parse()
+
+	stkOp := makeStackOperator(*stackLimit)
+	if *wordsPath != "" {
+		parseWordsFile(stkOp, *wordsPath)
+	}
+	if len(flag.Args()) > 0 {
+        for _, program := range flag.Args() {
+            stkOp.ParseInput(program)
+        }
+	} else {
+		interactive(stkOp)
+	}
 }
