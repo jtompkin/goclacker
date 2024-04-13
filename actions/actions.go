@@ -102,7 +102,7 @@ func Display(stkOp *stack.StackOperator) error {
 
 func Words(stkOp *stack.StackOperator) error {
 	for word, def := range stkOp.GetWords() {
-		fmt.Printf("%s: \"%s\"\n", word, def)
+		fmt.Printf("%s: %s\n", word, def)
 	}
 	return nil
 }
