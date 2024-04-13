@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"math"
+	"slices"
 
 	"github.com/jtompkin/goclacker/stack"
 )
@@ -100,9 +101,21 @@ func Display(stkOp *stack.StackOperator) error {
 	return nil
 }
 
+func Help(stkOp *stack.StackOperator) error {
+	if err := stkOp.PrintHelp(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func Words(stkOp *stack.StackOperator) error {
-	for word, def := range stkOp.GetWords() {
-		fmt.Printf("%s: %s\n", word, def)
+	words := make([]string, 0, len(stkOp.GetWords()))
+	for k := range stkOp.GetWords() {
+		words = append(words, k)
+	}
+	slices.Sort(words)
+	for _, w := range words {
+		fmt.Printf("%s: %s\n", w, stkOp.GetWords()[w])
 	}
 	return nil
 }
@@ -114,7 +127,12 @@ func Pop(stkOp *stack.StackOperator) error {
 }
 
 func Clear(stkOp *stack.StackOperator) error {
-	fmt.Printf("cleared %d values\n", stkOp.Stack.Len())
+	var c string
+	n := stkOp.Stack.Len()
+	if n != 1 {
+		c = "s"
+	}
+	fmt.Printf("cleared %d value%s\n", n, c)
 	stkOp.Stack.SetValues(make([]float64, 0, stkOp.Stack.Cap()))
 	return nil
 }
