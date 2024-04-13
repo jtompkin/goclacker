@@ -1,6 +1,7 @@
 package stack
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -66,10 +67,11 @@ type Operation struct {
 	action func(*StackOperator) error
 	Pops   int
 	Pushes int
+	Help   string
 }
 
-func NewOperation(action func(*StackOperator) error, pops int, pushes int) *Operation {
-	op := Operation{action: action, Pops: pops, Pushes: pushes}
+func NewOperation(action func(*StackOperator) error, pops int, pushes int, help string) *Operation {
+	op := Operation{action: action, Pops: pops, Pushes: pushes, Help: help}
 	return &op
 }
 
@@ -117,10 +119,10 @@ func (stkOp *StackOperator) DefWord(def []string) error {
 		return nil
 	}
 	if strings.Contains("0123456789=.", string(word[0])) {
-		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot start word with digit, '=', or '.'", word))
+		return stkOp.Fail(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'", word))
 	}
 	if _, pres := stkOp.operators[word]; pres {
-		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot redifine operator", word))
+		return stkOp.Fail(fmt.Sprintf("could not define '%s'; cannot redifine operator", word))
 	}
 	stkOp.words[word] = strings.Join(def[1:], " ")
 	return nil
@@ -158,7 +160,28 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 }
 
 func (stkOp *StackOperator) GetWords() map[string]string {
-    return stkOp.words
+	return stkOp.words
+}
+
+func (stkOp *StackOperator) PrintHelp() error {
+	f, err := os.Open("data/help.tab")
+	if err != nil {
+		return stkOp.Fail("could not read help file")
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		split := strings.Split(scanner.Text(), "\t")
+		if len(split) == 2 {
+			fmt.Printf("operator: %s\t\"%s\"\n", split[0], split[1])
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return stkOp.Fail("could not read help file")
+	}
+	return nil
 }
 
 func NewStackOperator(operators map[string]*Operation, maxStack int) *StackOperator {
