@@ -77,7 +77,7 @@ func NewOperation(action func(*StackOperator) error, pops int, pushes int) *Oper
 // can be called to operate on the stack.
 type StackOperator struct {
 	operators map[string]*Operation
-	Words     map[string]string
+	words     map[string]string
 	Stack     Stack
 }
 
@@ -113,7 +113,7 @@ func (stkOp *StackOperator) DefWord(def []string) error {
 	}
 	word := def[0]
 	if len(def) == 1 {
-		delete(stkOp.Words, word)
+		delete(stkOp.words, word)
 		return nil
 	}
 	if strings.Contains("0123456789=.", string(word[0])) {
@@ -122,14 +122,14 @@ func (stkOp *StackOperator) DefWord(def []string) error {
 	if _, pres := stkOp.operators[word]; pres {
 		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot redifine operator", word))
 	}
-	stkOp.Words[word] = strings.Join(def[1:], " ")
+	stkOp.words[word] = strings.Join(def[1:], " ")
 	return nil
 }
 
 func (stkOp *StackOperator) ParseToken(token string) error {
 	op := stkOp.operators[token]
 	if op == nil {
-		def := stkOp.Words[token]
+		def := stkOp.words[token]
 		if def == "" {
 			return nil
 		}
@@ -157,10 +157,14 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 	return errors.New(message)
 }
 
+func (stkOp *StackOperator) GetWords() map[string]string {
+    return stkOp.words
+}
+
 func NewStackOperator(operators map[string]*Operation, maxStack int) *StackOperator {
 	stkOp := StackOperator{
 		operators: operators,
-		Words:     map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
+		words:     map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
 		Stack:     *NewStack(make([]float64, 0, maxStack)),
 	}
 	return &stkOp
