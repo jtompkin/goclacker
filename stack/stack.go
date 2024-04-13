@@ -11,7 +11,7 @@ import (
 // Stack contains a slice of values and methods to operate on that slice.
 type Stack struct {
 	values []float64
-    stash float64
+	stash  float64
 }
 
 func (stk *Stack) Pop() float64 {
@@ -46,11 +46,11 @@ func (stk *Stack) Cap() int {
 }
 
 func (stk *Stack) SetStash(value float64) {
-    stk.stash = value
+	stk.stash = value
 }
 
 func (stk *Stack) GetStash() float64 {
-    return stk.stash
+	return stk.stash
 }
 
 func NewStack(values []float64) *Stack {
@@ -116,8 +116,8 @@ func (stkOp *StackOperator) DefWord(def []string) error {
 		delete(stkOp.Words, word)
 		return nil
 	}
-	if strings.Contains("0123456789=", string(word[0])) {
-		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot start word with digit or '='", word))
+	if strings.Contains("0123456789=.", string(word[0])) {
+		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot start word with digit, '=', or '.'", word))
 	}
 	if _, pres := stkOp.operators[word]; pres {
 		return stkOp.Fail(fmt.Sprintf("could not define %s, cannot redifine operator", word))
@@ -160,7 +160,7 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 func NewStackOperator(operators map[string]*Operation, maxStack int) *StackOperator {
 	stkOp := StackOperator{
 		operators: operators,
-        Words:     map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
+		Words:     map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
 		Stack:     *NewStack(make([]float64, 0, maxStack)),
 	}
 	return &stkOp
