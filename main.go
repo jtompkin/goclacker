@@ -22,19 +22,8 @@ const usage = `Usage of goclacker:
 `
 
 func makeStackOperator(stackLimit int) *stack.StackOperator {
-    help := map[string]string{
-        "+": "pop 'a', 'b'; push the result of 'a' + 'b'",
-        "-":"pop 'a', 'b'; push the result of 'b' - 'a'",
-        "*":"pop 'a', 'b'; push the result of 'a' * 'b'",
-        "/":"pop 'a', 'b'; push the result of 'b' / 'a'",
-        "^":"pop 'a', 'b'; push the result of 'b' ^ 'a'",
-        "log":,
-        "ln":,
-        ".":,
-        "stash":,
-    }
 	operationMap := map[string]*stack.Operation{
-		"+":     stack.NewOperation(actions.Add, 2, 1, help["+"]),
+		"+":     stack.NewOperation(actions.Add, 2, 1),
 		"-":     stack.NewOperation(actions.Subtract, 2, 1),
 		"*":     stack.NewOperation(actions.Multiply, 2, 1),
 		"/":     stack.NewOperation(actions.Divide, 2, 1),

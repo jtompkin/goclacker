@@ -8,131 +8,208 @@ import (
 	"github.com/jtompkin/goclacker/stack"
 )
 
-func Add(stkOp *stack.StackOperator) error {
-	stkOp.Stack.Push(stkOp.Stack.Pop() + stkOp.Stack.Pop())
-	stkOp.Stack.Display()
-	return nil
+type Action struct {
+	action func(*stack.StackOperator) error
+	Help   string
 }
 
-func Subtract(stkOp *stack.StackOperator) error {
-	x := stkOp.Stack.Pop()
-	y := stkOp.Stack.Pop()
-	stkOp.Stack.Push(y - x)
-	stkOp.Stack.Display()
-	return nil
+func (a *Action) Call(stkOp *stack.StackOperator) error {
+	return a.action(stkOp)
 }
 
-func Multiply(stkOp *stack.StackOperator) error {
-	stkOp.Stack.Push(stkOp.Stack.Pop() * stkOp.Stack.Pop())
-	stkOp.Stack.Display()
-	return nil
+func newAction(action func(*stack.StackOperator) error, help string) *Action {
+	return &Action{action: action, Help: help}
 }
 
-func Divide(stkOp *stack.StackOperator) error {
-	divisor := stkOp.Stack.Pop()
-	if divisor == 0 {
-		return stkOp.Fail("cannot divde by 0", divisor)
-	}
-	dividend := stkOp.Stack.Pop()
-	stkOp.Stack.Push(dividend / divisor)
-	stkOp.Stack.Display()
-	return nil
+func Add() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(so.Stack.Pop() + so.Stack.Pop())
+			so.Stack.Display()
+			return nil
+		},
+		"pop 'a', 'b'; push the result of 'a' + 'b'",
+	)
 }
 
-func Power(stkOp *stack.StackOperator) error {
-	exponent := stkOp.Stack.Pop()
-	base := stkOp.Stack.Pop()
-	if base == 0 && exponent < 0 {
-		return stkOp.Fail("cannot raise 0 to negative power", base, exponent)
-	}
-	if base < 0 && exponent != float64(int(exponent)) {
-		return stkOp.Fail("cannot raise negative number to non-integer power", base, exponent)
-	}
-	stkOp.Stack.Push(math.Pow(base, exponent))
-	stkOp.Stack.Display()
-	return nil
+func Subtract() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			x := so.Stack.Pop()
+			y := so.Stack.Pop()
+			so.Stack.Push(y - x)
+			so.Stack.Display()
+			return nil
+		},
+		"pop 'a', 'b'; push the result of 'b' - 'a'",
+	)
 }
 
-func Log(stkOp *stack.StackOperator) error {
-	x := stkOp.Stack.Pop()
-	if x <= 0 {
-		return stkOp.Fail("cannot take logarithm of non-positive number", x)
-	}
-	stkOp.Stack.Push(math.Log10(x))
-	stkOp.Stack.Display()
-	return nil
+func Multiply() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(so.Stack.Pop() * so.Stack.Pop())
+			so.Stack.Display()
+			return nil
+		},
+		"pop 'a', 'b'; push the result of 'a' * 'b'",
+	)
 }
 
-func Ln(stkOp *stack.StackOperator) error {
-	x := stkOp.Stack.Pop()
-	if x <= 0 {
-		return stkOp.Fail("cannot take logarithm of non-positive number", x)
-	}
-	stkOp.Stack.Push(math.Log(x))
-	stkOp.Stack.Display()
-	return nil
+func Divide() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			divisor := so.Stack.Pop()
+			if divisor == 0 {
+				return so.Fail("cannot divide by 0", divisor)
+			}
+			dividend := so.Stack.Pop()
+			so.Stack.Push(dividend / divisor)
+			so.Stack.Display()
+			return nil
+		},
+		"pop 'a', 'b'; push the result of 'b' / 'a'",
+	)
 }
 
-func Round(stkOp *stack.StackOperator) error {
-	precision := stkOp.Stack.Pop()
-	if precision < 0 || precision != float64(int(precision)) {
-		return stkOp.Fail("precision must be non-negative integer")
-	}
-	ratio := math.Pow(10, precision)
-	stkOp.Stack.Push(math.Round(stkOp.Stack.Pop()*ratio) / ratio)
-	stkOp.Stack.Display()
-	return nil
+func Power() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		exponent := so.Stack.Pop()
+		base := so.Stack.Pop()
+		if base == 0 && exponent < 0 {
+			return so.Fail("cannot raise 0 to negative power", base, exponent)
+		}
+		if base < 0 && exponent != float64(int(exponent)) {
+			return so.Fail("cannot raise negative number to non-integer power", base, exponent)
+		}
+		so.Stack.Push(math.Pow(base, exponent))
+		so.Stack.Display()
+		return nil
+	},
+		"pop 'a', 'b'; push the result of 'b' ^ 'a'",
+	)
 }
 
-func Stash(stkOp *stack.StackOperator) error {
-	stkOp.Stack.SetStash(stkOp.Stack.Pop())
-	stkOp.Stack.Display()
-	return nil
+func Log() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		x := so.Stack.Pop()
+		if x <= 0 {
+			return so.Fail("cannot take logarithm of non-positive number", x)
+		}
+		so.Stack.Push(math.Log10(x))
+		so.Stack.Display()
+		return nil
+	},
+		"pop 'a'; push the logarithm base 10 of 'a'",
+	)
 }
 
-func Pull(stkOp *stack.StackOperator) error {
-	stkOp.Stack.Push(stkOp.Stack.GetStash())
-	stkOp.Stack.Display()
-	return nil
+func Ln() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		x := so.Stack.Pop()
+		if x <= 0 {
+			return so.Fail("cannot take logarithm of non-positive number", x)
+		}
+		so.Stack.Push(math.Log(x))
+		so.Stack.Display()
+		return nil
+	},
+		"pop 'a'; push the natural logarithm of 'a'",
+	)
 }
 
-func Display(stkOp *stack.StackOperator) error {
-	stkOp.Stack.Display()
-	return nil
+func Round() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		precision := so.Stack.Pop()
+		if precision < 0 || precision != float64(int(precision)) {
+			return so.Fail("precision must be non-negative integer")
+		}
+		ratio := math.Pow(10, precision)
+		so.Stack.Push(math.Round(so.Stack.Pop()*ratio) / ratio)
+		so.Stack.Display()
+		return nil
+	},
+		"pop 'a', 'b'; push the result of rounding 'b' to 'a' decimal places",
+	)
 }
 
-func Help(stkOp *stack.StackOperator) error {
-	if err := stkOp.PrintHelp(); err != nil {
-		return err
-	}
-	return nil
+func Stash() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		so.Stack.SetStash(so.Stack.Pop())
+		so.Stack.Display()
+		return nil
+	},
+		"pop 'a'; stash 'a'",
+	)
 }
 
-func Words(stkOp *stack.StackOperator) error {
-	words := make([]string, 0, len(stkOp.GetWords()))
-	for k := range stkOp.GetWords() {
-		words = append(words, k)
-	}
-	slices.Sort(words)
-	for _, w := range words {
-		fmt.Printf("%s: %s\n", w, stkOp.GetWords()[w])
-	}
-	return nil
+func Pull() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		so.Stack.Push(so.Stack.GetStash())
+		so.Stack.Display()
+		return nil
+	},
+		"push the value in the stash",
+	)
 }
 
-func Pop(stkOp *stack.StackOperator) error {
-	stkOp.Stack.Pop()
-	stkOp.Stack.Display()
-	return nil
+func Display() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		so.Stack.Display()
+		return nil
+	},
+		"display all values in the stack",
+	)
 }
 
-func Clear(stkOp *stack.StackOperator) error {
-	var c string
-	n := stkOp.Stack.Len()
-	if n != 1 {
-		c = "s"
-	}
-	fmt.Printf("cleared %d value%s\n", n, c)
-	stkOp.Stack.SetValues(make([]float64, 0, stkOp.Stack.Cap()))
-	return nil
+func Help() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		if err := so.PrintHelp(); err != nil {
+			return err
+		}
+		return nil
+	},
+		"display this information screen",
+	)
+}
+
+func Words() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		keys := make([]string, 0, len(so.GetWords()))
+		for k := range so.GetWords() {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+		for _, k := range keys {
+			fmt.Printf("%s: %s\n", k, so.GetWords()[k])
+		}
+		return nil
+	},
+		"display all defined words",
+	)
+}
+
+func Pop() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		so.Stack.Pop()
+		so.Stack.Display()
+		return nil
+	},
+		"pop 'a'",
+	)
+}
+
+func Clear() *Action {
+	return newAction(func(so *stack.StackOperator) error {
+		var c string
+		n := so.Stack.Len()
+		if n != 1 {
+			c = "s"
+		}
+		fmt.Printf("cleared %d value%s\n", n, c)
+		so.Stack.SetValues(make([]float64, 0, so.Stack.Cap()))
+		return nil
+	},
+		"pop all values in the stack",
+	)
 }
