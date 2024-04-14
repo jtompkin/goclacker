@@ -22,24 +22,26 @@ const usage = `Usage of goclacker:
 `
 
 func makeStackOperator(stackLimit int) *stack.StackOperator {
-	operationMap := map[string]*stack.Operation{
-		"+":     stack.NewOperation(actions.Add, 2, 1),
-		"-":     stack.NewOperation(actions.Subtract, 2, 1),
-		"*":     stack.NewOperation(actions.Multiply, 2, 1),
-		"/":     stack.NewOperation(actions.Divide, 2, 1),
-		"^":     stack.NewOperation(actions.Power, 2, 1),
-		"log":   stack.NewOperation(actions.Log, 1, 1),
-		"ln":    stack.NewOperation(actions.Ln, 1, 1),
-		".":     stack.NewOperation(actions.Display, 0, 0),
-		",":     stack.NewOperation(actions.Pop, 1, 0),
-		"stash": stack.NewOperation(actions.Stash, 1, 0),
-		"pull":  stack.NewOperation(actions.Pull, 0, 1),
-		"round": stack.NewOperation(actions.Round, 2, 1),
-		"clear": stack.NewOperation(actions.Clear, 0, 0),
-		"words": stack.NewOperation(actions.Words, 0, 0),
-		"help":  stack.NewOperation(actions.Help, 0, 0),
+	orderedTokens := []string{"+", "-", "*", "/", "^", "log", "ln", ".", ",",
+		"stash", "pull", "round", "clear", "words", "help"}
+	actionMap := map[string]stack.Action{
+		orderedTokens[0]:  actions.Add(),
+		orderedTokens[1]:  actions.Subtract(),
+		orderedTokens[2]:  actions.Multiply(),
+		orderedTokens[3]:  actions.Divide(),
+		orderedTokens[4]:  actions.Power(),
+		orderedTokens[5]:  actions.Log(),
+		orderedTokens[6]:  actions.Ln(),
+		orderedTokens[7]:  actions.Display(),
+		orderedTokens[8]:  actions.Pop(),
+		orderedTokens[9]:  actions.Stash(),
+		orderedTokens[10]: actions.Pull(),
+		orderedTokens[11]: actions.Round(),
+		orderedTokens[12]: actions.Clear(),
+		orderedTokens[13]: actions.Words(),
+		orderedTokens[14]: actions.Help(),
 	}
-	return stack.NewStackOperator(operationMap, stackLimit)
+	return stack.NewStackOperator(actionMap, &orderedTokens, stackLimit)
 }
 
 func withCount(stkOp *stack.StackOperator) {

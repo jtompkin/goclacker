@@ -1,13 +1,19 @@
 package stack
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 )
+
+type Action interface {
+	Call(*StackOperator) error
+	GetPops() int
+	GetPushes() int
+	GetHelp() string
+}
 
 // Stack contains a slice of values and methods to operate on that slice.
 type Stack struct {
@@ -54,42 +60,26 @@ func (stk *Stack) GetStash() float64 {
 	return stk.stash
 }
 
-func NewStack(values []float64) *Stack {
-	stk := Stack{}
-	stk.values = values
-	return &stk
-}
-
-// Operation contains a function to operate on a StackOperator instance. `Pops`
-// and `Pushes` represent the number of values the functions pops from and
-// pushes to the stack.
-type Operation struct {
-	action func(*StackOperator) error
-	Pops   int
-	Pushes int
-	Help   string
-}
-
-func NewOperation(action func(*StackOperator) error, pops int, pushes int, help string) *Operation {
-	op := Operation{action: action, Pops: pops, Pushes: pushes, Help: help}
-	return &op
+func newStack(values []float64) Stack {
+	stk := Stack{values: values}
+	return stk
 }
 
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	operators map[string]*Operation
-	words     map[string]string
-	Stack     Stack
+	actions map[string]Action
+	Tokens  *[]string
+	words   map[string]string
+	Stack   Stack
 }
 
 func (stkOp *StackOperator) ParseInput(input string) {
 	split := strings.Split(input, " ")
 	for i, s := range split {
 		if s == "=" {
-			dErr := stkOp.DefWord(split[i+1:])
-			if dErr != nil {
-				fmt.Fprintf(os.Stderr, "definition error: %s\n", dErr)
+			if err := stkOp.DefWord(split[i+1:]); err != nil {
+				fmt.Fprintf(os.Stderr, "definition error: %s\n", err)
 			}
 			return
 		}
@@ -121,32 +111,37 @@ func (stkOp *StackOperator) DefWord(def []string) error {
 	if strings.Contains("0123456789=.", string(word[0])) {
 		return stkOp.Fail(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'", word))
 	}
-	if _, pres := stkOp.operators[word]; pres {
+	if _, pres := stkOp.actions[word]; pres {
 		return stkOp.Fail(fmt.Sprintf("could not define '%s'; cannot redifine operator", word))
 	}
 	stkOp.words[word] = strings.Join(def[1:], " ")
 	return nil
 }
 
-func (stkOp *StackOperator) ParseToken(token string) error {
-	op := stkOp.operators[token]
-	if op == nil {
-		def := stkOp.words[token]
+func (so *StackOperator) ParseToken(token string) error {
+	action := so.actions[token]
+	if action == nil {
+		def := so.words[token]
 		if def == "" {
 			return nil
 		}
-		stkOp.ParseInput(def)
+		so.ParseInput(def)
 		return nil
 	}
-	stkLen := stkOp.Stack.Len()
-	if stkLen < op.Pops {
-		return stkOp.Fail(fmt.Sprintf("operation needs %d values in stack", op.Pops))
+	sLen := so.Stack.Len()
+	pops := action.GetPops()
+	var c rune
+	if pops != 1 {
+		c = 's'
 	}
-	if stkLen-op.Pops+op.Pushes > stkOp.Stack.Cap() {
-		return stkOp.Fail("operation would overflow stack")
+	if sLen < pops {
+		return so.Fail(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
 	}
-	if err := op.action(stkOp); err != nil {
-		return stkOp.Fail(fmt.Sprintf("%s", err))
+	if sLen-pops+action.GetPushes() > so.Stack.Cap() {
+		return so.Fail("operation would overflow stack")
+	}
+	if err := action.Call(so); err != nil {
+		return so.Fail(fmt.Sprintf("%s", err))
 	}
 	return nil
 }
@@ -163,32 +158,20 @@ func (stkOp *StackOperator) GetWords() map[string]string {
 	return stkOp.words
 }
 
+func (so *StackOperator) GetActions() map[string]Action {
+	return so.actions
+}
+
 func (stkOp *StackOperator) PrintHelp() error {
-	f, err := os.Open("data/help.tab")
-	if err != nil {
-		return stkOp.Fail("could not read help file")
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		split := strings.Split(scanner.Text(), "\t")
-		if len(split) == 2 {
-			fmt.Printf("operator: %s\t\"%s\"\n", split[0], split[1])
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return stkOp.Fail("could not read help file")
-	}
 	return nil
 }
 
-func NewStackOperator(operators map[string]*Operation, maxStack int) *StackOperator {
+func NewStackOperator(actions map[string]Action, orderedTokens *[]string, maxStack int) *StackOperator {
 	stkOp := StackOperator{
-		operators: operators,
-		words:     map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
-		Stack:     *NewStack(make([]float64, 0, maxStack)),
+		actions: actions,
+		Tokens:  orderedTokens,
+		words:   map[string]string{"sqrt": "0.5 ^", "pi": "3.141592653589793", "logb": "log stash log pull /"},
+		Stack:   newStack(make([]float64, 0, maxStack)),
 	}
 	return &stkOp
 }
