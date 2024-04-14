@@ -145,7 +145,7 @@ func Degrees() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
 			so.Stack.Push(so.Stack.Pop() * 180 / math.Pi)
-            so.Stack.Display()
+			so.Stack.Display()
 			return nil
 		}, 1, 1,
 		"pop 'a'; push the result of converting 'a' from radians to degrees",
@@ -156,7 +156,7 @@ func Radians() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
 			so.Stack.Push(so.Stack.Pop() * math.Pi / 180)
-            so.Stack.Display()
+			so.Stack.Display()
 			return nil
 		}, 1, 1,
 		"pop 'a'; push the result of converting 'a' from degrees to radians",
@@ -167,7 +167,7 @@ func Sine() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
 			so.Stack.Push(math.Sin(so.Stack.Pop()))
-            so.Stack.Display()
+			so.Stack.Display()
 			return nil
 		}, 1, 1,
 		"pop 'a'; return the sine of 'a' in radians",
@@ -178,7 +178,7 @@ func Cosine() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
 			so.Stack.Push(math.Cos(so.Stack.Pop()))
-            so.Stack.Display()
+			so.Stack.Display()
 			return nil
 		}, 1, 1,
 		"pop 'a'; return the cosine of 'a' in radians",
@@ -189,7 +189,7 @@ func Tangent() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
 			so.Stack.Push(math.Tan(so.Stack.Pop()))
-            so.Stack.Display()
+			so.Stack.Display()
 			return nil
 		}, 1, 1,
 		"pop 'a'; return the tangent of 'a' in radias",
@@ -215,7 +215,7 @@ func Round() *Action {
 func Stash() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
-			so.Stack.SetStash(so.Stack.Pop())
+			so.Stack.Stash = so.Stack.Pop()
 			so.Stack.Display()
 			return nil
 		}, 1, 0,
@@ -226,7 +226,7 @@ func Stash() *Action {
 func Pull() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
-			so.Stack.Push(so.Stack.GetStash())
+			so.Stack.Push(so.Stack.Stash)
 			so.Stack.Display()
 			return nil
 		}, 0, 1,
@@ -288,12 +288,12 @@ func Clear() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
 			var c rune
-			n := so.Stack.Len()
+			n := len(so.Stack.Values)
 			if n != 1 {
 				c = 's'
 			}
 			fmt.Printf("cleared %d value%c\n", n, c)
-			so.Stack.SetValues(make([]float64, 0, so.Stack.Cap()))
+			so.Stack.Values = make([]float64, 0, cap(so.Stack.Values))
 			return nil
 		}, 0, 0,
 		"pop all values in the stack",

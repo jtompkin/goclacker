@@ -17,51 +17,38 @@ type Action interface {
 
 // Stack contains a slice of values and methods to operate on that slice.
 type Stack struct {
-	values []float64
-	stash  float64
+	Values []float64
+	Stash  float64
 }
 
 func (stk *Stack) Pop() float64 {
-	n := len(stk.values) - 1
-	f := stk.values[n]
-	stk.values = stk.values[:n]
+	n := len(stk.Values) - 1
+	f := stk.Values[n]
+	stk.Values = stk.Values[:n]
 	return f
 }
 
 func (stk *Stack) Push(f float64) error {
-	if len(stk.values)+1 > cap(stk.values) {
-		return errors.New(fmt.Sprintf("cannot push %f, stack at capacity", f))
+	if len(stk.Values)+1 > cap(stk.Values) {
+		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity", f))
 	}
-	stk.values = append(stk.values, f)
+	stk.Values = append(stk.Values, f)
 	return nil
 }
 
+func (stk *Stack) Top() (float64, error) {
+	if len(stk.Values) == 0 {
+		return 0, errors.New("NA")
+	}
+	return stk.Values[len(stk.Values)-1], nil
+}
+
 func (stk *Stack) Display() {
-	fmt.Println(stk.values)
-}
-
-func (stk *Stack) SetValues(values []float64) {
-	stk.values = values
-}
-
-func (stk *Stack) Len() int {
-	return len(stk.values)
-}
-
-func (stk *Stack) Cap() int {
-	return cap(stk.values)
-}
-
-func (stk *Stack) SetStash(value float64) {
-	stk.stash = value
-}
-
-func (stk *Stack) GetStash() float64 {
-	return stk.stash
+	fmt.Println(stk.Values)
 }
 
 func newStack(values []float64) Stack {
-	stk := Stack{values: values}
+	stk := Stack{Values: values}
 	return stk
 }
 
@@ -128,7 +115,7 @@ func (so *StackOperator) ParseToken(token string) error {
 		so.ParseInput(def)
 		return nil
 	}
-	sLen := so.Stack.Len()
+	sLen := len(so.Stack.Values)
 	pops := action.GetPops()
 	var c rune
 	if pops != 1 {
@@ -137,7 +124,7 @@ func (so *StackOperator) ParseToken(token string) error {
 	if sLen < pops {
 		return so.Fail(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
 	}
-	if sLen-pops+action.GetPushes() > so.Stack.Cap() {
+	if sLen-pops+action.GetPushes() > cap(so.Stack.Values) {
 		return so.Fail("operation would overflow stack")
 	}
 	if err := action.Call(so); err != nil {

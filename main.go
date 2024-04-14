@@ -16,11 +16,16 @@ import (
 
 const usage = `Usage of goclacker:
     -s, --stack-limit int
-        stack size limit
+        stack size limit (default 8)
     -w, --words-file string
         path to file containing word definitions
-    -n, --no-count
-        do not print stack size in interactive prompt
+    -p, --prompt string
+        format string for the interactive prompt (default " &c > ")
+        format specifiers:
+            &l : stack limit
+            &c : current stack size
+            &t : top stack value
+            &s : current stash value
 `
 
 func checkTokens(tokens []string, actions map[string]stack.Action) error {
@@ -48,8 +53,8 @@ func checkTokens(tokens []string, actions map[string]stack.Action) error {
 
 func makeStackOperator(stackLimit int) *stack.StackOperator {
 	orderedTokens := []string{
-		"+", "-", "*", "/", "^", "log", "ln", ".", ",", "rad", "deg", "sin",
-		"cos", "tan", "stash", "pull", "round", "clear", "words", "help",
+		"+", "-", "*", "/", "^", "log", "ln", "rad", "deg", "sin", "cos", "tan",
+		"stash", "pull", "round", ".", ",", "clear", "words", "help",
 	}
 	actionMap := map[string]stack.Action{
 		"+":     actions.Add(),
@@ -79,20 +84,42 @@ func makeStackOperator(stackLimit int) *stack.StackOperator {
 	return stack.NewStackOperator(actionMap, &orderedTokens, stackLimit)
 }
 
-func withCount(stkOp *stack.StackOperator) {
-	fmt.Printf(" %d > ", stkOp.Stack.Len())
+func makePrompt(so *stack.StackOperator, format string) string {
+	flags := map[byte]func(*stack.StackOperator) (float64, error){
+		'l': func(so *stack.StackOperator) (float64, error) { return float64(cap(so.Stack.Values)), nil },
+		't': func(so *stack.StackOperator) (float64, error) { return so.Stack.Top() },
+		'c': func(so *stack.StackOperator) (float64, error) { return float64(len(so.Stack.Values)), nil },
+		's': func(so *stack.StackOperator) (float64, error) { return so.Stack.Stash, nil },
+	}
+	var prompt string
+	var i int
+	for i < len(format) {
+		if c := format[i]; c == '&' {
+			if i == len(format)-1 {
+				return prompt
+			}
+			if fmtFunc := flags[format[i+1]]; fmtFunc != nil {
+				if f, err := fmtFunc(so); err != nil {
+					prompt += fmt.Sprint(err)
+				} else {
+					prompt += fmt.Sprint(f)
+				}
+			}
+			i += 2
+		} else {
+			prompt += fmt.Sprintf("%c", c)
+			i++
+		}
+	}
+	return prompt
 }
 
-func noCount(_ *stack.StackOperator) {
-	fmt.Print("  > ")
-}
-
-func interactive(stkOp *stack.StackOperator, promptFunc func(*stack.StackOperator)) {
+func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
-	promptFunc(stkOp)
+	fmt.Print(makePrompt(so, promptFormat))
 	for scanner.Scan() {
-		stkOp.ParseInput(scanner.Text())
-		promptFunc(stkOp)
+		so.ParseInput(scanner.Text())
+		fmt.Print(makePrompt(so, promptFormat))
 	}
 	fmt.Println()
 
@@ -133,9 +160,9 @@ func main() {
 	var stackLimit int
 	flag.IntVar(&stackLimit, "s", 8, "stack size limit")
 	flag.IntVar(&stackLimit, "stack-limit", 8, "stack size limit")
-	var printCount bool
-	flag.BoolVar(&printCount, "n", false, "do not print stack size in interactive prompt")
-	flag.BoolVar(&printCount, "no-count", false, "do not print stack size in interactive prompt")
+	var promptFormat string
+	flag.StringVar(&promptFormat, "p", " &c > ", "format string for the interactive prompt")
+	flag.StringVar(&promptFormat, "prompt", " &c > ", "format string for the interactive prompt")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
@@ -149,10 +176,6 @@ func main() {
 			stkOp.ParseInput(program)
 		}
 	} else {
-		promptFunc := withCount
-		if printCount {
-			promptFunc = noCount
-		}
-		interactive(stkOp, promptFunc)
+		interactive(stkOp, promptFormat)
 	}
 }
