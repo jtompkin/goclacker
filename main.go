@@ -15,6 +15,10 @@ import (
 )
 
 const usage = `Usage of goclacker:
+    -V, --version
+        print version information
+    -h, --help
+        print usge information
     -s, --stack-limit int
         stack size limit (default 8)
     -w, --words-file string
@@ -27,6 +31,8 @@ const usage = `Usage of goclacker:
             &t : top stack value
             &s : current stash value
 `
+
+const version = "v0.1.0"
 
 func checkTokens(tokens []string, actions map[string]stack.Action) error {
 	notFoundOrdered := make([]string, 0, len(actions))
@@ -163,9 +169,17 @@ func main() {
 	var promptFormat string
 	flag.StringVar(&promptFormat, "p", " &c > ", "format string for the interactive prompt")
 	flag.StringVar(&promptFormat, "prompt", " &c > ", "format string for the interactive prompt")
+	var printVersion bool
+	flag.BoolVar(&printVersion, "V", false, "print version information")
+	flag.BoolVar(&printVersion, "version", false, "print version information")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
+
+	if printVersion {
+		fmt.Printf("goclacker %s\n", version)
+		return
+	}
 
 	stkOp := makeStackOperator(stackLimit)
 	if wordsPath != "" {
@@ -175,7 +189,7 @@ func main() {
 		for _, program := range flag.Args() {
 			stkOp.ParseInput(program)
 		}
-	} else {
-		interactive(stkOp, promptFormat)
+		return
 	}
+	interactive(stkOp, promptFormat)
 }
