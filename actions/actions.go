@@ -141,6 +141,61 @@ func Ln() *Action {
 	)
 }
 
+func Degrees() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(so.Stack.Pop() * 180 / math.Pi)
+            so.Stack.Display()
+			return nil
+		}, 1, 1,
+		"pop 'a'; push the result of converting 'a' from radians to degrees",
+	)
+}
+
+func Radians() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(so.Stack.Pop() * math.Pi / 180)
+            so.Stack.Display()
+			return nil
+		}, 1, 1,
+		"pop 'a'; push the result of converting 'a' from degrees to radians",
+	)
+}
+
+func Sine() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(math.Sin(so.Stack.Pop()))
+            so.Stack.Display()
+			return nil
+		}, 1, 1,
+		"pop 'a'; return the sine of 'a' in radians",
+	)
+}
+
+func Cosine() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(math.Cos(so.Stack.Pop()))
+            so.Stack.Display()
+			return nil
+		}, 1, 1,
+		"pop 'a'; return the cosine of 'a' in radians",
+	)
+}
+
+func Tangent() *Action {
+	return newAction(
+		func(so *stack.StackOperator) error {
+			so.Stack.Push(math.Tan(so.Stack.Pop()))
+            so.Stack.Display()
+			return nil
+		}, 1, 1,
+		"pop 'a'; return the tangent of 'a' in radias",
+	)
+}
+
 func Round() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -192,9 +247,9 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
-            for _, token := range *so.Tokens {
-                fmt.Printf("operator: %s\t\"%s\"\n", token, so.GetActions()[token].GetHelp())
-            }
+			for _, token := range *so.Tokens {
+				fmt.Printf("operator: %s\t\"%s\"\n", token, so.GetActions()[token].GetHelp())
+			}
 			return nil
 		}, 0, 0,
 		"display this information screen",

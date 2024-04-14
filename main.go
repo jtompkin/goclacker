@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/jtompkin/goclacker/actions"
@@ -21,25 +23,58 @@ const usage = `Usage of goclacker:
         do not print stack size in interactive prompt
 `
 
+func checkTokens(tokens []string, actions map[string]stack.Action) error {
+	notFoundOrdered := make([]string, 0, len(actions))
+	for k := range actions {
+		if slices.Index(tokens, k) == -1 {
+			notFoundOrdered = append(notFoundOrdered, k)
+		}
+	}
+	notFoundAction := make([]string, 0, len(tokens))
+	for _, s := range tokens {
+		if actions[s] == nil {
+			notFoundAction = append(notFoundAction, s)
+		}
+	}
+	var err error
+	if len(notFoundOrdered) > 0 {
+		err = errors.Join(err, errors.New(fmt.Sprintf("%s not found in orderedTokens", notFoundOrdered)))
+	}
+	if len(notFoundAction) > 0 {
+		err = errors.Join(err, errors.New(fmt.Sprintf("%s not found in actionMap", notFoundAction)))
+	}
+	return err
+}
+
 func makeStackOperator(stackLimit int) *stack.StackOperator {
-	orderedTokens := []string{"+", "-", "*", "/", "^", "log", "ln", ".", ",",
-		"stash", "pull", "round", "clear", "words", "help"}
+	orderedTokens := []string{
+		"+", "-", "*", "/", "^", "log", "ln", ".", ",", "rad", "deg", "sin",
+		"cos", "tan", "stash", "pull", "round", "clear", "words", "help",
+	}
 	actionMap := map[string]stack.Action{
-		orderedTokens[0]:  actions.Add(),
-		orderedTokens[1]:  actions.Subtract(),
-		orderedTokens[2]:  actions.Multiply(),
-		orderedTokens[3]:  actions.Divide(),
-		orderedTokens[4]:  actions.Power(),
-		orderedTokens[5]:  actions.Log(),
-		orderedTokens[6]:  actions.Ln(),
-		orderedTokens[7]:  actions.Display(),
-		orderedTokens[8]:  actions.Pop(),
-		orderedTokens[9]:  actions.Stash(),
-		orderedTokens[10]: actions.Pull(),
-		orderedTokens[11]: actions.Round(),
-		orderedTokens[12]: actions.Clear(),
-		orderedTokens[13]: actions.Words(),
-		orderedTokens[14]: actions.Help(),
+		"+":     actions.Add(),
+		"-":     actions.Subtract(),
+		"*":     actions.Multiply(),
+		"/":     actions.Divide(),
+		"^":     actions.Power(),
+		"log":   actions.Log(),
+		"ln":    actions.Ln(),
+		"rad":   actions.Radians(),
+		"deg":   actions.Degrees(),
+		"sin":   actions.Sine(),
+		"cos":   actions.Cosine(),
+		"tan":   actions.Tangent(),
+		".":     actions.Display(),
+		",":     actions.Pop(),
+		"stash": actions.Stash(),
+		"pull":  actions.Pull(),
+		"round": actions.Round(),
+		"clear": actions.Clear(),
+		"words": actions.Words(),
+		"help":  actions.Help(),
+	}
+	if err := checkTokens(orderedTokens, actionMap); err != nil {
+		log.Fatal(err)
 	}
 	return stack.NewStackOperator(actionMap, &orderedTokens, stackLimit)
 }
