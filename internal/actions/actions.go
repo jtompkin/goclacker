@@ -5,7 +5,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/jtompkin/goclacker/stack"
+	"github.com/jtompkin/goclacker/internal/stack"
 )
 
 // Action implements stack.Action.

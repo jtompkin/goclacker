@@ -10,8 +10,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/jtompkin/goclacker/actions"
-	"github.com/jtompkin/goclacker/stack"
+	"github.com/jtompkin/goclacker/internal/actions"
+	"github.com/jtompkin/goclacker/internal/stack"
 )
 
 const usage string = `Usage of goclacker:
