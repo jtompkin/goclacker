@@ -14,7 +14,7 @@ import (
 	"github.com/jtompkin/goclacker/stack"
 )
 
-const usage = `Usage of goclacker:
+const usage string = `Usage of goclacker:
     -V, --version
         print version information
     -h, --help
@@ -32,7 +32,7 @@ const usage = `Usage of goclacker:
             &s : current stash value
 `
 
-const version = "v0.1.0"
+const version string = "v0.1.1"
 
 func checkTokens(tokens []string, actions map[string]stack.Action) error {
 	notFoundOrdered := make([]string, 0, len(actions))
@@ -87,7 +87,7 @@ func makeStackOperator(stackLimit int) *stack.StackOperator {
 	if err := checkTokens(orderedTokens, actionMap); err != nil {
 		log.Fatal(err)
 	}
-	return stack.NewStackOperator(actionMap, &orderedTokens, stackLimit)
+	return stack.NewStackOperator(actionMap, orderedTokens, stackLimit)
 }
 
 func makePrompt(so *stack.StackOperator, format string) string {

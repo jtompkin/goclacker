@@ -16,22 +16,26 @@ type Action struct {
 	help   string
 }
 
+// Call calls the function stored in Action.action and returns the error value
+// returned by the function.
 func (a *Action) Call(stkOp *stack.StackOperator) error {
 	return a.action(stkOp)
 }
 
-func (a *Action) GetPops() int {
+func (a *Action) Pops() int {
 	return a.pops
 }
 
-func (a *Action) GetPushes() int {
+func (a *Action) Pushes() int {
 	return a.pushes
 }
 
-func (a *Action) GetHelp() string {
+func (a *Action) Help() string {
 	return a.help
 }
 
+// newAction returns a pointer to Action initialized with values given to
+// arguments.
 func newAction(
 	action func(*stack.StackOperator) error,
 	pops int,
@@ -41,6 +45,7 @@ func newAction(
 	return &Action{action: action, pops: pops, pushes: pushes, help: help}
 }
 
+// Add pops 'a', 'b'; pushes the result of 'a' + 'b'.
 func Add() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -52,6 +57,7 @@ func Add() *Action {
 	)
 }
 
+// Subtract pops 'a', 'b'; pushes the result of 'b' - 'a'.
 func Subtract() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -65,6 +71,7 @@ func Subtract() *Action {
 	)
 }
 
+// Multiply pops 'a', 'b'; pushes the result of 'a' * 'b'.
 func Multiply() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -76,6 +83,7 @@ func Multiply() *Action {
 	)
 }
 
+// Divide pops 'a', 'b'; pushes the result of 'b' / 'a'.
 func Divide() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -92,6 +100,7 @@ func Divide() *Action {
 	)
 }
 
+// Power pops 'a', 'b'; pushes the result of 'b' ^ 'a'.
 func Power() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -111,6 +120,7 @@ func Power() *Action {
 	)
 }
 
+// pops 'a'; pushes the logarithm base 10 of 'a'.
 func Log() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -126,6 +136,7 @@ func Log() *Action {
 	)
 }
 
+// Ln pops 'a'; pushes the logarithm base 10 of 'a'.
 func Ln() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -141,6 +152,7 @@ func Ln() *Action {
 	)
 }
 
+// Degrees pops 'a'; pushes the result of converting 'a' from radians to degrees.
 func Degrees() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -152,6 +164,7 @@ func Degrees() *Action {
 	)
 }
 
+// Radians pops 'a'; pushes the result of converting 'a' from degrees to radians.
 func Radians() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -163,6 +176,7 @@ func Radians() *Action {
 	)
 }
 
+// Sine returns an Action that pops 'a'; pushes the sine of 'a' in radians.
 func Sine() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -170,10 +184,11 @@ func Sine() *Action {
 			so.Stack.Display()
 			return nil
 		}, 1, 1,
-		"pop 'a'; return the sine of 'a' in radians",
+		"pop 'a'; push the sine of 'a' in radians",
 	)
 }
 
+// Cosine returns an Action that pops 'a'; pushes the cosine of 'a' in radians.
 func Cosine() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -181,10 +196,12 @@ func Cosine() *Action {
 			so.Stack.Display()
 			return nil
 		}, 1, 1,
-		"pop 'a'; return the cosine of 'a' in radians",
+		"pop 'a'; push the cosine of 'a' in radians",
 	)
 }
 
+// Tangent returns a pointer to an Action that pops 'a'; pushes the tangent of
+// 'a' in radians.
 func Tangent() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -192,10 +209,12 @@ func Tangent() *Action {
 			so.Stack.Display()
 			return nil
 		}, 1, 1,
-		"pop 'a'; return the tangent of 'a' in radias",
+		"pop 'a'; push the tangent of 'a' in radians",
 	)
 }
 
+// Round returns a pointer to an Action that pops 'a', 'b'; pushes the result of
+// rounding 'b' to 'a' decimal places.
 func Round() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -212,6 +231,7 @@ func Round() *Action {
 	)
 }
 
+// Stash returns a pointer to an Action that pops 'a'; stashes 'a'.
 func Stash() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -223,6 +243,7 @@ func Stash() *Action {
 	)
 }
 
+// Pull returns a pointer to an Action that pushes the value in the stash.
 func Pull() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -234,6 +255,7 @@ func Pull() *Action {
 	)
 }
 
+// Display returns a pointer to an Action that displays all values in the stack.
 func Display() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -244,11 +266,12 @@ func Display() *Action {
 	)
 }
 
+// Help returns a pointer to an Action that displays an information screen.
 func Help() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
-			for _, token := range *so.Tokens {
-				fmt.Printf("operator: %s\t\"%s\"\n", token, so.GetActions()[token].GetHelp())
+			for _, token := range so.Tokens {
+				fmt.Printf("operator: %s\t\"%s\"\n", token, so.Actions[token].Help())
 			}
 			return nil
 		}, 0, 0,
@@ -256,16 +279,17 @@ func Help() *Action {
 	)
 }
 
+// Words returns a pointer to an Action that displays all defined words.
 func Words() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
-			keys := make([]string, 0, len(so.GetWords()))
-			for k := range so.GetWords() {
+			keys := make([]string, 0, len(so.Words))
+			for k := range so.Words {
 				keys = append(keys, k)
 			}
 			slices.Sort(keys)
 			for _, k := range keys {
-				fmt.Printf("%s: %s\n", k, so.GetWords()[k])
+				fmt.Printf("%s: %s\n", k, so.Words[k])
 			}
 			return nil
 		}, 0, 0,
@@ -273,6 +297,7 @@ func Words() *Action {
 	)
 }
 
+// Pop returns a pointer to an Action that pops 'a'.
 func Pop() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
@@ -284,6 +309,7 @@ func Pop() *Action {
 	)
 }
 
+// Clear returns a pointer to an Action that pops all values in the stack.
 func Clear() *Action {
 	return newAction(
 		func(so *stack.StackOperator) error {
