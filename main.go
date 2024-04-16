@@ -90,42 +90,14 @@ func makeStackOperator(stackLimit int) *stack.StackOperator {
 	return stack.NewStackOperator(actionMap, orderedTokens, stackLimit)
 }
 
-func makePrompt(so *stack.StackOperator, format string) string {
-	flags := map[byte]func(*stack.StackOperator) (float64, error){
-		'l': func(so *stack.StackOperator) (float64, error) { return float64(cap(so.Stack.Values)), nil },
-		't': func(so *stack.StackOperator) (float64, error) { return so.Stack.Top() },
-		'c': func(so *stack.StackOperator) (float64, error) { return float64(len(so.Stack.Values)), nil },
-		's': func(so *stack.StackOperator) (float64, error) { return so.Stack.Stash, nil },
-	}
-	var prompt string
-	var i int
-	for i < len(format) {
-		if c := format[i]; c == '&' {
-			if i == len(format)-1 {
-				return prompt
-			}
-			if fmtFunc := flags[format[i+1]]; fmtFunc != nil {
-				if f, err := fmtFunc(so); err != nil {
-					prompt += fmt.Sprint(err)
-				} else {
-					prompt += fmt.Sprint(f)
-				}
-			}
-			i += 2
-		} else {
-			prompt += fmt.Sprintf("%c", c)
-			i++
-		}
-	}
-	return prompt
-}
 
 func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print(makePrompt(so, promptFormat))
+    prompt := so.MakePromptFunc(promptFormat, '&')
+    fmt.Printf("%s", prompt())
 	for scanner.Scan() {
 		so.ParseInput(scanner.Text())
-		fmt.Print(makePrompt(so, promptFormat))
+        fmt.Printf("%s", prompt())
 	}
 	fmt.Println()
 
@@ -134,7 +106,7 @@ func interactive(so *stack.StackOperator, promptFormat string) {
 	}
 }
 
-func parseWordsFile(stkOp *stack.StackOperator, path string) {
+func parseWordsFile(so *stack.StackOperator, path string) {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -144,7 +116,7 @@ func parseWordsFile(stkOp *stack.StackOperator, path string) {
 	scanner := bufio.NewScanner(f)
 	failed := false
 	for scanner.Scan() {
-		if err := stkOp.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
+		if err := so.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
 			fmt.Printf("definition error: %s\n", err)
 			failed = true
 		}

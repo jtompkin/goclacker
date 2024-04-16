@@ -3,6 +3,7 @@ package stack
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -39,15 +40,6 @@ func (stk *Stack) Push(f float64) error {
 	return nil
 }
 
-// Top returns the last value in stack.Values and returns an error if
-// stack.Values is empty.
-func (stk *Stack) Top() (float64, error) {
-	if len(stk.Values) == 0 {
-		return 0, errors.New("NA")
-	}
-	return stk.Values[len(stk.Values)-1], nil
-}
-
 // Display prints all the values in the stack
 func (stk *Stack) Display() {
 	fmt.Println(stk.Values)
@@ -61,10 +53,11 @@ func newStack(values []float64) Stack {
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	Actions map[string]Action
-	Tokens  []string
-	Words   map[string]string
-	Stack   Stack
+	Actions    map[string]Action
+	Tokens     []string
+	Words      map[string]string
+	Stack      Stack
+	formatters map[byte]func(*StackOperator) string
 }
 
 // ParseInput splits `input` into words and either starts defining a word, pushing a
@@ -154,6 +147,62 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 	return errors.New(message)
 }
 
+// MakePromptFunc returns a function that will execute any functions needed to
+// build the prompt and returns a new string every time it is called
+func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) func() string {
+	promptFmt := make([]byte, len(format))
+	promptFuncs := make([]func(*StackOperator) string, 0, strings.Count(format, string(fmtChar)))
+	for i := 0; i < len(format); {
+		b := format[i]
+		if b == fmtChar {
+			if i == len(format)-1 {
+				break
+			}
+			f := so.formatters[format[i+1]]
+			if f != nil {
+				promptFuncs = append(promptFuncs, f)
+				promptFmt = append(promptFmt, '%', 's')
+			}
+			i += 2
+		} else {
+			promptFmt = append(promptFmt, b)
+			i++
+		}
+	}
+	promptSplit := strings.SplitAfter(string(promptFmt), "%s")
+	if len(promptSplit) != len(promptFuncs)+1 {
+		log.Fatal("Not right")
+	}
+	return func() string {
+        sb := new(strings.Builder)
+		for i, f := range promptFuncs {
+            sb.WriteString(fmt.Sprintf(promptSplit[i], f(so)))
+		}
+        sb.WriteString(promptSplit[len(promptSplit)-1])
+        return sb.String()
+	}
+}
+
+func (so *StackOperator) promptCap() string {
+	return fmt.Sprint(cap(so.Stack.Values))
+}
+
+func (so *StackOperator) promptTop() string {
+	stkLen := len(so.Stack.Values)
+	if stkLen == 0 {
+		return "NA"
+	}
+	return fmt.Sprint(so.Stack.Values[stkLen-1])
+}
+
+func (so *StackOperator) promptLen() string {
+	return fmt.Sprint(len(so.Stack.Values))
+}
+
+func (so *StackOperator) promptStash() string {
+	return fmt.Sprint(so.Stack.Stash)
+}
+
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
 func NewStackOperator(actions map[string]Action, orderedTokens []string, maxStack int) *StackOperator {
@@ -165,6 +214,12 @@ func NewStackOperator(actions map[string]Action, orderedTokens []string, maxStac
 			"sqrt": "0.5 ^",
 			"pi":   "3.141592653589793",
 			"logb": "log stash log pull /",
+		},
+		formatters: map[byte]func(*StackOperator) string{
+			'l': (*StackOperator).promptCap,
+			't': (*StackOperator).promptTop,
+			'c': (*StackOperator).promptLen,
+			's': (*StackOperator).promptStash,
 		},
 	}
 	return &stkOp
