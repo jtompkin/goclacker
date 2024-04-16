@@ -34,7 +34,7 @@ func (stk *Stack) Pop() float64 {
 // is at capacity.
 func (stk *Stack) Push(f float64) error {
 	if len(stk.Values)+1 > cap(stk.Values) {
-		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity", f))
+		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity (%d)", f, cap(stk.Values)))
 	}
 	stk.Values = append(stk.Values, f)
 	return nil
@@ -58,6 +58,7 @@ type StackOperator struct {
 	Words      map[string]string
 	Stack      Stack
 	formatters map[byte]func(*StackOperator) string
+	prompt     func() string
 }
 
 // ParseInput splits `input` into words and either starts defining a word, pushing a
@@ -147,17 +148,19 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 	return errors.New(message)
 }
 
-// MakePromptFunc returns a function that will execute any functions needed to
-// build the prompt and returns a new string every time it is called
-func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) func() string {
+// MakePromptFunc sets the StackOperator.prompt value that will execute any
+// functions needed to build the prompt and will return a new string every time
+// it is called
+func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) {
 	promptFmt := make([]byte, len(format))
 	promptFuncs := make([]func(*StackOperator) string, 0, strings.Count(format, string(fmtChar)))
-	for i := 0; i < len(format); {
+	formatLen := len(format)
+	if format[formatLen-1] == fmtChar {
+		format = format[:formatLen-1]
+	}
+	for i := 0; i < formatLen; {
 		b := format[i]
 		if b == fmtChar {
-			if i == len(format)-1 {
-				break
-			}
 			f := so.formatters[format[i+1]]
 			if f != nil {
 				promptFuncs = append(promptFuncs, f)
@@ -171,16 +174,23 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) func() stri
 	}
 	promptSplit := strings.SplitAfter(string(promptFmt), "%s")
 	if len(promptSplit) != len(promptFuncs)+1 {
-		log.Fatal("Not right")
+		log.Fatal("Something done gone wrong with the prompt")
 	}
-	return func() string {
-        sb := new(strings.Builder)
+
+	so.prompt = func() string {
+		sb := new(strings.Builder)
 		for i, f := range promptFuncs {
-            sb.WriteString(fmt.Sprintf(promptSplit[i], f(so)))
+			sb.WriteString(fmt.Sprintf(promptSplit[i], f(so)))
 		}
-        sb.WriteString(promptSplit[len(promptSplit)-1])
-        return sb.String()
+		sb.WriteString(promptSplit[len(promptSplit)-1])
+		return sb.String()
 	}
+}
+
+// PrintPrompt prints the string returned by the function set by
+// StackOperator.MakePromptFunc
+func (so *StackOperator) PrintPrompt() {
+	fmt.Print(so.prompt())
 }
 
 func (so *StackOperator) promptCap() string {

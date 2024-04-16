@@ -18,9 +18,9 @@ const usage string = `Usage of goclacker:
     -V, --version
         print version information
     -h, --help
-        print usge information
+        print usage information
     -s, --stack-limit int
-        stack size limit (default 8)
+        stack size limit (default 8); must be non-negative
     -w, --words-file string
         path to file containing word definitions
     -p, --prompt string
@@ -31,8 +31,11 @@ const usage string = `Usage of goclacker:
             &t : top stack value
             &s : current stash value
 `
-
 const version string = "v0.1.1"
+const fmtChar byte = '&'
+
+const defStackLimit int = 8
+const defPrompt string = " &c > "
 
 func checkTokens(tokens []string, actions map[string]stack.Action) error {
 	notFoundOrdered := make([]string, 0, len(actions))
@@ -90,14 +93,13 @@ func makeStackOperator(stackLimit int) *stack.StackOperator {
 	return stack.NewStackOperator(actionMap, orderedTokens, stackLimit)
 }
 
-
 func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
-    prompt := so.MakePromptFunc(promptFormat, '&')
-    fmt.Printf("%s", prompt())
+	so.MakePromptFunc(promptFormat, fmtChar)
+	so.PrintPrompt()
 	for scanner.Scan() {
 		so.ParseInput(scanner.Text())
-        fmt.Printf("%s", prompt())
+		so.PrintPrompt()
 	}
 	fmt.Println()
 
@@ -114,7 +116,7 @@ func parseWordsFile(so *stack.StackOperator, path string) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	failed := false
+	var failed bool
 	for scanner.Scan() {
 		if err := so.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
 			fmt.Printf("definition error: %s\n", err)
@@ -136,11 +138,11 @@ func main() {
 	flag.StringVar(&wordsPath, "words-file", "", "path to file containing word definitions")
 	flag.StringVar(&wordsPath, "w", "", "path to file containing word definitions")
 	var stackLimit int
-	flag.IntVar(&stackLimit, "s", 8, "stack size limit")
-	flag.IntVar(&stackLimit, "stack-limit", 8, "stack size limit")
+	flag.IntVar(&stackLimit, "s", defStackLimit, "stack size limit")
+	flag.IntVar(&stackLimit, "stack-limit", defStackLimit, "stack size limit")
 	var promptFormat string
-	flag.StringVar(&promptFormat, "p", " &c > ", "format string for the interactive prompt")
-	flag.StringVar(&promptFormat, "prompt", " &c > ", "format string for the interactive prompt")
+	flag.StringVar(&promptFormat, "p", defPrompt, "format string for the interactive prompt")
+	flag.StringVar(&promptFormat, "prompt", defPrompt, "format string for the interactive prompt")
 	var printVersion bool
 	flag.BoolVar(&printVersion, "V", false, "print version information")
 	flag.BoolVar(&printVersion, "version", false, "print version information")
@@ -148,20 +150,26 @@ func main() {
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
-	if printVersion {
-		fmt.Printf("goclacker %s\n", version)
-		return
+	if stackLimit < 0 {
+		fmt.Print("-s, --stack-limit must be non-negative\n\n")
+		fmt.Print(usage)
+		os.Exit(1)
 	}
 
-	stkOp := makeStackOperator(stackLimit)
+	if printVersion {
+		fmt.Printf("goclacker %s\n", version)
+		os.Exit(0)
+	}
+
+	so := makeStackOperator(stackLimit)
 	if wordsPath != "" {
-		parseWordsFile(stkOp, wordsPath)
+		parseWordsFile(so, wordsPath)
 	}
 	if len(flag.Args()) > 0 {
 		for _, program := range flag.Args() {
-			stkOp.ParseInput(program)
+			so.ParseInput(program)
 		}
-		return
+		os.Exit(0)
 	}
-	interactive(stkOp, promptFormat)
+	interactive(so, promptFormat)
 }
