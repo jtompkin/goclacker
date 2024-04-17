@@ -152,15 +152,15 @@ func (stkOp *StackOperator) Fail(message string, values ...float64) error {
 // functions needed to build the prompt and will return a new string every time
 // it is called
 func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) {
-    if format == "" {
-        so.prompt = func() string {return ""}
-        return
-    }
+	if format == "" {
+		so.prompt = func() string { return "" }
+		return
+	}
 	promptFuncs := make([]func(*StackOperator) string, 0, strings.Count(format, string(fmtChar)))
 	formatLen := len(format)
 	if format[formatLen-1] == fmtChar {
 		format = format[:formatLen-1]
-        formatLen = len(format)
+		formatLen = len(format)
 	}
 	promptFmt := []byte(format)
 	for i := 0; i < formatLen; {
@@ -168,8 +168,8 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) {
 			f := so.formatters[format[i+1]]
 			if f != nil {
 				promptFuncs = append(promptFuncs, f)
-                promptFmt[i] = '%'
-                promptFmt[i+1] = 's'
+				promptFmt[i] = '%'
+				promptFmt[i+1] = 's'
 			}
 			i += 2
 		} else {
