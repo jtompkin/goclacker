@@ -96,10 +96,10 @@ func makeStackOperator(stackLimit int) *stack.StackOperator {
 func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
 	so.MakePromptFunc(promptFormat, fmtChar)
-	so.PrintPrompt()
+	fmt.Print(so.Prompt())
 	for scanner.Scan() {
 		so.ParseInput(scanner.Text())
-		so.PrintPrompt()
+		fmt.Print(so.Prompt())
 	}
 	fmt.Println()
 
