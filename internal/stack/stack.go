@@ -4,13 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 )
 
 type Action interface {
-	Call(*StackOperator) error
+	Call(*StackOperator) (string, error)
 	Pops() int
 	Pushes() int
 	Help() string
@@ -41,8 +40,19 @@ func (stk *Stack) Push(f float64) error {
 }
 
 // Display prints all the values in the stack
-func (stk *Stack) Display() {
-	fmt.Println(stk.Values)
+func (stk *Stack) Display(fancy bool) string {
+	var s string
+	if fancy {
+		s = "[ "
+		for _, f := range stk.Values {
+			s += fmt.Sprint(f, " ")
+		}
+		return s + "]"
+	}
+	for _, f := range stk.Values {
+		s += fmt.Sprint(f, " ")
+	}
+	return s
 }
 
 func newStack(values []float64) Stack {
@@ -53,39 +63,42 @@ func newStack(values []float64) Stack {
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	Actions    map[string]Action
-	Tokens     []string
-	Words      map[string]string
-	Stack      Stack
-	formatters map[byte]func(*StackOperator) string
-	Prompt     func() string
+	Actions     map[string]Action
+	Tokens      []string
+	Words       map[string]string
+	Stack       Stack
+	formatters  map[byte]func(*StackOperator) string
+	Prompt      func() string
+	Interactive bool
 }
 
 // ParseInput splits `input` into words and either starts defining a word, pushing a
 // numerical value, or treating the word as a token to execute.
-func (stkOp *StackOperator) ParseInput(input string) {
+func (so *StackOperator) ParseInput(input string) (string, error) {
+    var rs string
 	split := strings.Split(input, " ")
 	for i, s := range split {
 		if s == "=" {
-			if err := stkOp.DefWord(split[i+1:]); err != nil {
-				fmt.Fprintf(os.Stderr, "definition error: %s\n", err)
+			if err := so.DefWord(split[i+1:]); err != nil {
+				return "", errors.New(fmt.Sprintf("definition error: %s\n", err))
 			}
-			return
+			return "", nil
 		}
 		var pErr error
 		f, err := strconv.ParseFloat(s, 64)
 		if err != nil {
-			pErr = stkOp.ParseToken(s)
+			rs, pErr = so.ParseToken(s)
 		} else {
-			pErr = stkOp.Stack.Push(f)
+			pErr = so.Stack.Push(f)
 			if i == len(split)-1 {
-				stkOp.Stack.Display()
+				return so.Stack.Display(so.Interactive), nil
 			}
 		}
 		if pErr != nil {
-			fmt.Fprintf(os.Stderr, "operation error: %s\n", pErr)
+			return "", errors.New(fmt.Sprintf("operation error: %s\n", pErr))
 		}
 	}
+	return rs, nil
 }
 
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
@@ -112,15 +125,15 @@ func (so *StackOperator) DefWord(def []string) error {
 
 // ParseToken determines if `token` is an Action token or defined word and
 // executes it accordingly. Returns an error if the Action cannot be completed.
-func (so *StackOperator) ParseToken(token string) error {
+func (so *StackOperator) ParseToken(token string) (string, error) {
 	action := so.Actions[token]
 	if action == nil {
 		def := so.Words[token]
 		if def == "" { // input is neither a defined word nor an Action token
-			return nil
+			return "", nil
 		}
 		so.ParseInput(def)
-		return nil
+		return "", nil
 	}
 	sLen := len(so.Stack.Values)
 	pops := action.Pops()
@@ -129,15 +142,16 @@ func (so *StackOperator) ParseToken(token string) error {
 		c = 's'
 	}
 	if sLen < pops {
-		return so.Fail(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
+		return "", errors.New(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
 	}
 	if sLen-pops+action.Pushes() > cap(so.Stack.Values) {
-		return so.Fail("operation would overflow stack")
+		return "", errors.New("operation would overflow stack")
 	}
-	if err := action.Call(so); err != nil {
-		return so.Fail(fmt.Sprintf("%s", err))
+	s, err := action.Call(so)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("%s", err))
 	}
-	return nil
+	return s, nil
 }
 
 // Fail pushes all `values` to the stack and returns an error containing `message`
@@ -202,11 +216,12 @@ func (so *StackOperator) promptStash() string {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
-func NewStackOperator(actions map[string]Action, orderedTokens []string, maxStack int) *StackOperator {
+func NewStackOperator(actions map[string]Action, orderedTokens []string, maxStack int, interactive bool) *StackOperator {
 	stkOp := StackOperator{
-		Actions: actions,
-		Tokens:  orderedTokens,
-		Stack:   newStack(make([]float64, 0, maxStack)),
+		Actions:     actions,
+		Tokens:      orderedTokens,
+		Stack:       newStack(make([]float64, 0, maxStack)),
+		Interactive: interactive,
 		Words: map[string]string{
 			"sqrt": "0.5 ^",
 			"pi":   "3.141592653589793",

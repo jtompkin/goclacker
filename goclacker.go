@@ -60,7 +60,7 @@ func checkTokens(tokens []string, actions map[string]stack.Action) error {
 	return err
 }
 
-func makeStackOperator(stackLimit int) *stack.StackOperator {
+func makeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
 	orderedTokens := []string{
 		"+", "-", "*", "/", "^", "log", "ln", "rad", "deg", "sin", "cos", "tan",
 		"stash", "pull", "round", ".", ",", "clear", "words", "help",
@@ -90,7 +90,17 @@ func makeStackOperator(stackLimit int) *stack.StackOperator {
 	if err := checkTokens(orderedTokens, actionMap); err != nil {
 		log.Fatal(err)
 	}
-	return stack.NewStackOperator(actionMap, orderedTokens, stackLimit)
+	return stack.NewStackOperator(actionMap, orderedTokens, stackLimit, interactive)
+}
+
+func nonInteractive(so *stack.StackOperator, programs []string) {
+	for _, s := range programs {
+		if s, err := so.ParseInput(s); err != nil {
+			fmt.Fprintf(os.Stderr, "%s", err)
+		} else {
+			fmt.Printf("%s\n", s)
+		}
+	}
 }
 
 func interactive(so *stack.StackOperator, promptFormat string) {
@@ -98,7 +108,11 @@ func interactive(so *stack.StackOperator, promptFormat string) {
 	so.MakePromptFunc(promptFormat, fmtChar)
 	fmt.Print(so.Prompt())
 	for scanner.Scan() {
-		so.ParseInput(scanner.Text())
+		if s, err := so.ParseInput(scanner.Text()); err != nil {
+			fmt.Fprintf(os.Stderr, "%s", err)
+		} else {
+			fmt.Printf("%s\n", s)
+		}
 		fmt.Print(so.Prompt())
 	}
 	fmt.Println()
@@ -161,15 +175,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	so := makeStackOperator(stackLimit)
+	so := makeStackOperator(stackLimit, !(len(flag.Args()) > 0))
 	if wordsPath != "" {
 		parseWordsFile(so, wordsPath)
 	}
-	if len(flag.Args()) > 0 {
-		for _, program := range flag.Args() {
-			so.ParseInput(program)
-		}
-		os.Exit(0)
+	if so.Interactive {
+		interactive(so, promptFormat)
+	} else {
+		nonInteractive(so, flag.Args())
 	}
-	interactive(so, promptFormat)
 }
