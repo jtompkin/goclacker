@@ -43,33 +43,20 @@ func (stk *Stack) Push(f float64) error {
 
 // Display prints all the values in the stack
 func (stk *Stack) Display(fancy bool) string {
-	var s string
+    ss := make([]string, len(stk.Values))
+    for i, f := range stk.Values {
+        ss[i] = fmt.Sprint(f)
+    }
+    s := strings.Join(ss, " ")
 	if fancy {
-		s = "[ "
-		for _, f := range stk.Values {
-			s += fmt.Sprint(f, " ")
-		}
-		return s + "]" + Suffix
+        return fmt.Sprintf("[ %s ]\n", s)
 	}
-	for _, f := range stk.Values {
-		s += fmt.Sprint(f, " ")
-	}
-	return s + Suffix
+    return fmt.Sprintf("%s\n", s)
 }
 
 func newStack(values []float64) Stack {
 	stk := Stack{Values: values}
 	return stk
-}
-
-func rStrip(s string, chars string) string {
-	if len(s) == 0 {
-		return s
-	}
-	for i := len(s) - 1; strings.ContainsAny(string(s[i]), chars) && i > 0; i-- {
-		s = s[:i]
-	}
-	return s
 }
 
 // StackOperator contains map for converting string tokens into operations that
@@ -88,7 +75,7 @@ type StackOperator struct {
 // numerical value, or treating the word as a token to execute.
 func (so *StackOperator) ParseInput(input string) (string, error) {
 	var rs string
-	input = rStrip(input, " \t")
+	input = strings.TrimSpace(input)
 	split := strings.Split(input, " ")
 	for i, s := range split {
 		if s == "=" {
@@ -98,18 +85,18 @@ func (so *StackOperator) ParseInput(input string) (string, error) {
 				return s + Suffix, nil
 			}
 		}
-		var pErr error
-		f, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			rs, pErr = so.ParseToken(s)
+		if f, err := strconv.ParseFloat(s, 64); err != nil {
+			rs, err = so.ParseToken(s)
+			if err != nil {
+				return "", errors.New(fmt.Sprintf("operation error: %s\n", err))
+			}
 		} else {
-			pErr = so.Stack.Push(f)
+			if err := so.Stack.Push(f); err != nil {
+				return "", errors.New(fmt.Sprintf("operation error: %s\n", err))
+			}
 			if i == len(split)-1 {
 				return so.Stack.Display(so.Interactive), nil
 			}
-		}
-		if pErr != nil {
-			return "", errors.New(fmt.Sprintf("operation error: %s\n", pErr))
 		}
 	}
 	return rs, nil

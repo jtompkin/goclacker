@@ -63,8 +63,8 @@ func TestPrograms(t *testing.T) {
 		"":             newProgParams("", false, false),
 		"      ":       newProgParams("", false, false),
 		"test":         newProgParams("", false, false),
-		"2 2 +":        newProgParams("4 \n", false, false),
-		"4 sqrt":       newProgParams("2 \n", false, false),
+		"2 2 +":        newProgParams("4\n", false, false),
+		"4 sqrt":       newProgParams("2\n", false, false),
 		"= pi":         newProgParams("deleted word: pi\n", false, false),
 		"= test 2 2 +": newProgParams(`defined word: "test" with value: "2 2 +"`+"\n", false, false),
 		"=":            newProgParams("", true, false),
@@ -72,7 +72,7 @@ func TestPrograms(t *testing.T) {
 		"1 0 /":        newProgParams("", true, false),
 		"help":         newProgParams("", false, true),
 		"words":        newProgParams("", false, true),
-		"  3 4 * 4455 -    23         + 4 4332     ": newProgParams("-4420 4 4332 \n", false, false),
+		"  3 4 * 4455 -    23         + 4 4332     ": newProgParams("-4420 4 4332\n", false, false),
 	}
 	for program, expected := range programs {
 		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)
