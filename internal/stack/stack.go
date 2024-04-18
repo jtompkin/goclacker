@@ -142,16 +142,16 @@ func (so *StackOperator) ParseToken(token string) (string, error) {
 		}
 		return so.ParseInput(def)
 	}
-	sLen := len(so.Stack.Values)
+	stkLen := len(so.Stack.Values)
 	pops := action.Pops()
 	var c rune
 	if pops != 1 {
 		c = 's'
 	}
-	if sLen < pops {
+	if stkLen < pops {
 		return "", errors.New(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
 	}
-	if sLen-pops+action.Pushes() > cap(so.Stack.Values) {
+	if stkLen-pops+action.Pushes() > cap(so.Stack.Values) {
 		return "", errors.New("operation would overflow stack")
 	}
 	s, err := action.Call(so)
@@ -235,6 +235,7 @@ func NewStackOperator(actions orderedmap.OrderedMap[string, Action], maxStack in
 			"sqrt": "0.5 ^",
 			"pi":   "3.141592653589793",
 			"logb": "log stash log pull /",
+            "randn": "stash rand pull * ceil 1 -",
 		},
 		formatters: map[byte]func(*StackOperator) string{
 			'l': (*StackOperator).promptCap,

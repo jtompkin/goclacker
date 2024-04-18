@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"slices"
 	"strings"
 
@@ -294,6 +295,18 @@ func Round() *Action {
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of rounding 'b' to 'a' decimal places",
 	)
+}
+
+// Random returns a pointer to an Action that pushes a random number between 0
+// and 1
+func Random() *Action {
+    return newAction(
+        func(so *stack.StackOperator) (string, error) {
+            so.Stack.Push(rand.Float64())
+            return so.Stack.Display(so.Interactive), nil
+        }, 0, 1,
+        "push a random number between 0 and 1",
+        )
 }
 
 // Stash returns a pointer to an Action that pops 'a'; stashes 'a'.
