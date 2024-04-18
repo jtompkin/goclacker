@@ -31,7 +31,7 @@ const usage string = `Usage of goclacker:
             &t : top stack value
             &s : current stash value
 `
-const version string = "v0.1.1"
+const version string = "v0.2.0"
 const fmtChar byte = '&'
 
 const defStackLimit int = 8
