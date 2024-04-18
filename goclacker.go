@@ -60,9 +60,9 @@ func checkTokens(tokens []string, actions map[string]stack.Action) error {
 	return err
 }
 
-func makeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
+func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
 	orderedTokens := []string{
-		"+", "-", "*", "/", "^", "log", "ln", "rad", "deg", "sin", "cos", "tan",
+		"+", "-", "*", "/", "^", "!", "log", "ln", "rad", "deg", "sin", "cos", "tan",
 		"stash", "pull", "round", ".", ",", "clear", "words", "help",
 	}
 	actionMap := map[string]stack.Action{
@@ -71,6 +71,7 @@ func makeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
 		"*":     actions.Multiply(),
 		"/":     actions.Divide(),
 		"^":     actions.Power(),
+		"!":     actions.Factorial(),
 		"log":   actions.Log(),
 		"ln":    actions.Ln(),
 		"rad":   actions.Radians(),
@@ -98,7 +99,7 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 		if s, err := so.ParseInput(s); err != nil {
 			fmt.Fprintf(os.Stderr, "%s", err)
 		} else {
-			fmt.Printf("%s\n", s)
+			fmt.Printf("%s", s)
 		}
 	}
 }
@@ -111,7 +112,7 @@ func interactive(so *stack.StackOperator, promptFormat string) {
 		if s, err := so.ParseInput(scanner.Text()); err != nil {
 			fmt.Fprintf(os.Stderr, "%s", err)
 		} else {
-			fmt.Printf("%s\n", s)
+			fmt.Printf("%s", s)
 		}
 		fmt.Print(so.Prompt())
 	}
@@ -122,7 +123,7 @@ func interactive(so *stack.StackOperator, promptFormat string) {
 	}
 }
 
-func parseWordsFile(so *stack.StackOperator, path string) {
+func ParseWordsFile(so *stack.StackOperator, path string) {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -132,7 +133,7 @@ func parseWordsFile(so *stack.StackOperator, path string) {
 	scanner := bufio.NewScanner(f)
 	var failed bool
 	for scanner.Scan() {
-		if err := so.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
+		if _, err := so.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
 			fmt.Printf("definition error: %s\n", err)
 			failed = true
 		}
@@ -175,9 +176,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	so := makeStackOperator(stackLimit, !(len(flag.Args()) > 0))
+	so := MakeStackOperator(stackLimit, !(len(flag.Args()) > 0))
 	if wordsPath != "" {
-		parseWordsFile(so, wordsPath)
+		ParseWordsFile(so, wordsPath)
 	}
 	if so.Interactive {
 		interactive(so, promptFormat)

@@ -97,6 +97,32 @@ func Divide() *Action {
 	)
 }
 
+func fact(x int) int {
+    p := 1
+	for i := 2; i <= x; i++ {
+		p *= i
+	}
+	return p
+}
+
+// Factorial pops 'a'; pushes the factorial of 'a'.
+func Factorial() *Action {
+	return newAction(
+		func(so *stack.StackOperator) (string, error) {
+			x := so.Stack.Pop()
+			if x != float64(int(x)) {
+				return "", so.Fail("cannot take factorial of non-integer", x)
+			}
+			if x < 0 {
+				return "", so.Fail("cannot take factorial of negative number", x)
+			}
+			so.Stack.Push(float64(fact(int(x))))
+			return so.Stack.Display(so.Interactive), nil
+		}, 1, 1,
+		"pop 'a'; push the factorial of 'a'",
+	)
+}
+
 // Power pops 'a', 'b'; pushes the result of 'b' ^ 'a'.
 func Power() *Action {
 	return newAction(
@@ -245,7 +271,7 @@ func Pull() *Action {
 func Display() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
-            return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(so.Interactive), nil
 		}, 0, 0,
 		"display all values in the stack",
 	)
@@ -255,11 +281,11 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
-            helps := make([]string, len(so.Tokens))
+			helps := make([]string, len(so.Tokens))
 			for i, token := range so.Tokens {
-                helps[i] = fmt.Sprintf(`operator: %s%c"%s"`, token, '\t', so.Actions[token].Help())
+				helps[i] = fmt.Sprintf(`operator: %s%c"%s"`, token, '\t', so.Actions[token].Help())
 			}
-			return strings.Join(helps, "\n"), nil
+			return strings.Join(helps, "\n") + stack.Suffix, nil
 		}, 0, 0,
 		"display this information screen",
 	)
@@ -274,11 +300,11 @@ func Words() *Action {
 				keys = append(keys, k)
 			}
 			slices.Sort(keys)
-            defs := make([]string, len(keys))
+			defs := make([]string, len(keys))
 			for i, k := range keys {
-                defs[i] = fmt.Sprintf("%s: %s", k, so.Words[k])
+				defs[i] = fmt.Sprintf("%s: %s", k, so.Words[k])
 			}
-			return strings.Join(defs, "\n"), nil
+			return strings.Join(defs, "\n") + stack.Suffix, nil
 		}, 0, 0,
 		"display all defined words",
 	)
@@ -289,7 +315,7 @@ func Pop() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
 			so.Stack.Pop()
-            return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(so.Interactive), nil
 		}, 1, 0,
 		"pop 'a'",
 	)
@@ -305,7 +331,7 @@ func Clear() *Action {
 				c = 's'
 			}
 			so.Stack.Values = make([]float64, 0, cap(so.Stack.Values))
-			return fmt.Sprintf("cleared %d value%c", n, c), nil
+			return fmt.Sprintf("cleared %d value%c%s", n, c, stack.Suffix), nil
 		}, 0, 0,
 		"pop all values in the stack",
 	)

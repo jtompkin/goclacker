@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const Suffix string = "\n"
+
 type Action interface {
 	Call(*StackOperator) (string, error)
 	Pops() int
@@ -47,17 +49,27 @@ func (stk *Stack) Display(fancy bool) string {
 		for _, f := range stk.Values {
 			s += fmt.Sprint(f, " ")
 		}
-		return s + "]"
+		return s + "]" + Suffix
 	}
 	for _, f := range stk.Values {
 		s += fmt.Sprint(f, " ")
 	}
-	return s
+	return s + Suffix
 }
 
 func newStack(values []float64) Stack {
 	stk := Stack{Values: values}
 	return stk
+}
+
+func rStrip(s string, chars string) string {
+	if len(s) == 0 {
+		return s
+	}
+	for i := len(s) - 1; strings.ContainsAny(string(s[i]), chars) && i > 0; i-- {
+		s = s[:i]
+	}
+	return s
 }
 
 // StackOperator contains map for converting string tokens into operations that
@@ -75,14 +87,16 @@ type StackOperator struct {
 // ParseInput splits `input` into words and either starts defining a word, pushing a
 // numerical value, or treating the word as a token to execute.
 func (so *StackOperator) ParseInput(input string) (string, error) {
-    var rs string
+	var rs string
+	input = rStrip(input, " \t")
 	split := strings.Split(input, " ")
 	for i, s := range split {
 		if s == "=" {
-			if err := so.DefWord(split[i+1:]); err != nil {
+			if s, err := so.DefWord(split[i+1:]); err != nil {
 				return "", errors.New(fmt.Sprintf("definition error: %s\n", err))
+			} else {
+				return s + Suffix, nil
 			}
-			return "", nil
 		}
 		var pErr error
 		f, err := strconv.ParseFloat(s, 64)
@@ -104,23 +118,30 @@ func (so *StackOperator) ParseInput(input string) (string, error) {
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
 // further values being the value. Or deletes def[0] from StackOperator.Words if
 // len(def) == 1.
-func (so *StackOperator) DefWord(def []string) error {
+func (so *StackOperator) DefWord(def []string) (string, error) {
 	if len(def) == 0 {
-		return so.Fail("define word: '= example 2 2 +'; remove word: '= example'")
+		return "", errors.New("define word: '= example 2 2 +'; remove word: '= example'")
 	}
-	word := def[0]
-	if len(def) == 1 {
+	noEmpty := make([]string, 0, len(def))
+	for _, s := range def {
+		if s != "" {
+			noEmpty = append(noEmpty, s)
+		}
+	}
+	word := noEmpty[0]
+	if len(noEmpty) == 1 {
 		delete(so.Words, word)
-		return nil
+		return fmt.Sprintf("deleted word: %s", word), nil
 	}
 	if strings.Contains("0123456789=.", string(word[0])) {
-		return so.Fail(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'", word))
+		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'", word))
 	}
 	if _, pres := so.Actions[word]; pres {
-		return so.Fail(fmt.Sprintf("could not define '%s'; cannot redifine operator", word))
+		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot redifine operator", word))
 	}
-	so.Words[word] = strings.Join(def[1:], " ")
-	return nil
+	s := strings.Join(noEmpty[1:], " ")
+	so.Words[word] = s
+	return fmt.Sprintf(`defined word: "%s" with value: "%s"`, word, s), nil
 }
 
 // ParseToken determines if `token` is an Action token or defined word and
@@ -132,8 +153,7 @@ func (so *StackOperator) ParseToken(token string) (string, error) {
 		if def == "" { // input is neither a defined word nor an Action token
 			return "", nil
 		}
-		so.ParseInput(def)
-		return "", nil
+		return so.ParseInput(def)
 	}
 	sLen := len(so.Stack.Values)
 	pops := action.Pops()
@@ -155,9 +175,12 @@ func (so *StackOperator) ParseToken(token string) (string, error) {
 }
 
 // Fail pushes all `values` to the stack and returns an error containing `message`
-func (stkOp *StackOperator) Fail(message string, values ...float64) error {
-	for _, value := range values {
-		stkOp.Stack.Push(value)
+func (so *StackOperator) Fail(message string, values ...float64) error {
+	for _, f := range values {
+		so.Stack.Push(f)
+	}
+	if so.Interactive {
+		fmt.Printf("%s", so.Stack.Display(true))
 	}
 	return errors.New(message)
 }

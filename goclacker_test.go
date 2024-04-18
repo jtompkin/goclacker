@@ -2,16 +2,10 @@ package main
 
 import (
 	"testing"
-
-	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-func basicStackOperator() *stack.StackOperator {
-    return stack.NewStackOperator(make(map[string]stack.Action), make([]string, 0), 8)
-}
-
 func prompt(t *testing.T, format string, expected string) {
-    so := basicStackOperator()
+	so := MakeStackOperator(8, false)
 	so.Stack.Stash = 12
 	so.MakePromptFunc(format, '&')
 	if s := so.Prompt(); s != expected {
@@ -36,14 +30,51 @@ func TestPrompts(t *testing.T) {
 		prompt(t, format, expected)
 	}
 }
-/*
-func TestProgramBasic(t *testing.T) {
-    so := basicStackOperator()
-    so.ParseInput("2 2 +")
-    b := make([]byte, 3)
-    os.Stdout.Read(b)
-    if string(b) != "[4]" {
-        t.Fatalf(`program = "2 2 +" : expected = "[4]" : got = %s`, b)
-    }
+
+func prog(t *testing.T, program string, expected string, wantError bool, acceptAny bool) {
+	so := MakeStackOperator(8, false)
+	s, err := so.ParseInput(program)
+	if err != nil {
+		if wantError {
+			return
+		}
+		s = err.Error()
+	}
+	if wantError {
+		t.Fatalf(`program = "%s" : wanted error, none raised`, program)
+	}
+	if s != expected && !acceptAny {
+		t.Fatalf(`program = "%s" : expected = %q : got = %q`, program, expected, s)
+	}
 }
-*/
+
+type progParams struct {
+	Expected  string
+	WantError bool
+	AcceptAny bool
+}
+
+func newProgParams(expected string, wantError bool, acceptAny bool) *progParams {
+	return &progParams{Expected: expected, WantError: wantError, AcceptAny: acceptAny}
+}
+
+func TestPrograms(t *testing.T) {
+	programs := map[string]*progParams{
+		"":             newProgParams("", false, false),
+		"      ":       newProgParams("", false, false),
+		"test":         newProgParams("", false, false),
+		"2 2 +":        newProgParams("4 \n", false, false),
+		"4 sqrt":       newProgParams("2 \n", false, false),
+		"= pi":         newProgParams("deleted word: pi\n", false, false),
+		"= test 2 2 +": newProgParams(`defined word: "test" with value: "2 2 +"`+"\n", false, false),
+		"=":            newProgParams("", true, false),
+		"+":            newProgParams("", true, false),
+		"1 0 /":        newProgParams("", true, false),
+		"help":         newProgParams("", false, true),
+		"words":        newProgParams("", false, true),
+		"  3 4 * 4455 -    23         + 4 4332     ": newProgParams("-4420 4 4332 \n", false, false),
+	}
+	for program, expected := range programs {
+		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)
+	}
+}
