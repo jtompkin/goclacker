@@ -142,7 +142,7 @@ func Power() *Action {
 	)
 }
 
-// pops 'a'; pushes the logarithm base 10 of 'a'.
+// Log pops 'a'; pushes the logarithm base 10 of 'a'.
 func Log() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -281,10 +281,12 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
-			helps := make([]string, len(so.Tokens))
-			for i, token := range so.Tokens {
-				helps[i] = fmt.Sprintf(`operator: %s%c"%s"`, token, '\t', so.Actions[token].Help())
-			}
+			helps := make([]string, 1, so.Actions.Len()+1)
+            helps[0] = "operator\tdescription"
+            for pair := so.Actions.Oldest(); pair != nil; pair = pair.Next() {
+                helps = append(helps, fmt.Sprintf(`%s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
+                //helps = append(helps, fmt.Sprintf(`operator: %s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
+            }
 			return strings.Join(helps, "\n") + stack.Suffix, nil
 		}, 0, 0,
 		"display this information screen",
@@ -302,7 +304,7 @@ func Words() *Action {
 			slices.Sort(keys)
 			defs := make([]string, len(keys))
 			for i, k := range keys {
-				defs[i] = fmt.Sprintf("%s: %s", k, so.Words[k])
+				defs[i] = fmt.Sprintf("%s : %s", k, so.Words[k])
 			}
 			return strings.Join(defs, "\n") + stack.Suffix, nil
 		}, 0, 0,

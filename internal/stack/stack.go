@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+    "github.com/wk8/go-ordered-map/v2"
 )
 
 const Suffix string = "\n"
@@ -62,8 +63,7 @@ func newStack(values []float64) Stack {
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	Actions     map[string]Action
-	Tokens      []string
+	Actions     orderedmap.OrderedMap[string, Action]
 	Words       map[string]string
 	Stack       Stack
 	formatters  map[byte]func(*StackOperator) string
@@ -123,9 +123,9 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 	if strings.Contains("0123456789=.", string(word[0])) {
 		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'", word))
 	}
-	if _, pres := so.Actions[word]; pres {
+    if _, present := so.Actions.Get(word); present {
 		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot redifine operator", word))
-	}
+    }
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s
 	return fmt.Sprintf(`defined word: "%s" with value: "%s"`, word, s), nil
@@ -134,7 +134,7 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 // ParseToken determines if `token` is an Action token or defined word and
 // executes it accordingly. Returns an error if the Action cannot be completed.
 func (so *StackOperator) ParseToken(token string) (string, error) {
-	action := so.Actions[token]
+	action, _ := so.Actions.Get(token)
 	if action == nil {
 		def := so.Words[token]
 		if def == "" { // input is neither a defined word nor an Action token
@@ -226,10 +226,9 @@ func (so *StackOperator) promptStash() string {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
-func NewStackOperator(actions map[string]Action, orderedTokens []string, maxStack int, interactive bool) *StackOperator {
+func NewStackOperator(actions orderedmap.OrderedMap[string, Action], maxStack int, interactive bool) *StackOperator {
 	stkOp := StackOperator{
 		Actions:     actions,
-		Tokens:      orderedTokens,
 		Stack:       newStack(make([]float64, 0, maxStack)),
 		Interactive: interactive,
 		Words: map[string]string{

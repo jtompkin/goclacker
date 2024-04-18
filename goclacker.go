@@ -12,6 +12,7 @@ import (
 
 	"github.com/jtompkin/goclacker/internal/actions"
 	"github.com/jtompkin/goclacker/internal/stack"
+	"github.com/wk8/go-ordered-map/v2"
 )
 
 const usage string = `Usage of goclacker:
@@ -61,37 +62,29 @@ func checkTokens(tokens []string, actions map[string]stack.Action) error {
 }
 
 func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
-	orderedTokens := []string{
-		"+", "-", "*", "/", "^", "!", "log", "ln", "rad", "deg", "sin", "cos", "tan",
-		"stash", "pull", "round", ".", ",", "clear", "words", "help",
-	}
-	actionMap := map[string]stack.Action{
-		"+":     actions.Add(),
-		"-":     actions.Subtract(),
-		"*":     actions.Multiply(),
-		"/":     actions.Divide(),
-		"^":     actions.Power(),
-		"!":     actions.Factorial(),
-		"log":   actions.Log(),
-		"ln":    actions.Ln(),
-		"rad":   actions.Radians(),
-		"deg":   actions.Degrees(),
-		"sin":   actions.Sine(),
-		"cos":   actions.Cosine(),
-		"tan":   actions.Tangent(),
-		".":     actions.Display(),
-		",":     actions.Pop(),
-		"stash": actions.Stash(),
-		"pull":  actions.Pull(),
-		"round": actions.Round(),
-		"clear": actions.Clear(),
-		"words": actions.Words(),
-		"help":  actions.Help(),
-	}
-	if err := checkTokens(orderedTokens, actionMap); err != nil {
-		log.Fatal(err)
-	}
-	return stack.NewStackOperator(actionMap, orderedTokens, stackLimit, interactive)
+	actionMap := *orderedmap.New[string, stack.Action]()
+	actionMap.Set("+", actions.Add())
+	actionMap.Set("-", actions.Subtract())
+	actionMap.Set("*", actions.Multiply())
+	actionMap.Set("/", actions.Divide())
+    actionMap.Set("^", actions.Power())
+    actionMap.Set("!", actions.Factorial())
+    actionMap.Set("log", actions.Log())
+    actionMap.Set("ln", actions.Ln())
+    actionMap.Set("rad", actions.Radians())
+    actionMap.Set("deg", actions.Degrees())
+    actionMap.Set("sin", actions.Sine())
+    actionMap.Set("cos", actions.Cosine())
+    actionMap.Set("tan", actions.Tangent())
+    actionMap.Set("round", actions.Round())
+    actionMap.Set(".", actions.Display())
+    actionMap.Set(",", actions.Pop())
+    actionMap.Set("stash", actions.Stash())
+    actionMap.Set("pull", actions.Pull())
+    actionMap.Set("clear", actions.Clear())
+    actionMap.Set("words", actions.Words())
+    actionMap.Set("help", actions.Help())
+	return stack.NewStackOperator(actionMap, stackLimit, interactive)
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
