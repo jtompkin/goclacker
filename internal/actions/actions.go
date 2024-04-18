@@ -46,7 +46,8 @@ func newAction(
 	return &Action{action: action, pops: pops, pushes: pushes, help: help}
 }
 
-// Add pops 'a', 'b'; pushes the result of 'a' + 'b'.
+// Add pops returns a pointer to an Action that 'a', 'b'; pushes the result of
+// 'a' + 'b'.
 func Add() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -57,7 +58,8 @@ func Add() *Action {
 	)
 }
 
-// Subtract pops 'a', 'b'; pushes the result of 'b' - 'a'.
+// Subtract returns a pointer to an Action that pops 'a', 'b'; pushes the result
+// of 'b' - 'a'.
 func Subtract() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -70,7 +72,8 @@ func Subtract() *Action {
 	)
 }
 
-// Multiply pops 'a', 'b'; pushes the result of 'a' * 'b'.
+// Multiply returns a pointer to an Action that pops 'a', 'b'; pushes the result
+// of 'a' * 'b'.
 func Multiply() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -81,7 +84,8 @@ func Multiply() *Action {
 	)
 }
 
-// Divide pops 'a', 'b'; pushes the result of 'b' / 'a'.
+// Divide returns a pointer to an Action that pops 'a', 'b'; pushes the result
+// of 'b' / 'a'.
 func Divide() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -89,23 +93,39 @@ func Divide() *Action {
 			if divisor == 0 {
 				return "", so.Fail("cannot divide by 0", divisor)
 			}
-			dividend := so.Stack.Pop()
-			so.Stack.Push(dividend / divisor)
+			so.Stack.Push(so.Stack.Pop() / divisor)
 			return so.Stack.Display(so.Interactive), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of 'b' / 'a'",
 	)
 }
 
+// Modulo returns a pointer to an Action that pops 'a', 'b'; pushes the
+// remainder of 'b' / 'a'
+func Modulo() *Action {
+	return newAction(
+		func(so *stack.StackOperator) (string, error) {
+			divisor := so.Stack.Pop()
+			if divisor == 0 {
+				return "", so.Fail("cannot divide by 0", divisor)
+			}
+			so.Stack.Push(math.Mod(so.Stack.Pop(), divisor))
+			return so.Stack.Display(so.Interactive), nil
+		}, 2, 1,
+		"pop 'a', 'b'; push the remainder of 'b' / 'a'",
+	)
+}
+
 func fact(x int) int {
-    p := 1
+	p := 1
 	for i := 2; i <= x; i++ {
 		p *= i
 	}
 	return p
 }
 
-// Factorial pops 'a'; pushes the factorial of 'a'.
+// Factorial returns a pointer to an Action that pops 'a'; pushes the factorial
+// of 'a'.
 func Factorial() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -123,7 +143,8 @@ func Factorial() *Action {
 	)
 }
 
-// Power pops 'a', 'b'; pushes the result of 'b' ^ 'a'.
+// Power returns a pointer to an Action that pops 'a', 'b'; pushes the result of
+// 'b' ^ 'a'.
 func Power() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -142,7 +163,8 @@ func Power() *Action {
 	)
 }
 
-// Log pops 'a'; pushes the logarithm base 10 of 'a'.
+// Log returns a pointer to an Action that pops 'a'; pushes the logarithm base
+// 10 of 'a'.
 func Log() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -157,7 +179,8 @@ func Log() *Action {
 	)
 }
 
-// Ln pops 'a'; pushes the logarithm base 10 of 'a'.
+// Ln returns a pointer to an Action that pops 'a'; pushes the logarithm base 10
+// of 'a'.
 func Ln() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -172,7 +195,8 @@ func Ln() *Action {
 	)
 }
 
-// Degrees pops 'a'; pushes the result of converting 'a' from radians to degrees.
+// Degrees returns a pointer to an Action that pops 'a'; pushes the result of
+// converting 'a' from radians to degrees.
 func Degrees() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -183,7 +207,8 @@ func Degrees() *Action {
 	)
 }
 
-// Radians pops 'a'; pushes the result of converting 'a' from degrees to radians.
+// Radians returns a pointer to an Action that pops 'a'; pushes the result of
+// converting 'a' from degrees to radians.
 func Radians() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -194,7 +219,8 @@ func Radians() *Action {
 	)
 }
 
-// Sine returns an Action that pops 'a'; pushes the sine of 'a' in radians.
+// Sine returns a pointer to an Action that pops 'a'; pushes the sine of 'a' in
+// radians.
 func Sine() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -205,7 +231,8 @@ func Sine() *Action {
 	)
 }
 
-// Cosine returns an Action that pops 'a'; pushes the cosine of 'a' in radians.
+// Cosine returns a pointer to an Action that pops 'a'; pushes the cosine of 'a'
+// in radians.
 func Cosine() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
@@ -225,6 +252,30 @@ func Tangent() *Action {
 			return so.Stack.Display(so.Interactive), nil
 		}, 1, 1,
 		"pop 'a'; push the tangent of 'a' in radians",
+	)
+}
+
+// Floor returns a pointer to an Action that pops 'a'; pushes the greatest
+// integer value less than 'a'.
+func Floor() *Action {
+	return newAction(
+		func(so *stack.StackOperator) (string, error) {
+			so.Stack.Push(math.Floor(so.Stack.Pop()))
+			return so.Stack.Display(so.Interactive), nil
+		}, 1, 1,
+		"pop 'a'; push the greatest integer value less than or equal to 'a'",
+	)
+}
+
+// Ceiling returns a pointer to an Action that pops 'a'; pushes the least
+// integer value greater than 'a'.
+func Ceiling() *Action {
+	return newAction(
+		func(so *stack.StackOperator) (string, error) {
+			so.Stack.Push(math.Ceil(so.Stack.Pop()))
+			return so.Stack.Display(so.Interactive), nil
+		}, 1, 1,
+		"pop 'a'; push the least integer value greater than or equal to 'a'",
 	)
 }
 
@@ -282,11 +333,11 @@ func Help() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
 			helps := make([]string, 1, so.Actions.Len()+1)
-            helps[0] = "operator\tdescription"
-            for pair := so.Actions.Oldest(); pair != nil; pair = pair.Next() {
-                helps = append(helps, fmt.Sprintf(`%s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
-                //helps = append(helps, fmt.Sprintf(`operator: %s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
-            }
+			helps[0] = "operator\tdescription"
+			for pair := so.Actions.Oldest(); pair != nil; pair = pair.Next() {
+				helps = append(helps, fmt.Sprintf(`%s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
+				//helps = append(helps, fmt.Sprintf(`operator: %s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
+			}
 			return strings.Join(helps, "\n") + stack.Suffix, nil
 		}, 0, 0,
 		"display this information screen",
