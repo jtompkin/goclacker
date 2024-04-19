@@ -2,15 +2,12 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"slices"
 	"strings"
 
-	"github.com/jtompkin/goclacker/internal/actions"
 	"github.com/jtompkin/goclacker/internal/stack"
 	"github.com/wk8/go-ordered-map/v2"
 )
@@ -38,56 +35,34 @@ const fmtChar byte = '&'
 const defStackLimit int = 8
 const defPrompt string = " &c > "
 
-func checkTokens(tokens []string, actions map[string]stack.Action) error {
-	notFoundOrdered := make([]string, 0, len(actions))
-	for k := range actions {
-		if slices.Index(tokens, k) == -1 {
-			notFoundOrdered = append(notFoundOrdered, k)
-		}
-	}
-	notFoundAction := make([]string, 0, len(tokens))
-	for _, s := range tokens {
-		if actions[s] == nil {
-			notFoundAction = append(notFoundAction, s)
-		}
-	}
-	var err error
-	if len(notFoundOrdered) > 0 {
-		err = errors.Join(err, errors.New(fmt.Sprintf("%s not found in orderedTokens", notFoundOrdered)))
-	}
-	if len(notFoundAction) > 0 {
-		err = errors.Join(err, errors.New(fmt.Sprintf("%s not found in actionMap", notFoundAction)))
-	}
-	return err
-}
 
 func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
-	actionMap := *orderedmap.New[string, stack.Action]()
-	actionMap.Set("+", actions.Add())
-	actionMap.Set("-", actions.Subtract())
-	actionMap.Set("*", actions.Multiply())
-	actionMap.Set("/", actions.Divide())
-	actionMap.Set("%", actions.Modulo())
-	actionMap.Set("^", actions.Power())
-	actionMap.Set("!", actions.Factorial())
-	actionMap.Set("log", actions.Log())
-	actionMap.Set("ln", actions.Ln())
-	actionMap.Set("rad", actions.Radians())
-	actionMap.Set("deg", actions.Degrees())
-	actionMap.Set("sin", actions.Sine())
-	actionMap.Set("cos", actions.Cosine())
-	actionMap.Set("tan", actions.Tangent())
-	actionMap.Set("floor", actions.Floor())
-	actionMap.Set("ceil", actions.Ceiling())
-	actionMap.Set("round", actions.Round())
-    actionMap.Set("rand", actions.Random())
-	actionMap.Set(".", actions.Display())
-	actionMap.Set(",", actions.Pop())
-	actionMap.Set("stash", actions.Stash())
-	actionMap.Set("pull", actions.Pull())
-	actionMap.Set("clear", actions.Clear())
-	actionMap.Set("words", actions.Words())
-	actionMap.Set("help", actions.Help())
+	actionMap := *orderedmap.New[string, *stack.Action]()
+	actionMap.Set("+", stack.Add())
+	actionMap.Set("-", stack.Subtract())
+	actionMap.Set("*", stack.Multiply())
+	actionMap.Set("/", stack.Divide())
+	actionMap.Set("%", stack.Modulo())
+	actionMap.Set("^", stack.Power())
+	actionMap.Set("!", stack.Factorial())
+	actionMap.Set("log", stack.Log())
+	actionMap.Set("ln", stack.Ln())
+	actionMap.Set("rad", stack.Radians())
+	actionMap.Set("deg", stack.Degrees())
+	actionMap.Set("sin", stack.Sine())
+	actionMap.Set("cos", stack.Cosine())
+	actionMap.Set("tan", stack.Tangent())
+	actionMap.Set("floor", stack.Floor())
+	actionMap.Set("ceil", stack.Ceiling())
+	actionMap.Set("round", stack.Round())
+    actionMap.Set("rand", stack.Random())
+	actionMap.Set(".", stack.Display())
+	actionMap.Set(",", stack.Pop())
+	actionMap.Set("stash", stack.Stash())
+	actionMap.Set("pull", stack.Pull())
+	actionMap.Set("clear", stack.Clear())
+	actionMap.Set("words", stack.Words())
+	actionMap.Set("help", stack.Help())
 	return stack.NewStackOperator(actionMap, stackLimit, interactive)
 }
 
