@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -15,16 +16,16 @@ func prompt(t *testing.T, format string, expected string) {
 
 func TestPrompts(t *testing.T) {
 	formats := map[string]string{
-		"":         "",
-		"&":        "&",
-		" &":       " &",
-		"& ":       "& ",
-		"&a":       "&a",
-		"a&":       "a&",
-		"&&&":      "&&&",
-		"     ":    "     ",
-		"&l&c&s&t": "8012NA",
-		" &c > ":   " 0 > ",
+		"":                             "",
+		"     ":                        "     ",
+		fmt.Sprintf("%c", fmtChar):     fmt.Sprintf("%c", fmtChar),
+		fmt.Sprintf(" %c", fmtChar):    fmt.Sprintf(" %c", fmtChar),
+		fmt.Sprintf("%c ", fmtChar):    fmt.Sprintf("%c ", fmtChar),
+		fmt.Sprintf("%c-", fmtChar):    fmt.Sprintf("%c-", fmtChar),
+		fmt.Sprintf("-%c", fmtChar):    fmt.Sprintf("-%c", fmtChar),
+		fmt.Sprintf(" %c > ", fmtChar): fmt.Sprintf(" %c > ", fmtChar),
+		fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar):                fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar),
+		fmt.Sprintf("%cl%cc%cs%ct", fmtChar, fmtChar, fmtChar, fmtChar): "8012NA",
 	}
 	for format, expected := range formats {
 		prompt(t, format, expected)
@@ -63,10 +64,11 @@ func TestPrograms(t *testing.T) {
 		"":             newProgParams("", false, false),
 		"      ":       newProgParams("", false, false),
 		"test":         newProgParams("", false, false),
+		"1 2 3 4 5 6":  newProgParams("1 2 3 4 5 6\n", false, false),
 		"2 2 +":        newProgParams("4\n", false, false),
 		"4 sqrt":       newProgParams("2\n", false, false),
 		"= pi":         newProgParams("deleted word: pi\n", false, false),
-		"= test 2 2 +": newProgParams(`defined word: "test" with value: "2 2 +"`+"\n", false, false),
+		"= test 2 2 +": newProgParams(fmt.Sprintf(`defined word: "test" with value: "2 2 +"%c`, '\n'), false, false),
 		"=":            newProgParams("", true, false),
 		"+":            newProgParams("", true, false),
 		"1 0 /":        newProgParams("", true, false),
