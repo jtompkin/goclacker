@@ -13,10 +13,11 @@ import (
 )
 
 const usage string = `Usage of goclacker:
+goclacker [-V] [-h] [-s] int [-w] string [-p] string [program...]
     -V, --version
-        print version information
+        print version information and exit
     -h, --help
-        print usage information
+        print usage information and exit
     -s, --stack-limit int
         stack size limit (default 8); must be non-negative
     -w, --words-file string
@@ -28,6 +29,10 @@ const usage string = `Usage of goclacker:
             &c : current stack size
             &t : top stack value
             &s : current stash value
+    [program...]
+        Any positional arguments will be interpreted and executed by the
+        calculator. Interactive mode will not be entered if any positional
+        arguments are supplied.
 `
 const version string = "v0.2.0"
 const fmtChar byte = '&'
@@ -140,7 +145,7 @@ func main() {
 	flag.Parse()
 
 	if stackLimit < 0 {
-		fmt.Print("-s, --stack-limit must be non-negative\n\n")
+        fmt.Print("argument error: -s, --stack-limit must be non-negative\n\n")
 		fmt.Print(usage)
 		os.Exit(1)
 	}
