@@ -46,17 +46,16 @@ func (stk *Stack) Display() string {
 	return fmt.Sprintf(stk.displayFmt, s)
 }
 
-func newStack(values []float64, displayFmt string) Stack {
-	stk := Stack{Values: values, displayFmt: displayFmt}
-	return stk
+func newStack(values []float64, displayFmt string) *Stack {
+	return &Stack{Values: values, displayFmt: displayFmt}
 }
 
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	Actions     orderedmap.OrderedMap[string, *Action]
+	Actions     *orderedmap.OrderedMap[string, *Action]
 	Words       map[string]string
-	Stack       Stack
+	Stack       *Stack
 	formatters  map[byte]func(*StackOperator) string
 	Prompt      func() string
 	Interactive bool
@@ -214,7 +213,7 @@ func (so *StackOperator) promptStash() string {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
-func NewStackOperator(actions orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool) *StackOperator {
+func NewStackOperator(actions *orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool) *StackOperator {
 	var displayFmt string
 	if interactive {
 		displayFmt = "[ %s ]" + Suffix

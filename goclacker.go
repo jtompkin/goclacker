@@ -41,7 +41,7 @@ const defStackLimit int = 8
 const defPrompt string = " &c > "
 
 func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
-	actionMap := *orderedmap.New[string, *stack.Action]()
+	actionMap := orderedmap.New[string, *stack.Action]()
 	actionMap.Set("+", stack.Add())
 	actionMap.Set("-", stack.Subtract())
 	actionMap.Set("*", stack.Multiply())
