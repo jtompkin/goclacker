@@ -12,8 +12,9 @@ const Suffix string = "\n"
 
 // Stack contains a slice of values and methods to operate on that slice.
 type Stack struct {
-	Values []float64
-	Stash  float64
+	Values     []float64
+	Stash      float64
+	displayFmt string
 }
 
 // Pop removes the last value in stack.Values and returns the value removed.
@@ -41,14 +42,11 @@ func (stk *Stack) Display(fancy bool) string {
 		ss[i] = fmt.Sprint(f)
 	}
 	s := strings.Join(ss, " ")
-	if fancy {
-		return fmt.Sprintf("[ %s ]\n", s)
-	}
-	return fmt.Sprintf("%s\n", s)
+	return fmt.Sprintf(stk.displayFmt, s)
 }
 
-func newStack(values []float64) Stack {
-	stk := Stack{Values: values}
+func newStack(values []float64, displayFmt string) Stack {
+	stk := Stack{Values: values, displayFmt: displayFmt}
 	return stk
 }
 
@@ -157,7 +155,7 @@ func (so *StackOperator) Fail(message string, values ...float64) error {
 	if so.Interactive {
 		fmt.Printf("%s", so.Stack.Display(true))
 	}
-    return errors.New(fmt.Sprintf("operation error: %s%s", message, Suffix))
+	return errors.New(fmt.Sprintf("operation error: %s%s", message, Suffix))
 }
 
 // MakePromptFunc sets the StackOperator.prompt value that will execute any
@@ -179,7 +177,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 	}
 	promptSplit := strings.SplitAfter(string(promptFmt), "%s")
 	if len(promptSplit) != len(promptFuncs)+1 {
-        return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifyers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
+		return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifyers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
 	}
 
 	so.Prompt = func() string {
@@ -190,7 +188,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 		sb.WriteString(promptSplit[len(promptSplit)-1])
 		return sb.String()
 	}
-    return nil
+	return nil
 }
 
 func (so *StackOperator) promptCap() string {
@@ -216,10 +214,15 @@ func (so *StackOperator) promptStash() string {
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
 func NewStackOperator(actions orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool) *StackOperator {
+	var displayFmt string
+	if interactive {
+		displayFmt = "[ %s ]" + Suffix
+	} else {
+		displayFmt = "%s" + Suffix
+	}
 	stkOp := StackOperator{
-		Actions:     actions,
-		Stack:       newStack(make([]float64, 0, maxStack)),
-		Interactive: interactive,
+		Actions: actions,
+		Stack:   newStack(make([]float64, 0, maxStack), displayFmt),
 		Words: map[string]string{
 			"sqrt":  "0.5 ^",
 			"pi":    "3.141592653589793",

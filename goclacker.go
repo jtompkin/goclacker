@@ -40,7 +40,6 @@ const fmtChar byte = '&'
 const defStackLimit int = 8
 const defPrompt string = " &c > "
 
-
 func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
 	actionMap := *orderedmap.New[string, *stack.Action]()
 	actionMap.Set("+", stack.Add())
@@ -60,7 +59,7 @@ func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
 	actionMap.Set("floor", stack.Floor())
 	actionMap.Set("ceil", stack.Ceiling())
 	actionMap.Set("round", stack.Round())
-    actionMap.Set("rand", stack.Random())
+	actionMap.Set("rand", stack.Random())
 	actionMap.Set(".", stack.Display())
 	actionMap.Set(",", stack.Pop())
 	actionMap.Set("stash", stack.Stash())
@@ -83,9 +82,9 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 
 func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
-    if err := so.MakePromptFunc(promptFormat, fmtChar); err != nil {
-        log.Fatal(err)
-    }
+	if err := so.MakePromptFunc(promptFormat, fmtChar); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Print(so.Prompt())
 	for scanner.Scan() {
 		if s, err := so.ParseInput(scanner.Text()); err != nil {
@@ -145,7 +144,7 @@ func main() {
 	flag.Parse()
 
 	if stackLimit < 0 {
-        fmt.Print("argument error: -s, --stack-limit must be non-negative\n\n")
+		fmt.Print("argument error: -s, --stack-limit must be non-negative\n\n")
 		fmt.Print(usage)
 		os.Exit(1)
 	}

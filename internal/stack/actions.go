@@ -298,13 +298,13 @@ func Round() *Action {
 // Random returns a pointer to an Action that pushes a random number between 0
 // and 1
 func Random() *Action {
-    return newAction(
-        func(so *StackOperator) (string, error) {
-            so.Stack.Push(rand.Float64())
-            return so.Stack.Display(so.Interactive), nil
-        }, 0, 1,
-        "push a random number between 0 and 1",
-        )
+	return newAction(
+		func(so *StackOperator) (string, error) {
+			so.Stack.Push(rand.Float64())
+			return so.Stack.Display(so.Interactive), nil
+		}, 0, 1,
+		"push a random number between 0 and 1",
+	)
 }
 
 // Stash returns a pointer to an Action that pops 'a'; stashes 'a'.
