@@ -94,22 +94,24 @@ func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
 func nonInteractive(so *stack.StackOperator, programs []string) {
 	for _, s := range programs {
 		if s, err := so.ParseInput(s); err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
+			fmt.Fprint(os.Stderr, err)
 		} else {
-			fmt.Printf("%s", s)
+			fmt.Print(s)
 		}
 	}
 }
 
 func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
-	so.MakePromptFunc(promptFormat, fmtChar)
+    if err := so.MakePromptFunc(promptFormat, fmtChar); err != nil {
+        log.Fatal(err)
+    }
 	fmt.Print(so.Prompt())
 	for scanner.Scan() {
 		if s, err := so.ParseInput(scanner.Text()); err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
+			fmt.Fprint(os.Stderr, err)
 		} else {
-			fmt.Printf("%s", s)
+			fmt.Print(s)
 		}
 		fmt.Print(so.Prompt())
 	}
@@ -137,7 +139,7 @@ func ParseWordsFile(so *stack.StackOperator, path string) {
 	}
 
 	if failed {
-		fmt.Fprintln(os.Stderr, "enter 'help' to see list of operators that cannot be used as words")
+		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words\n")
 	}
 
 	if err := scanner.Err(); err != nil {

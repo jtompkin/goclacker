@@ -345,8 +345,7 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *stack.StackOperator) (string, error) {
-			helps := make([]string, 1, so.Actions.Len()+1)
-			helps[0] = "operator\tdescription"
+			helps := make([]string, 0, so.Actions.Len())
 			for pair := so.Actions.Oldest(); pair != nil; pair = pair.Next() {
 				helps = append(helps, fmt.Sprintf(`%s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
 				//helps = append(helps, fmt.Sprintf(`operator: %s%c"%s"`, pair.Key, '\t', pair.Value.Help()))

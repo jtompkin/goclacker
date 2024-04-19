@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"testing"
+
+	"github.com/jtompkin/goclacker/internal/stack"
 )
 
 func prompt(t *testing.T, format string, expected string) {
@@ -64,17 +66,18 @@ func TestPrograms(t *testing.T) {
 		"":             newProgParams("", false, false),
 		"      ":       newProgParams("", false, false),
 		"test":         newProgParams("", false, false),
-		"1 2 3 4 5 6":  newProgParams("1 2 3 4 5 6\n", false, false),
-		"2 2 +":        newProgParams("4\n", false, false),
-		"4 sqrt":       newProgParams("2\n", false, false),
-		"= pi":         newProgParams("deleted word: pi\n", false, false),
-		"= test 2 2 +": newProgParams(fmt.Sprintf(`defined word: "test" with value: "2 2 +"%c`, '\n'), false, false),
+		"1 2 3 4 5 6":  newProgParams(fmt.Sprintf("1 2 3 4 5 6%s", stack.Suffix), false, false),
+		"2 2 +":        newProgParams(fmt.Sprintf("4%s", stack.Suffix), false, false),
+		"4 sqrt":       newProgParams(fmt.Sprintf("2%s", stack.Suffix), false, false),
+		"= pi":         newProgParams(fmt.Sprintf("deleted word: pi%s", stack.Suffix), false, false),
+		"= test 2 2 +": newProgParams(fmt.Sprintf(`defined word: "test" with value: "2 2 +"%s`, stack.Suffix), false, false),
+		"pi sqrt":      newProgParams(fmt.Sprintf("1.7724538509055159%s", stack.Suffix), false, false),
+        "+":            newProgParams(fmt.Sprintf("operation error: '+' needs 2 values in stack%s", stack.Suffix), false, false),
 		"=":            newProgParams("", true, false),
-		"+":            newProgParams("", true, false),
 		"1 0 /":        newProgParams("", true, false),
 		"help":         newProgParams("", false, true),
 		"words":        newProgParams("", false, true),
-		"  3 4 * 4455 -    23         + 4 4332     ": newProgParams("-4420 4 4332\n", false, false),
+		"  3 4 * 4455 -    23         + 4 4332     ": newProgParams(fmt.Sprintf("-4420 4 4332%s", stack.Suffix), false, false),
 	}
 	for program, expected := range programs {
 		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)

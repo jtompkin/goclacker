@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/wk8/go-ordered-map/v2"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -96,7 +95,7 @@ func (so *StackOperator) parseToken(token string) (string, error) {
 		return so.ExecuteToken(token)
 	}
 	if err := so.Stack.Push(f); err != nil {
-		return "", errors.New(fmt.Sprintf("operation error: %s\n", err))
+		return "", errors.New(fmt.Sprintf("push error: %s\n", err))
 	}
 	return so.Stack.Display(so.Interactive), nil
 }
@@ -133,31 +132,28 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 // ExecuteToken determines if `token` is an Action token or defined word and
 // executes it accordingly. Returns an error if the Action cannot be completed.
 func (so *StackOperator) ExecuteToken(token string) (string, error) {
-	action, _ := so.Actions.Get(token)
-	if action == nil {
+	prefix := "operation error: "
+	action, present := so.Actions.Get(token)
+	if !present {
 		def := so.Words[token]
-		if def == "" { // input is neither a defined word nor an Action token
+		if def == "" {
 			return "", nil
 		}
 		return so.ParseInput(def)
 	}
 	stkLen := len(so.Stack.Values)
 	pops := action.Pops()
-	var c rune
+	var c byte
 	if pops != 1 {
 		c = 's'
 	}
 	if stkLen < pops {
-		return "", errors.New(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
+		return "", errors.New(fmt.Sprintf("%s'%s' needs %d value%c in stack%s", prefix, token, pops, c, Suffix))
 	}
 	if stkLen-pops+action.Pushes() > cap(so.Stack.Values) {
-		return "", errors.New("operation would overflow stack")
+		return "", errors.New(fmt.Sprintf("%s'%s' would overflow stack%s", prefix, token, Suffix))
 	}
-	s, err := action.Call(so)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("%s", err))
-	}
-	return s, nil
+	return action.Call(so)
 }
 
 // Fail pushes all `values` to the stack and returns an error containing `message`
@@ -168,13 +164,13 @@ func (so *StackOperator) Fail(message string, values ...float64) error {
 	if so.Interactive {
 		fmt.Printf("%s", so.Stack.Display(true))
 	}
-	return errors.New(message)
+    return errors.New(fmt.Sprintf("operation error: %s%s", message, Suffix))
 }
 
 // MakePromptFunc sets the StackOperator.prompt value that will execute any
 // functions needed to build the prompt and will return a new string every time
 // it is called
-func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) {
+func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 	promptFuncs := make([]func(*StackOperator) string, 0, strings.Count(format, string(fmtChar)))
 	promptFmt := []byte(format)
 	for i := 0; i < len(format)-1; i++ {
@@ -190,7 +186,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) {
 	}
 	promptSplit := strings.SplitAfter(string(promptFmt), "%s")
 	if len(promptSplit) != len(promptFuncs)+1 {
-		log.Fatal("Something done gone wrong with the prompt")
+        return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifyers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
 	}
 
 	so.Prompt = func() string {
@@ -201,6 +197,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) {
 		sb.WriteString(promptSplit[len(promptSplit)-1])
 		return sb.String()
 	}
+    return nil
 }
 
 func (so *StackOperator) promptCap() string {
