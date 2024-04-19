@@ -59,6 +59,7 @@ type StackOperator struct {
 	formatters  map[byte]func(*StackOperator) string
 	Prompt      func() string
 	Interactive bool
+	notFound    func(string) error
 }
 
 // ParseInput splits `input` into tokens (words) and either starts defining a
@@ -78,17 +79,6 @@ func (so *StackOperator) ParseInput(input string) (string, error) {
 		}
 	}
 	return rs, nil
-}
-
-func (so *StackOperator) parseToken(token string) (string, error) {
-	f, err := strconv.ParseFloat(token, 64)
-	if err != nil {
-		return so.ExecuteToken(token)
-	}
-	if err := so.Stack.Push(f); err != nil {
-		return "", errors.New(fmt.Sprintf("push error: %s\n", err))
-	}
-	return so.Stack.Display(), nil
 }
 
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
@@ -120,6 +110,17 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 	return fmt.Sprintf(`defined word: "%s" with value: "%s"%s`, word, s, Suffix), nil
 }
 
+func (so *StackOperator) parseToken(token string) (string, error) {
+	f, err := strconv.ParseFloat(token, 64)
+	if err != nil {
+		return so.ExecuteToken(token)
+	}
+	if err := so.Stack.Push(f); err != nil {
+		return "", errors.New(fmt.Sprintf("push error: %s\n", err))
+	}
+	return so.Stack.Display(), nil
+}
+
 // ExecuteToken determines if `token` is an Action token or defined word and
 // executes it accordingly. Returns an error if the Action cannot be completed.
 func (so *StackOperator) ExecuteToken(token string) (string, error) {
@@ -128,7 +129,7 @@ func (so *StackOperator) ExecuteToken(token string) (string, error) {
 	if !present {
 		def := so.Words[token]
 		if def == "" {
-			return "", nil
+			return "", so.notFound(token)
 		}
 		return so.ParseInput(def)
 	}
@@ -213,21 +214,29 @@ func (so *StackOperator) promptStash() string {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
-func NewStackOperator(actions *orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool) *StackOperator {
+func NewStackOperator(actions *orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool, strict bool) *StackOperator {
 	var displayFmt string
 	if interactive {
 		displayFmt = "[ %s ]" + Suffix
 	} else {
 		displayFmt = "%s" + Suffix
 	}
-	stkOp := StackOperator{
-		Actions: actions,
-		Stack:   newStack(make([]float64, 0, maxStack), displayFmt),
+	var notFound func(string) error
+	if strict {
+		notFound = func(s string) error { return errors.New(fmt.Sprintf("command not found: %q\n", s)) }
+	} else {
+		notFound = func(s string) error { return nil }
+	}
+	return &StackOperator{
+		Stack:       newStack(make([]float64, 0, maxStack), displayFmt),
+		Actions:     actions,
+		notFound:    notFound,
+		Interactive: interactive,
 		Words: map[string]string{
 			"sqrt":  "0.5 ^",
 			"pi":    "3.141592653589793",
 			"logb":  "log stash log pull /",
-			"randn": "stash rand pull * ceil 1 -",
+			"randn": "rand * ceil 1 -",
 		},
 		formatters: map[byte]func(*StackOperator) string{
 			'l': (*StackOperator).promptCap,
@@ -235,7 +244,5 @@ func NewStackOperator(actions *orderedmap.OrderedMap[string, *Action], maxStack 
 			'c': (*StackOperator).promptLen,
 			's': (*StackOperator).promptStash,
 		},
-        Interactive: interactive,
 	}
-	return &stkOp
 }

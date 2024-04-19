@@ -8,7 +8,7 @@ import (
 )
 
 func prompt(t *testing.T, format string, expected string) {
-	so := MakeStackOperator(8, false)
+	so := MakeStackOperator(8, false, false)
 	so.Stack.Stash = 12
 	so.MakePromptFunc(format, '&')
 	if s := so.Prompt(); s != expected {
@@ -35,7 +35,7 @@ func TestPrompts(t *testing.T) {
 }
 
 func prog(t *testing.T, program string, expected string, wantError bool, acceptAny bool) {
-	so := MakeStackOperator(8, false)
+	so := MakeStackOperator(8, false, false)
 	s, err := so.ParseInput(program)
 	if err != nil {
 		if wantError {
@@ -72,7 +72,7 @@ func TestPrograms(t *testing.T) {
 		"= pi":         newProgParams(fmt.Sprintf("deleted word: pi%s", stack.Suffix), false, false),
 		"= test 2 2 +": newProgParams(fmt.Sprintf(`defined word: "test" with value: "2 2 +"%s`, stack.Suffix), false, false),
 		"pi sqrt":      newProgParams(fmt.Sprintf("1.7724538509055159%s", stack.Suffix), false, false),
-        "+":            newProgParams(fmt.Sprintf("operation error: '+' needs 2 values in stack%s", stack.Suffix), false, false),
+		"+":            newProgParams(fmt.Sprintf("operation error: '+' needs 2 values in stack%s", stack.Suffix), false, false),
 		"=":            newProgParams("", true, false),
 		"1 0 /":        newProgParams("", true, false),
 		"help":         newProgParams("", false, true),
