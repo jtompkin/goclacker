@@ -51,7 +51,7 @@ func Add() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(so.Stack.Pop() + so.Stack.Pop())
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of 'a' + 'b'",
 	)
@@ -65,7 +65,7 @@ func Subtract() *Action {
 			x := so.Stack.Pop()
 			y := so.Stack.Pop()
 			so.Stack.Push(y - x)
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of 'b' - 'a'",
 	)
@@ -77,7 +77,7 @@ func Multiply() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(so.Stack.Pop() * so.Stack.Pop())
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of 'a' * 'b'",
 	)
@@ -93,7 +93,7 @@ func Divide() *Action {
 				return "", so.Fail("cannot divide by 0", divisor)
 			}
 			so.Stack.Push(so.Stack.Pop() / divisor)
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of 'b' / 'a'",
 	)
@@ -109,7 +109,7 @@ func Modulo() *Action {
 				return "", so.Fail("cannot divide by 0", divisor)
 			}
 			so.Stack.Push(math.Mod(so.Stack.Pop(), divisor))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the remainder of 'b' / 'a'",
 	)
@@ -136,7 +136,7 @@ func Factorial() *Action {
 				return "", so.Fail("cannot take factorial of negative number", x)
 			}
 			so.Stack.Push(float64(fact(int(x))))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the factorial of 'a'",
 	)
@@ -156,7 +156,7 @@ func Power() *Action {
 				return "", so.Fail("cannot raise negative number to non-integer power", base, exponent)
 			}
 			so.Stack.Push(math.Pow(base, exponent))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of 'b' ^ 'a'",
 	)
@@ -172,7 +172,7 @@ func Log() *Action {
 				return "", so.Fail("cannot take logarithm of non-positive number", x)
 			}
 			so.Stack.Push(math.Log10(x))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the logarithm base 10 of 'a'",
 	)
@@ -188,7 +188,7 @@ func Ln() *Action {
 				return "", so.Fail("cannot take logarithm of non-positive number", x)
 			}
 			so.Stack.Push(math.Log(x))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the natural logarithm of 'a'",
 	)
@@ -200,7 +200,7 @@ func Degrees() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(so.Stack.Pop() * 180 / math.Pi)
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the result of converting 'a' from radians to degrees",
 	)
@@ -212,7 +212,7 @@ func Radians() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(so.Stack.Pop() * math.Pi / 180)
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the result of converting 'a' from degrees to radians",
 	)
@@ -224,7 +224,7 @@ func Sine() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(math.Sin(so.Stack.Pop()))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the sine of 'a' in radians",
 	)
@@ -236,7 +236,7 @@ func Cosine() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(math.Cos(so.Stack.Pop()))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the cosine of 'a' in radians",
 	)
@@ -248,7 +248,7 @@ func Tangent() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(math.Tan(so.Stack.Pop()))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the tangent of 'a' in radians",
 	)
@@ -260,7 +260,7 @@ func Floor() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(math.Floor(so.Stack.Pop()))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the greatest integer value less than or equal to 'a'",
 	)
@@ -272,7 +272,7 @@ func Ceiling() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(math.Ceil(so.Stack.Pop()))
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 1,
 		"pop 'a'; push the least integer value greater than or equal to 'a'",
 	)
@@ -289,7 +289,7 @@ func Round() *Action {
 			}
 			ratio := math.Pow(10, precision)
 			so.Stack.Push(math.Round(so.Stack.Pop()*ratio) / ratio)
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 2, 1,
 		"pop 'a', 'b'; push the result of rounding 'b' to 'a' decimal places",
 	)
@@ -301,7 +301,7 @@ func Random() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(rand.Float64())
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 0, 1,
 		"push a random number between 0 and 1",
 	)
@@ -312,7 +312,7 @@ func Stash() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Stash = so.Stack.Pop()
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 0,
 		"pop 'a'; stash 'a'",
 	)
@@ -323,7 +323,7 @@ func Pull() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Push(so.Stack.Stash)
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 0, 1,
 		"push the value in the stash",
 	)
@@ -333,7 +333,7 @@ func Pull() *Action {
 func Display() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 0, 0,
 		"display all values in the stack",
 	)
@@ -378,7 +378,7 @@ func Pop() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
 			so.Stack.Pop()
-			return so.Stack.Display(so.Interactive), nil
+			return so.Stack.Display(), nil
 		}, 1, 0,
 		"pop 'a'",
 	)

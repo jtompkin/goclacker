@@ -35,8 +35,9 @@ func (stk *Stack) Push(f float64) error {
 	return nil
 }
 
-// Display prints all the values in the stack
-func (stk *Stack) Display(fancy bool) string {
+// Display returns a string of all values in the stack according to
+// Stack.displayFmt
+func (stk *Stack) Display() string {
 	ss := make([]string, len(stk.Values))
 	for i, f := range stk.Values {
 		ss[i] = fmt.Sprint(f)
@@ -61,8 +62,8 @@ type StackOperator struct {
 	Interactive bool
 }
 
-// ParseInput splits `input` into words and either starts defining a word, pushing a
-// numerical value, or treating the word as a token to execute.
+// ParseInput splits `input` into tokens (words) and either starts defining a
+// word or parsing the token
 func (so *StackOperator) ParseInput(input string) (string, error) {
 	var rs string
 	var err error
@@ -88,12 +89,12 @@ func (so *StackOperator) parseToken(token string) (string, error) {
 	if err := so.Stack.Push(f); err != nil {
 		return "", errors.New(fmt.Sprintf("push error: %s\n", err))
 	}
-	return so.Stack.Display(so.Interactive), nil
+	return so.Stack.Display(), nil
 }
 
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
-// further values being the value. Or deletes def[0] from StackOperator.Words if
-// len(def) == 1.
+// value being the rest of the slice. It deletes def[0] from StackOperator.Words
+// if len(def) == 1.
 func (so *StackOperator) DefWord(def []string) (string, error) {
 	if len(def) == 0 {
 		return "", errors.New(fmt.Sprintf("define word: '= example 2 2 +'; remove word: '= example'%s", Suffix))
@@ -153,7 +154,7 @@ func (so *StackOperator) Fail(message string, values ...float64) error {
 		so.Stack.Push(f)
 	}
 	if so.Interactive {
-		fmt.Printf("%s", so.Stack.Display(true))
+		fmt.Print(so.Stack.Display())
 	}
 	return errors.New(fmt.Sprintf("operation error: %s%s", message, Suffix))
 }
@@ -235,6 +236,7 @@ func NewStackOperator(actions orderedmap.OrderedMap[string, *Action], maxStack i
 			'c': (*StackOperator).promptLen,
 			's': (*StackOperator).promptStash,
 		},
+        Interactive: interactive,
 	}
 	return &stkOp
 }
