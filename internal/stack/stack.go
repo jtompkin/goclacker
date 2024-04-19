@@ -95,15 +95,18 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 		}
 	}
 	word := noEmpty[0]
-	if len(noEmpty) == 1 {
-		delete(so.Words, word)
-		return fmt.Sprintf("deleted word: %s%s", word, Suffix), nil
-	}
 	if strings.Contains("0123456789=.", string(word[0])) {
 		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'%s", word, Suffix))
 	}
 	if _, present := so.Actions.Get(word); present {
 		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot redifine operator%s", word, Suffix))
+	}
+	if len(noEmpty) == 1 {
+		if _, present := so.Words[word]; !present {
+			return "", errors.New(fmt.Sprintf("%q not defined%s", word, Suffix))
+		}
+		delete(so.Words, word)
+		return fmt.Sprintf("deleted word: %s%s", word, Suffix), nil
 	}
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s
