@@ -3,6 +3,7 @@ package stack
 import (
 	"errors"
 	"fmt"
+	"github.com/wk8/go-ordered-map/v2"
 	"log"
 	"strconv"
 	"strings"
@@ -43,18 +44,15 @@ func (stk *Stack) Push(f float64) error {
 
 // Display prints all the values in the stack
 func (stk *Stack) Display(fancy bool) string {
-	var s string
+	ss := make([]string, len(stk.Values))
+	for i, f := range stk.Values {
+		ss[i] = fmt.Sprint(f)
+	}
+	s := strings.Join(ss, " ")
 	if fancy {
-		s = "[ "
-		for _, f := range stk.Values {
-			s += fmt.Sprint(f, " ")
-		}
-		return s + "]" + Suffix
+		return fmt.Sprintf("[ %s ]\n", s)
 	}
-	for _, f := range stk.Values {
-		s += fmt.Sprint(f, " ")
-	}
-	return s + Suffix
+	return fmt.Sprintf("%s\n", s)
 }
 
 func newStack(values []float64) Stack {
@@ -62,21 +60,10 @@ func newStack(values []float64) Stack {
 	return stk
 }
 
-func rStrip(s string, chars string) string {
-	if len(s) == 0 {
-		return s
-	}
-	for i := len(s) - 1; strings.ContainsAny(string(s[i]), chars) && i > 0; i-- {
-		s = s[:i]
-	}
-	return s
-}
-
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	Actions     map[string]Action
-	Tokens      []string
+	Actions     orderedmap.OrderedMap[string, Action]
 	Words       map[string]string
 	Stack       Stack
 	formatters  map[byte]func(*StackOperator) string
@@ -88,31 +75,30 @@ type StackOperator struct {
 // numerical value, or treating the word as a token to execute.
 func (so *StackOperator) ParseInput(input string) (string, error) {
 	var rs string
-	input = rStrip(input, " \t")
+	var err error
+	input = strings.TrimSpace(input)
 	split := strings.Split(input, " ")
 	for i, s := range split {
 		if s == "=" {
-			if s, err := so.DefWord(split[i+1:]); err != nil {
-				return "", errors.New(fmt.Sprintf("definition error: %s\n", err))
-			} else {
-				return s + Suffix, nil
-			}
+			return so.DefWord(split[i+1:])
 		}
-		var pErr error
-		f, err := strconv.ParseFloat(s, 64)
+		rs, err = so.parseToken(s)
 		if err != nil {
-			rs, pErr = so.ParseToken(s)
-		} else {
-			pErr = so.Stack.Push(f)
-			if i == len(split)-1 {
-				return so.Stack.Display(so.Interactive), nil
-			}
-		}
-		if pErr != nil {
-			return "", errors.New(fmt.Sprintf("operation error: %s\n", pErr))
+			return "", err
 		}
 	}
 	return rs, nil
+}
+
+func (so *StackOperator) parseToken(token string) (string, error) {
+	f, err := strconv.ParseFloat(token, 64)
+	if err != nil {
+		return so.ExecuteToken(token)
+	}
+	if err := so.Stack.Push(f); err != nil {
+		return "", errors.New(fmt.Sprintf("operation error: %s\n", err))
+	}
+	return so.Stack.Display(so.Interactive), nil
 }
 
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
@@ -120,7 +106,7 @@ func (so *StackOperator) ParseInput(input string) (string, error) {
 // len(def) == 1.
 func (so *StackOperator) DefWord(def []string) (string, error) {
 	if len(def) == 0 {
-		return "", errors.New("define word: '= example 2 2 +'; remove word: '= example'")
+		return "", errors.New(fmt.Sprintf("define word: '= example 2 2 +'; remove word: '= example'%s", Suffix))
 	}
 	noEmpty := make([]string, 0, len(def))
 	for _, s := range def {
@@ -131,23 +117,23 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 	word := noEmpty[0]
 	if len(noEmpty) == 1 {
 		delete(so.Words, word)
-		return fmt.Sprintf("deleted word: %s", word), nil
+		return fmt.Sprintf("deleted word: %s%s", word, Suffix), nil
 	}
 	if strings.Contains("0123456789=.", string(word[0])) {
-		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'", word))
+		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'%s", word, Suffix))
 	}
-	if _, pres := so.Actions[word]; pres {
-		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot redifine operator", word))
+	if _, present := so.Actions.Get(word); present {
+		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot redifine operator%s", word, Suffix))
 	}
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s
-	return fmt.Sprintf(`defined word: "%s" with value: "%s"`, word, s), nil
+	return fmt.Sprintf(`defined word: "%s" with value: "%s"%s`, word, s, Suffix), nil
 }
 
-// ParseToken determines if `token` is an Action token or defined word and
+// ExecuteToken determines if `token` is an Action token or defined word and
 // executes it accordingly. Returns an error if the Action cannot be completed.
-func (so *StackOperator) ParseToken(token string) (string, error) {
-	action := so.Actions[token]
+func (so *StackOperator) ExecuteToken(token string) (string, error) {
+	action, _ := so.Actions.Get(token)
 	if action == nil {
 		def := so.Words[token]
 		if def == "" { // input is neither a defined word nor an Action token
@@ -155,16 +141,16 @@ func (so *StackOperator) ParseToken(token string) (string, error) {
 		}
 		return so.ParseInput(def)
 	}
-	sLen := len(so.Stack.Values)
+	stkLen := len(so.Stack.Values)
 	pops := action.Pops()
 	var c rune
 	if pops != 1 {
 		c = 's'
 	}
-	if sLen < pops {
+	if stkLen < pops {
 		return "", errors.New(fmt.Sprintf("'%s' needs %d value%c in stack", token, pops, c))
 	}
-	if sLen-pops+action.Pushes() > cap(so.Stack.Values) {
+	if stkLen-pops+action.Pushes() > cap(so.Stack.Values) {
 		return "", errors.New("operation would overflow stack")
 	}
 	s, err := action.Call(so)
@@ -239,16 +225,16 @@ func (so *StackOperator) promptStash() string {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
-func NewStackOperator(actions map[string]Action, orderedTokens []string, maxStack int, interactive bool) *StackOperator {
+func NewStackOperator(actions orderedmap.OrderedMap[string, Action], maxStack int, interactive bool) *StackOperator {
 	stkOp := StackOperator{
 		Actions:     actions,
-		Tokens:      orderedTokens,
 		Stack:       newStack(make([]float64, 0, maxStack)),
 		Interactive: interactive,
 		Words: map[string]string{
-			"sqrt": "0.5 ^",
-			"pi":   "3.141592653589793",
-			"logb": "log stash log pull /",
+			"sqrt":  "0.5 ^",
+			"pi":    "3.141592653589793",
+			"logb":  "log stash log pull /",
+			"randn": "stash rand pull * ceil 1 -",
 		},
 		formatters: map[byte]func(*StackOperator) string{
 			'l': (*StackOperator).promptCap,
