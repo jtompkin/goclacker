@@ -3,9 +3,10 @@ package stack
 import (
 	"errors"
 	"fmt"
-	"github.com/wk8/go-ordered-map/v2"
 	"strconv"
 	"strings"
+
+	"github.com/wk8/go-ordered-map/v2"
 )
 
 const Suffix string = "\n"
@@ -56,9 +57,9 @@ type StackOperator struct {
 	Actions     *orderedmap.OrderedMap[string, *Action]
 	Words       map[string]string
 	Stack       *Stack
+	Interactive bool
 	formatters  map[byte]func(*StackOperator) string
 	Prompt      func() string
-	Interactive bool
 	notFound    func(string) error
 }
 
@@ -81,7 +82,7 @@ func (so *StackOperator) ParseInput(input string) (string, error) {
 	return rs, nil
 }
 
-// DefWord adds a word to StackOperator.Words with the key being def[0] and the
+// DefWord adds a word to StackOperator. Words with the key being def[0] and the
 // value being the rest of the slice. It deletes def[0] from StackOperator.Words
 // if len(def) == 1.
 func (so *StackOperator) DefWord(def []string) (string, error) {
