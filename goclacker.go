@@ -37,7 +37,7 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
         calculator. Interactive mode will not be entered if any positional
         arguments are supplied.
 `
-const version string = "v0.2.0"
+const version string = "v1.0.0"
 const fmtChar byte = '&'
 
 const defStackLimit int = 8
