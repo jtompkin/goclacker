@@ -35,7 +35,7 @@ If any positional arguments (`program...`) are supplied, they will be interprete
 
 ## Interactive mode
 
-Type a number and press enter to push it to the stack. Type an operator and press enter to execute that operator on the stack. Enter `help` to see available operators. Enter mutliple commands separated by a space and press enter to execute them in order. 
+Type a number and press enter to push it to the stack. Type an operator and press enter to execute that operator on the stack. Enter `help` to see available operators. Enter mutliple commands separated by a space and press enter to execute them in order.
 
 ## Words
 
@@ -67,11 +67,11 @@ If you're into accessorizing your command line RPN calculators (I know you are),
 
 `goclacker -p '-&t-&l- <3 '` would make a prompt that prints the top value in the stack and the stack size limit surrounded by `-` characters and a heart. For when you're in the *mood* for that reverse Polish goodness.
 
-| Specifyer |        Value        |
+| Specifyer | Value               |
 |----------:|---------------------|
-|          l| stack size limit    |
-|          c| current stack size  |
-|          t| top stack value     |
-|          s| current stash value |
+|         l | stack size limit    |
+|         c | current stack size  |
+|         t | top stack value     |
+|         s | current stash value |
 
 You can probably break this if you try hard enough, so please do.
