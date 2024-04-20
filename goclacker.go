@@ -2,25 +2,26 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"slices"
 	"strings"
 
-	"github.com/jtompkin/goclacker/internal/actions"
 	"github.com/jtompkin/goclacker/internal/stack"
 	"github.com/wk8/go-ordered-map/v2"
 )
 
 const usage string = `Usage of goclacker:
+goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -V, --version
-        print version information
+        Print version information and exit.
     -h, --help
-        print usage information
-    -s, --stack-limit int
+        Print usage information and exit.
+    -s, --strict
+        Run in strict mode: entering something that is not a number, operator,
+        or defined word will return an error instead of doing nothing.
+    -l, --stack-limit int
         stack size limit (default 8); must be non-negative
     -w, --words-file string
         path to file containing word definitions
@@ -31,6 +32,10 @@ const usage string = `Usage of goclacker:
             &c : current stack size
             &t : top stack value
             &s : current stash value
+    [program...]
+        Any positional arguments will be interpreted and executed by the
+        calculator. Interactive mode will not be entered if any positional
+        arguments are supplied.
 `
 const version string = "v0.2.0"
 const fmtChar byte = '&'
@@ -38,78 +43,57 @@ const fmtChar byte = '&'
 const defStackLimit int = 8
 const defPrompt string = " &c > "
 
-func checkTokens(tokens []string, actions map[string]stack.Action) error {
-	notFoundOrdered := make([]string, 0, len(actions))
-	for k := range actions {
-		if slices.Index(tokens, k) == -1 {
-			notFoundOrdered = append(notFoundOrdered, k)
-		}
-	}
-	notFoundAction := make([]string, 0, len(tokens))
-	for _, s := range tokens {
-		if actions[s] == nil {
-			notFoundAction = append(notFoundAction, s)
-		}
-	}
-	var err error
-	if len(notFoundOrdered) > 0 {
-		err = errors.Join(err, errors.New(fmt.Sprintf("%s not found in orderedTokens", notFoundOrdered)))
-	}
-	if len(notFoundAction) > 0 {
-		err = errors.Join(err, errors.New(fmt.Sprintf("%s not found in actionMap", notFoundAction)))
-	}
-	return err
-}
-
-func MakeStackOperator(stackLimit int, interactive bool) *stack.StackOperator {
-	actionMap := *orderedmap.New[string, stack.Action]()
-	actionMap.Set("+", actions.Add())
-	actionMap.Set("-", actions.Subtract())
-	actionMap.Set("*", actions.Multiply())
-	actionMap.Set("/", actions.Divide())
-	actionMap.Set("%", actions.Modulo())
-	actionMap.Set("^", actions.Power())
-	actionMap.Set("!", actions.Factorial())
-	actionMap.Set("log", actions.Log())
-	actionMap.Set("ln", actions.Ln())
-	actionMap.Set("rad", actions.Radians())
-	actionMap.Set("deg", actions.Degrees())
-	actionMap.Set("sin", actions.Sine())
-	actionMap.Set("cos", actions.Cosine())
-	actionMap.Set("tan", actions.Tangent())
-	actionMap.Set("floor", actions.Floor())
-	actionMap.Set("ceil", actions.Ceiling())
-	actionMap.Set("round", actions.Round())
-    actionMap.Set("rand", actions.Random())
-	actionMap.Set(".", actions.Display())
-	actionMap.Set(",", actions.Pop())
-	actionMap.Set("stash", actions.Stash())
-	actionMap.Set("pull", actions.Pull())
-	actionMap.Set("clear", actions.Clear())
-	actionMap.Set("words", actions.Words())
-	actionMap.Set("help", actions.Help())
-	return stack.NewStackOperator(actionMap, stackLimit, interactive)
+func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
+	actionMap := orderedmap.New[string, *stack.Action]()
+	actionMap.Set("+", stack.Add())
+	actionMap.Set("-", stack.Subtract())
+	actionMap.Set("*", stack.Multiply())
+	actionMap.Set("/", stack.Divide())
+	actionMap.Set("%", stack.Modulo())
+	actionMap.Set("^", stack.Power())
+	actionMap.Set("!", stack.Factorial())
+	actionMap.Set("log", stack.Log())
+	actionMap.Set("ln", stack.Ln())
+	actionMap.Set("rad", stack.Radians())
+	actionMap.Set("deg", stack.Degrees())
+	actionMap.Set("sin", stack.Sine())
+	actionMap.Set("cos", stack.Cosine())
+	actionMap.Set("tan", stack.Tangent())
+	actionMap.Set("floor", stack.Floor())
+	actionMap.Set("ceil", stack.Ceiling())
+	actionMap.Set("round", stack.Round())
+	actionMap.Set("rand", stack.Random())
+	actionMap.Set(".", stack.Display())
+	actionMap.Set(",", stack.Pop())
+	actionMap.Set("stash", stack.Stash())
+	actionMap.Set("pull", stack.Pull())
+	actionMap.Set("clear", stack.Clear())
+	actionMap.Set("words", stack.Words())
+	actionMap.Set("help", stack.Help())
+	return stack.NewStackOperator(actionMap, stackLimit, interactive, strict)
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
 	for _, s := range programs {
 		if s, err := so.ParseInput(s); err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
+			fmt.Fprint(os.Stderr, err)
 		} else {
-			fmt.Printf("%s", s)
+			fmt.Print(s)
 		}
 	}
 }
 
 func interactive(so *stack.StackOperator, promptFormat string) {
 	scanner := bufio.NewScanner(os.Stdin)
-	so.MakePromptFunc(promptFormat, fmtChar)
+	if err := so.MakePromptFunc(promptFormat, fmtChar); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Print(so.Prompt())
 	for scanner.Scan() {
 		if s, err := so.ParseInput(scanner.Text()); err != nil {
-			fmt.Fprintf(os.Stderr, "%s", err)
+			fmt.Fprint(os.Stderr, err)
 		} else {
-			fmt.Printf("%s", s)
+			fmt.Print(s)
 		}
 		fmt.Print(so.Prompt())
 	}
@@ -137,7 +121,7 @@ func ParseWordsFile(so *stack.StackOperator, path string) {
 	}
 
 	if failed {
-		fmt.Fprintln(os.Stderr, "enter 'help' to see list of operators that cannot be used as words")
+		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words\n")
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -146,34 +130,36 @@ func ParseWordsFile(so *stack.StackOperator, path string) {
 }
 
 func main() {
-	var wordsPath string
-	flag.StringVar(&wordsPath, "words-file", "", "path to file containing word definitions")
-	flag.StringVar(&wordsPath, "w", "", "path to file containing word definitions")
-	var stackLimit int
-	flag.IntVar(&stackLimit, "s", defStackLimit, "stack size limit")
-	flag.IntVar(&stackLimit, "stack-limit", defStackLimit, "stack size limit")
-	var promptFormat string
-	flag.StringVar(&promptFormat, "p", defPrompt, "format string for the interactive prompt")
-	flag.StringVar(&promptFormat, "prompt", defPrompt, "format string for the interactive prompt")
 	var printVersion bool
-	flag.BoolVar(&printVersion, "V", false, "print version information")
-	flag.BoolVar(&printVersion, "version", false, "print version information")
+	flag.BoolVar(&printVersion, "V", false, "")
+	flag.BoolVar(&printVersion, "version", false, "")
+	var stackLimit int
+	flag.IntVar(&stackLimit, "l", defStackLimit, "")
+	flag.IntVar(&stackLimit, "stack-limit", defStackLimit, "")
+	var strictMode bool
+	flag.BoolVar(&strictMode, "s", false, "")
+	flag.BoolVar(&strictMode, "strict", false, "")
+	var wordsPath string
+	flag.StringVar(&wordsPath, "words-file", "", "")
+	flag.StringVar(&wordsPath, "w", "", "")
+	var promptFormat string
+	flag.StringVar(&promptFormat, "p", defPrompt, "")
+	flag.StringVar(&promptFormat, "prompt", defPrompt, "")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
 	if stackLimit < 0 {
-		fmt.Print("-s, --stack-limit must be non-negative\n\n")
+		fmt.Print("argument error: -s, --stack-limit must be non-negative\n\n")
 		fmt.Print(usage)
 		os.Exit(1)
 	}
-
 	if printVersion {
 		fmt.Printf("goclacker %s\n", version)
 		os.Exit(0)
 	}
 
-	so := MakeStackOperator(stackLimit, !(len(flag.Args()) > 0))
+	so := MakeStackOperator(stackLimit, !(len(flag.Args()) > 0), strictMode)
 	if wordsPath != "" {
 		ParseWordsFile(so, wordsPath)
 	}
