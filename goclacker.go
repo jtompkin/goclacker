@@ -70,6 +70,7 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actionMap.Set("clear", stack.Clear())
 	actionMap.Set("words", stack.Words())
 	actionMap.Set("help", stack.Help())
+    actionMap.Set("cls", stack.Cls())
 	return stack.NewStackOperator(actionMap, stackLimit, interactive, strict)
 }
 

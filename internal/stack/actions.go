@@ -399,3 +399,12 @@ func Clear() *Action {
 		"pop all values in the stack",
 	)
 }
+
+func Cls() *Action {
+	return newAction(
+		func(so *StackOperator) (string, error) {
+			return "\033[2J\033[H", nil
+		}, 0, 0,
+		"clear the terminal screen",
+	)
+}
