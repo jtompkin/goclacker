@@ -1,7 +1,7 @@
 # Changelog
 
 - [1.0.0 - 2024-04-19](#100---2024-04-19)
-- [1.0.1 - TBD](#101---TBD)
+- [1.1.0 - TBD](#110---TBD)
 
 ## TODO
 
@@ -15,10 +15,15 @@ It's Go time (I'm sorry).
 
 - EVERYTHING
 
-## [1.0.1](https://github.com/jtompkin/goclacker/releases/tag/v1.0.1) - TBD
+## [1.1.0](https://github.com/jtompkin/goclacker/releases/tag/v1.1.0) - TBD
 
 Clearing and cleaning
 
 ### Added
 
 - `cls` operator: clear the terminal screen (actual magic don't ask me how)
+(also not at all guaranteed to work in all terminals)
+
+### Changed
+
+- Removed external dependency for ordered map. All vanilla now.

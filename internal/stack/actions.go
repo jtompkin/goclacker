@@ -11,9 +11,9 @@ import (
 // Action implements Action.
 type Action struct {
 	action func(*StackOperator) (string, error)
-	pops   int
-	pushes int
-	help   string
+	Pops   int
+	Pushes int
+	Help   string
 }
 
 // Call calls the function stored in Action.action and returns the error value
@@ -22,17 +22,6 @@ func (a *Action) Call(so *StackOperator) (string, error) {
 	return a.action(so)
 }
 
-func (a *Action) Pops() int {
-	return a.pops
-}
-
-func (a *Action) Pushes() int {
-	return a.pushes
-}
-
-func (a *Action) Help() string {
-	return a.help
-}
 
 // newAction returns a pointer to Action initialized with values given to
 // arguments.
@@ -42,7 +31,7 @@ func newAction(
 	pushes int,
 	help string,
 ) *Action {
-	return &Action{action: action, pops: pops, pushes: pushes, help: help}
+	return &Action{action: action, Pops: pops, Pushes: pushes, Help: help}
 }
 
 // Add pops returns a pointer to an Action that 'a', 'b'; pushes the result of
@@ -343,12 +332,11 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
-			helps := make([]string, 0, so.Actions.Len())
-			for pair := so.Actions.Oldest(); pair != nil; pair = pair.Next() {
-				helps = append(helps, fmt.Sprintf(`%s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
-				//helps = append(helps, fmt.Sprintf(`operator: %s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
-			}
-			return strings.Join(helps, "\n") + Suffix, nil
+            sb := &strings.Builder{}
+            for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
+                sb.Write([]byte(fmt.Sprintf("%s%c%q\n", p.Key, '\t', p.Value.Help)))
+            }
+            return sb.String(), nil
 		}, 0, 0,
 		"display this information screen",
 	)

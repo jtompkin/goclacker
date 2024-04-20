@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/wk8/go-ordered-map/v2"
 )
 
 const Suffix string = "\n"
@@ -54,7 +52,7 @@ func newStack(values []float64, displayFmt string) *Stack {
 // StackOperator contains map for converting string tokens into operations that
 // can be called to operate on the stack.
 type StackOperator struct {
-	Actions     *orderedmap.OrderedMap[string, *Action]
+	Actions     *OrderedMap[string, *Action]
 	Words       map[string]string
 	Stack       *Stack
 	Interactive bool
@@ -129,7 +127,7 @@ func (so *StackOperator) parseToken(token string) (string, error) {
 // executes it accordingly. Returns an error if the Action cannot be completed.
 func (so *StackOperator) ExecuteToken(token string) (string, error) {
 	prefix := "operation error: "
-	action, present := so.Actions.Get(token)
+	p, present := so.Actions.Get(token)
 	if !present {
 		def := so.Words[token]
 		if def == "" {
@@ -137,8 +135,9 @@ func (so *StackOperator) ExecuteToken(token string) (string, error) {
 		}
 		return so.ParseInput(def)
 	}
+    action := p.Value
 	stkLen := len(so.Stack.Values)
-	pops := action.Pops()
+	pops := action.Pops
 	var c byte
 	if pops != 1 {
 		c = 's'
@@ -146,7 +145,7 @@ func (so *StackOperator) ExecuteToken(token string) (string, error) {
 	if stkLen < pops {
 		return "", errors.New(fmt.Sprintf("%s'%s' needs %d value%c in stack%s", prefix, token, pops, c, Suffix))
 	}
-	if stkLen-pops+action.Pushes() > cap(so.Stack.Values) {
+	if stkLen-pops+action.Pushes > cap(so.Stack.Values) {
 		return "", errors.New(fmt.Sprintf("%s'%s' would overflow stack%s", prefix, token, Suffix))
 	}
 	return action.Call(so)
@@ -218,7 +217,7 @@ func (so *StackOperator) promptStash() string {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words.
-func NewStackOperator(actions *orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool, strict bool) *StackOperator {
+func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, strict bool) *StackOperator {
 	var displayFmt string
 	if interactive {
 		displayFmt = "[ %s ]" + Suffix

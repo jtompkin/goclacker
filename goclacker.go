@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/jtompkin/goclacker/internal/stack"
-	"github.com/wk8/go-ordered-map/v2"
 )
 
 const usage string = `Usage of goclacker:
@@ -37,41 +36,43 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
         calculator. Interactive mode will not be entered if any positional
         arguments are supplied.
 `
-const version string = "v1.0.1"
-const fmtChar byte = '&'
 
-const defStackLimit int = 8
-const defPrompt string = " &c > "
+const (
+	defPrompt string = " &c > "
+	version   string = "v1.0.1"
+	fmtChar   byte   = '&'
+	defLimit  int    = 8
+)
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
-	actionMap := orderedmap.New[string, *stack.Action]()
-	actionMap.Set("+", stack.Add())
-	actionMap.Set("-", stack.Subtract())
-	actionMap.Set("*", stack.Multiply())
-	actionMap.Set("/", stack.Divide())
-	actionMap.Set("%", stack.Modulo())
-	actionMap.Set("^", stack.Power())
-	actionMap.Set("!", stack.Factorial())
-	actionMap.Set("log", stack.Log())
-	actionMap.Set("ln", stack.Ln())
-	actionMap.Set("rad", stack.Radians())
-	actionMap.Set("deg", stack.Degrees())
-	actionMap.Set("sin", stack.Sine())
-	actionMap.Set("cos", stack.Cosine())
-	actionMap.Set("tan", stack.Tangent())
-	actionMap.Set("floor", stack.Floor())
-	actionMap.Set("ceil", stack.Ceiling())
-	actionMap.Set("round", stack.Round())
-	actionMap.Set("rand", stack.Random())
-	actionMap.Set(".", stack.Display())
-	actionMap.Set(",", stack.Pop())
-	actionMap.Set("stash", stack.Stash())
-	actionMap.Set("pull", stack.Pull())
-	actionMap.Set("clear", stack.Clear())
-	actionMap.Set("words", stack.Words())
-	actionMap.Set("help", stack.Help())
-    actionMap.Set("cls", stack.Cls())
-	return stack.NewStackOperator(actionMap, stackLimit, interactive, strict)
+	actions := stack.NewOrderedMap[string, *stack.Action](26)
+	actions.Set("+", stack.Add())
+	actions.Set("-", stack.Subtract())
+	actions.Set("*", stack.Multiply())
+	actions.Set("/", stack.Divide())
+	actions.Set("%", stack.Modulo())
+	actions.Set("^", stack.Power())
+	actions.Set("!", stack.Factorial())
+	actions.Set("log", stack.Log())
+	actions.Set("ln", stack.Ln())
+	actions.Set("rad", stack.Radians())
+	actions.Set("deg", stack.Degrees())
+	actions.Set("sin", stack.Sine())
+	actions.Set("cos", stack.Cosine())
+	actions.Set("tan", stack.Tangent())
+	actions.Set("floor", stack.Floor())
+	actions.Set("ceil", stack.Ceiling())
+	actions.Set("round", stack.Round())
+	actions.Set("rand", stack.Random())
+	actions.Set(".", stack.Display())
+	actions.Set(",", stack.Pop())
+	actions.Set("stash", stack.Stash())
+	actions.Set("pull", stack.Pull())
+	actions.Set("clear", stack.Clear())
+	actions.Set("words", stack.Words())
+	actions.Set("help", stack.Help())
+	actions.Set("cls", stack.Cls())
+	return stack.NewStackOperator(actions, stackLimit, interactive, strict)
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
@@ -135,8 +136,8 @@ func main() {
 	flag.BoolVar(&printVersion, "V", false, "")
 	flag.BoolVar(&printVersion, "version", false, "")
 	var stackLimit int
-	flag.IntVar(&stackLimit, "l", defStackLimit, "")
-	flag.IntVar(&stackLimit, "stack-limit", defStackLimit, "")
+	flag.IntVar(&stackLimit, "l", defLimit, "")
+	flag.IntVar(&stackLimit, "stack-limit", defLimit, "")
 	var strictMode bool
 	flag.BoolVar(&strictMode, "s", false, "")
 	flag.BoolVar(&strictMode, "strict", false, "")
