@@ -28,7 +28,7 @@ func (stk *Stack) Pop() float64 {
 // is at capacity.
 func (stk *Stack) Push(f float64) error {
 	if len(stk.Values)+1 > cap(stk.Values) {
-		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity (%d)", f, cap(stk.Values)))
+		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity (%d)\n", f, cap(stk.Values)))
 	}
 	stk.Values = append(stk.Values, f)
 	return nil
@@ -96,6 +96,9 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 		if s != "" {
 			noEmpty = append(noEmpty, s)
 		}
+	}
+	if len(noEmpty) == 0 {
+		return "", nil
 	}
 	word := noEmpty[0]
 	if strings.Contains("0123456789=.", string(word[0])) {

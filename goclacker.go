@@ -85,11 +85,8 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 	}
 }
 
-func interactive(so *stack.StackOperator, promptFormat string) {
+func interactive(so *stack.StackOperator) {
 	scanner := bufio.NewScanner(os.Stdin)
-	if err := so.MakePromptFunc(promptFormat, fmtChar); err != nil {
-		log.Fatal(err)
-	}
 	fmt.Print(so.Prompt())
 	for scanner.Scan() {
 		if s, err := so.ParseInput(scanner.Text()); err != nil {
@@ -106,7 +103,18 @@ func interactive(so *stack.StackOperator, promptFormat string) {
 	}
 }
 
-func ParseWordsFile(so *stack.StackOperator, path string) {
+func configure(so *stack.StackOperator, path string, promptFmt string) {
+	gavePrompt := true
+	if promptFmt == "\000" {
+		promptFmt = defPrompt
+		gavePrompt = false
+	}
+	if path == "" {
+		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
+			fmt.Fprint(os.Stderr, err.Error())
+		}
+		return
+	}
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -114,23 +122,35 @@ func ParseWordsFile(so *stack.StackOperator, path string) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	scanner.Scan()
+	promptLine := scanner.Text()
 	var failed bool
+	if len(promptLine) > 0 && !gavePrompt {
+		promptLine = strings.TrimPrefix(promptLine, `"`)
+		promptLine = strings.TrimSuffix(promptLine, `"`)
+		if err := so.MakePromptFunc(promptLine, fmtChar); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print("sucessfully parsed prompt from file...\n")
+	} else {
+		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
+			fmt.Fprint(os.Stderr, err.Error())
+		}
+	}
 	for scanner.Scan() {
-		if _, err := so.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
-			fmt.Printf("definition error: %s\n", err)
+		line := strings.TrimSpace(scanner.Text())
+		if _, err := so.DefWord(strings.Split(line, " ")); err != nil {
+			fmt.Fprintf(os.Stderr, "definition error: %s", err.Error())
 			failed = true
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-
 	if failed {
-		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words\n")
-	} else {
-        fmt.Printf("sucessfully parsed words file: %q", path)
-    }
-
+		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words...\n")
+	}
+	fmt.Print("sucessfully parsed config file\n")
 }
 
 func main() {
@@ -143,12 +163,12 @@ func main() {
 	var strictMode bool
 	flag.BoolVar(&strictMode, "s", false, "")
 	flag.BoolVar(&strictMode, "strict", false, "")
-	var wordsPath string
-	flag.StringVar(&wordsPath, "words-file", "", "")
-	flag.StringVar(&wordsPath, "w", "", "")
+	var configPath string
+	flag.StringVar(&configPath, "config-path", "", "")
+	flag.StringVar(&configPath, "c", "", "")
 	var promptFormat string
-	flag.StringVar(&promptFormat, "p", defPrompt, "")
-	flag.StringVar(&promptFormat, "prompt", defPrompt, "")
+	flag.StringVar(&promptFormat, "p", "\000", "")
+	flag.StringVar(&promptFormat, "prompt", "\000", "")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
@@ -164,11 +184,9 @@ func main() {
 	}
 
 	so := MakeStackOperator(stackLimit, !(len(flag.Args()) > 0), strictMode)
-	if wordsPath != "" {
-		ParseWordsFile(so, wordsPath)
-	}
+	configure(so, configPath, promptFormat)
 	if so.Interactive {
-		interactive(so, promptFormat)
+		interactive(so)
 	} else {
 		nonInteractive(so, flag.Args())
 	}
