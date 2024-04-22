@@ -121,14 +121,16 @@ func ParseWordsFile(so *stack.StackOperator, path string) {
 			failed = true
 		}
 	}
-
-	if failed {
-		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words\n")
-	}
-
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	if failed {
+		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words\n")
+	} else {
+        fmt.Printf("sucessfully parsed words file: %q", path)
+    }
+
 }
 
 func main() {

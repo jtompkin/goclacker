@@ -8,7 +8,7 @@ type Pair[K comparable, V any] struct {
 
 type list[K comparable, V any] struct {
 	Values  []*Pair[K, V]
-	current int
+	Current int
 }
 
 func newList[K comparable, V any](capacity int) *list[K, V] {
@@ -16,11 +16,11 @@ func newList[K comparable, V any](capacity int) *list[K, V] {
 }
 
 func (l *list[K, V]) increment(p *Pair[K, V]) {
-	if l.current+1 > cap(l.Values) {
+	if l.Current+1 > cap(l.Values) {
 		panic("list is full")
 	}
-	l.Values[l.current] = p
-	l.current++
+	l.Values[l.Current] = p
+	l.Current++
 }
 
 type OrderedMap[K comparable, V any] struct {
@@ -50,7 +50,7 @@ func (om *OrderedMap[K, V]) Get(key K) (*Pair[K, V], bool) {
 }
 
 func (om *OrderedMap[K, V]) Next() *Pair[K, V] {
-    if om.Current > om.list.current-1 {
+    if om.Current > om.list.Current-1 {
         return nil
     }
 	p := om.list.Values[om.Current]
