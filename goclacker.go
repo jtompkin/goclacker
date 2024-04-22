@@ -11,7 +11,7 @@ import (
 	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-const usage string = `Usage of goclacker:
+const usage string = `usage of goclacker:
 goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -V, --version
         Print version information and exit.
