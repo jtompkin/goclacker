@@ -89,7 +89,7 @@ func Divide() *Action {
 }
 
 // Modulo returns a pointer to an Action that pops 'a', 'b'; pushes the
-// remainder of 'b' / 'a'
+// remainder of 'b' / 'a'.
 func Modulo() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
@@ -285,7 +285,7 @@ func Round() *Action {
 }
 
 // Random returns a pointer to an Action that pushes a random number between 0
-// and 1
+// and 1.
 func Random() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
@@ -318,7 +318,7 @@ func Pull() *Action {
 	)
 }
 
-// Display returns a pointer to an Action that displays all values in the stack
+// Display returns a pointer to an Action that displays all values in the stack.
 func Display() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
@@ -388,6 +388,7 @@ func Clear() *Action {
 	)
 }
 
+// Cls returns a pointer to an Action that clears the terminal screen.
 func Cls() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
