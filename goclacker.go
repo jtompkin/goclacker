@@ -9,10 +9,9 @@ import (
 	"strings"
 
 	"github.com/jtompkin/goclacker/internal/stack"
-	"github.com/wk8/go-ordered-map/v2"
 )
 
-const usage string = `Usage of goclacker:
+const usage string = `usage of goclacker:
 goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -V, --version
         Print version information and exit.
@@ -21,10 +20,10 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -s, --strict
         Run in strict mode: entering something that is not a number, operator,
         or defined word will return an error instead of doing nothing.
-    -l, --stack-limit int
-        stack size limit (default 8); must be non-negative
-    -w, --words-file string
-        path to file containing word definitions
+    -l, --limit int
+        stack size limit, must be non-negative (default 8)
+    -c, --config string
+        path to config file
     -p, --prompt string
         format string for the interactive prompt (default " &c > ")
         format specifiers:
@@ -37,40 +36,43 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
         calculator. Interactive mode will not be entered if any positional
         arguments are supplied.
 `
-const version string = "v1.0.0"
-const fmtChar byte = '&'
 
-const defStackLimit int = 8
-const defPrompt string = " &c > "
+const (
+	defPrompt string = " &c > "
+	version   string = "v1.1.0"
+	fmtChar   byte   = '&'
+	defLimit  int    = 8
+)
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
-	actionMap := orderedmap.New[string, *stack.Action]()
-	actionMap.Set("+", stack.Add())
-	actionMap.Set("-", stack.Subtract())
-	actionMap.Set("*", stack.Multiply())
-	actionMap.Set("/", stack.Divide())
-	actionMap.Set("%", stack.Modulo())
-	actionMap.Set("^", stack.Power())
-	actionMap.Set("!", stack.Factorial())
-	actionMap.Set("log", stack.Log())
-	actionMap.Set("ln", stack.Ln())
-	actionMap.Set("rad", stack.Radians())
-	actionMap.Set("deg", stack.Degrees())
-	actionMap.Set("sin", stack.Sine())
-	actionMap.Set("cos", stack.Cosine())
-	actionMap.Set("tan", stack.Tangent())
-	actionMap.Set("floor", stack.Floor())
-	actionMap.Set("ceil", stack.Ceiling())
-	actionMap.Set("round", stack.Round())
-	actionMap.Set("rand", stack.Random())
-	actionMap.Set(".", stack.Display())
-	actionMap.Set(",", stack.Pop())
-	actionMap.Set("stash", stack.Stash())
-	actionMap.Set("pull", stack.Pull())
-	actionMap.Set("clear", stack.Clear())
-	actionMap.Set("words", stack.Words())
-	actionMap.Set("help", stack.Help())
-	return stack.NewStackOperator(actionMap, stackLimit, interactive, strict)
+	actions := stack.NewOrderedMap[string, *stack.Action](26)
+	actions.Set("+", stack.Add())
+	actions.Set("-", stack.Subtract())
+	actions.Set("*", stack.Multiply())
+	actions.Set("/", stack.Divide())
+	actions.Set("%", stack.Modulo())
+	actions.Set("^", stack.Power())
+	actions.Set("!", stack.Factorial())
+	actions.Set("log", stack.Log())
+	actions.Set("ln", stack.Ln())
+	actions.Set("rad", stack.Radians())
+	actions.Set("deg", stack.Degrees())
+	actions.Set("sin", stack.Sine())
+	actions.Set("cos", stack.Cosine())
+	actions.Set("tan", stack.Tangent())
+	actions.Set("floor", stack.Floor())
+	actions.Set("ceil", stack.Ceiling())
+	actions.Set("round", stack.Round())
+	actions.Set("rand", stack.Random())
+	actions.Set(".", stack.Display())
+	actions.Set(",", stack.Pop())
+	actions.Set("stash", stack.Stash())
+	actions.Set("pull", stack.Pull())
+	actions.Set("clear", stack.Clear())
+	actions.Set("words", stack.Words())
+	actions.Set("help", stack.Help())
+	actions.Set("cls", stack.Cls())
+	return stack.NewStackOperator(actions, stackLimit, interactive, strict)
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
@@ -83,11 +85,8 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 	}
 }
 
-func interactive(so *stack.StackOperator, promptFormat string) {
+func interactive(so *stack.StackOperator) {
 	scanner := bufio.NewScanner(os.Stdin)
-	if err := so.MakePromptFunc(promptFormat, fmtChar); err != nil {
-		log.Fatal(err)
-	}
 	fmt.Print(so.Prompt())
 	for scanner.Scan() {
 		if s, err := so.ParseInput(scanner.Text()); err != nil {
@@ -104,7 +103,18 @@ func interactive(so *stack.StackOperator, promptFormat string) {
 	}
 }
 
-func ParseWordsFile(so *stack.StackOperator, path string) {
+func configure(so *stack.StackOperator, path string, promptFmt string) {
+	gavePrompt := true
+	if promptFmt == "\000" {
+		promptFmt = defPrompt
+		gavePrompt = false
+	}
+	if path == "" {
+		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
+			fmt.Fprint(os.Stderr, err.Error())
+		}
+		return
+	}
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -112,21 +122,35 @@ func ParseWordsFile(so *stack.StackOperator, path string) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	scanner.Scan()
+	promptLine := scanner.Text()
 	var failed bool
+	if len(promptLine) > 0 && !gavePrompt {
+		promptLine = strings.TrimPrefix(promptLine, `"`)
+		promptLine = strings.TrimSuffix(promptLine, `"`)
+		if err := so.MakePromptFunc(promptLine, fmtChar); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print("sucessfully parsed prompt from file...\n")
+	} else {
+		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
+			fmt.Fprint(os.Stderr, err.Error())
+		}
+	}
 	for scanner.Scan() {
-		if _, err := so.DefWord(strings.Split(scanner.Text(), " ")); err != nil {
-			fmt.Printf("definition error: %s\n", err)
+		line := strings.TrimSpace(scanner.Text())
+		if _, err := so.DefWord(strings.Split(line, " ")); err != nil {
+			fmt.Fprintf(os.Stderr, "definition error: %s", err.Error())
 			failed = true
 		}
 	}
-
-	if failed {
-		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words\n")
-	}
-
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	if failed {
+		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words...\n")
+	}
+	fmt.Print("sucessfully parsed config file\n")
 }
 
 func main() {
@@ -134,17 +158,17 @@ func main() {
 	flag.BoolVar(&printVersion, "V", false, "")
 	flag.BoolVar(&printVersion, "version", false, "")
 	var stackLimit int
-	flag.IntVar(&stackLimit, "l", defStackLimit, "")
-	flag.IntVar(&stackLimit, "stack-limit", defStackLimit, "")
+	flag.IntVar(&stackLimit, "l", defLimit, "")
+	flag.IntVar(&stackLimit, "limit", defLimit, "")
 	var strictMode bool
 	flag.BoolVar(&strictMode, "s", false, "")
 	flag.BoolVar(&strictMode, "strict", false, "")
-	var wordsPath string
-	flag.StringVar(&wordsPath, "words-file", "", "")
-	flag.StringVar(&wordsPath, "w", "", "")
+	var configPath string
+	flag.StringVar(&configPath, "c", "", "")
+	flag.StringVar(&configPath, "config", "", "")
 	var promptFormat string
-	flag.StringVar(&promptFormat, "p", defPrompt, "")
-	flag.StringVar(&promptFormat, "prompt", defPrompt, "")
+	flag.StringVar(&promptFormat, "p", "\000", "")
+	flag.StringVar(&promptFormat, "prompt", "\000", "")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
@@ -160,11 +184,9 @@ func main() {
 	}
 
 	so := MakeStackOperator(stackLimit, !(len(flag.Args()) > 0), strictMode)
-	if wordsPath != "" {
-		ParseWordsFile(so, wordsPath)
-	}
+	configure(so, configPath, promptFormat)
 	if so.Interactive {
-		interactive(so, promptFormat)
+		interactive(so)
 	} else {
 		nonInteractive(so, flag.Args())
 	}

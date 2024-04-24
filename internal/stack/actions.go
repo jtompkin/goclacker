@@ -11,27 +11,15 @@ import (
 // Action implements Action.
 type Action struct {
 	action func(*StackOperator) (string, error)
-	pops   int
-	pushes int
-	help   string
+	Pops   int
+	Pushes int
+	Help   string
 }
 
 // Call calls the function stored in Action.action and returns the error value
 // returned by the function.
 func (a *Action) Call(so *StackOperator) (string, error) {
 	return a.action(so)
-}
-
-func (a *Action) Pops() int {
-	return a.pops
-}
-
-func (a *Action) Pushes() int {
-	return a.pushes
-}
-
-func (a *Action) Help() string {
-	return a.help
 }
 
 // newAction returns a pointer to Action initialized with values given to
@@ -42,7 +30,7 @@ func newAction(
 	pushes int,
 	help string,
 ) *Action {
-	return &Action{action: action, pops: pops, pushes: pushes, help: help}
+	return &Action{action: action, Pops: pops, Pushes: pushes, Help: help}
 }
 
 // Add pops returns a pointer to an Action that 'a', 'b'; pushes the result of
@@ -100,7 +88,7 @@ func Divide() *Action {
 }
 
 // Modulo returns a pointer to an Action that pops 'a', 'b'; pushes the
-// remainder of 'b' / 'a'
+// remainder of 'b' / 'a'.
 func Modulo() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
@@ -296,7 +284,7 @@ func Round() *Action {
 }
 
 // Random returns a pointer to an Action that pushes a random number between 0
-// and 1
+// and 1.
 func Random() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
@@ -329,7 +317,7 @@ func Pull() *Action {
 	)
 }
 
-// Display returns a pointer to an Action that displays all values in the stack
+// Display returns a pointer to an Action that displays all values in the stack.
 func Display() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
@@ -343,12 +331,11 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
-			helps := make([]string, 0, so.Actions.Len())
-			for pair := so.Actions.Oldest(); pair != nil; pair = pair.Next() {
-				helps = append(helps, fmt.Sprintf(`%s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
-				//helps = append(helps, fmt.Sprintf(`operator: %s%c"%s"`, pair.Key, '\t', pair.Value.Help()))
+			sb := &strings.Builder{}
+			for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
+				sb.Write([]byte(fmt.Sprintf("%s%c%q\n", p.Key, '\t', p.Value.Help)))
 			}
-			return strings.Join(helps, "\n") + Suffix, nil
+			return sb.String(), nil
 		}, 0, 0,
 		"display this information screen",
 	)
@@ -397,5 +384,15 @@ func Clear() *Action {
 			return fmt.Sprintf("cleared %d value%c%s", n, c, Suffix), nil
 		}, 0, 0,
 		"pop all values in the stack",
+	)
+}
+
+// Cls returns a pointer to an Action that clears the terminal screen.
+func Cls() *Action {
+	return newAction(
+		func(so *StackOperator) (string, error) {
+			return "\033[2J\033[H", nil
+		}, 0, 0,
+		"clear the terminal screen",
 	)
 }

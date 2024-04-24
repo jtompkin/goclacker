@@ -5,20 +5,18 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/wk8/go-ordered-map/v2"
 )
 
 const Suffix string = "\n"
 
-// Stack contains a slice of values and methods to operate on that slice.
+// Stack contains a slice of float64 and methods to operate on that slice.
 type Stack struct {
 	Values     []float64
 	Stash      float64
 	displayFmt string
 }
 
-// Pop removes the last value in stack.Values and returns the value removed.
+// Pop removes the last value in Stack.Values and returns the value removed.
 func (stk *Stack) Pop() float64 {
 	n := len(stk.Values) - 1
 	f := stk.Values[n]
@@ -26,11 +24,11 @@ func (stk *Stack) Pop() float64 {
 	return f
 }
 
-// Push attempts to append f to stack.Values and returns an error if the stack
+// Push attempts to append f to Stack.Values and returns an error if the stack
 // is at capacity.
 func (stk *Stack) Push(f float64) error {
 	if len(stk.Values)+1 > cap(stk.Values) {
-		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity (%d)", f, cap(stk.Values)))
+		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity (%d)\n", f, cap(stk.Values)))
 	}
 	stk.Values = append(stk.Values, f)
 	return nil
@@ -51,10 +49,10 @@ func newStack(values []float64, displayFmt string) *Stack {
 	return &Stack{Values: values, displayFmt: displayFmt}
 }
 
-// StackOperator contains map for converting string tokens into operations that
-// can be called to operate on the stack.
+// StackOperator contains a map for converting string tokens into operations
+// that can be called to operate on the stack.
 type StackOperator struct {
-	Actions     *orderedmap.OrderedMap[string, *Action]
+	Actions     *OrderedMap[string, *Action]
 	Words       map[string]string
 	Stack       *Stack
 	Interactive bool
@@ -63,8 +61,11 @@ type StackOperator struct {
 	notFound    func(string) error
 }
 
-// ParseInput splits `input` into tokens (words) and either starts defining a
-// word or parsing the token
+// ParseInput splits input into words and either begins defining a calculator
+// word or parses each word as a token. It stops parsing input if it defines a
+// word or receives an error during token parsing, and returns the string and
+// error recieved. If it parses the entire input without error, it will return
+// the last string received and nil.
 func (so *StackOperator) ParseInput(input string) (string, error) {
 	var rs string
 	var err error
@@ -82,12 +83,13 @@ func (so *StackOperator) ParseInput(input string) (string, error) {
 	return rs, nil
 }
 
-// DefWord adds a word to StackOperator. Words with the key being def[0] and the
+// DefWord adds a word to StackOperator.Words with the key being def[0] and the
 // value being the rest of the slice. It deletes def[0] from StackOperator.Words
-// if len(def) == 1.
+// if len(def) == 1. It returns a string and nil if the operator was successful
+// and an empty string and an error if not.
 func (so *StackOperator) DefWord(def []string) (string, error) {
 	if len(def) == 0 {
-		return "", errors.New(fmt.Sprintf("define word: '= example 2 2 +'; remove word: '= example'%s", Suffix))
+		return "", errors.New(fmt.Sprintf(`define word: "= example 2 2 +"; remove word: "= example"%s`, Suffix))
 	}
 	noEmpty := make([]string, 0, len(def))
 	for _, s := range def {
@@ -95,41 +97,47 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 			noEmpty = append(noEmpty, s)
 		}
 	}
+	if len(noEmpty) == 0 {
+		return "", nil
+	}
 	word := noEmpty[0]
 	if strings.Contains("0123456789=.", string(word[0])) {
-		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot start word with digit, '=', or '.'%s", word, Suffix))
+		return "", errors.New(fmt.Sprintf("could not define %s : cannot start word with digit, '=', or '.'%s", word, Suffix))
 	}
 	if _, present := so.Actions.Get(word); present {
-		return "", errors.New(fmt.Sprintf("could not define '%s'; cannot redifine operator%s", word, Suffix))
+		return "", errors.New(fmt.Sprintf("could not define %s : cannot redifine operator%s", word, Suffix))
 	}
 	if len(noEmpty) == 1 {
 		if _, present := so.Words[word]; !present {
-			return "", errors.New(fmt.Sprintf("%q not defined%s", word, Suffix))
+			return "", errors.New(fmt.Sprintf("could not delete %s : not defined%s", word, Suffix))
 		}
 		delete(so.Words, word)
-		return fmt.Sprintf("deleted word: %s%s", word, Suffix), nil
+		return fmt.Sprintf("deleted %s%s", word, Suffix), nil
 	}
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s
-	return fmt.Sprintf(`defined word: "%s" with value: "%s"%s`, word, s, Suffix), nil
+	return fmt.Sprintf(`defined %s : %s%s`, word, s, Suffix), nil
 }
 
+// parseToken parses token that should be one word and either pushes it to the
+// stack as a number or executes it as a token. It returns the result of
+// executing the token or the return value of Stack.Display and the error value
+// from pushing token to the stack.
 func (so *StackOperator) parseToken(token string) (string, error) {
 	f, err := strconv.ParseFloat(token, 64)
 	if err != nil {
 		return so.ExecuteToken(token)
 	}
-	if err := so.Stack.Push(f); err != nil {
-		return "", errors.New(fmt.Sprintf("push error: %s\n", err))
-	}
-	return so.Stack.Display(), nil
+	err = so.Stack.Push(f)
+	return so.Stack.Display(), err
 }
 
 // ExecuteToken determines if `token` is an Action token or defined word and
-// executes it accordingly. Returns an error if the Action cannot be completed.
+// executes it accordingly. Returns the string and error from doing what it
+// needs to do.
 func (so *StackOperator) ExecuteToken(token string) (string, error) {
 	prefix := "operation error: "
-	action, present := so.Actions.Get(token)
+	p, present := so.Actions.Get(token)
 	if !present {
 		def := so.Words[token]
 		if def == "" {
@@ -137,8 +145,9 @@ func (so *StackOperator) ExecuteToken(token string) (string, error) {
 		}
 		return so.ParseInput(def)
 	}
+	action := p.Value
 	stkLen := len(so.Stack.Values)
-	pops := action.Pops()
+	pops := action.Pops
 	var c byte
 	if pops != 1 {
 		c = 's'
@@ -146,13 +155,14 @@ func (so *StackOperator) ExecuteToken(token string) (string, error) {
 	if stkLen < pops {
 		return "", errors.New(fmt.Sprintf("%s'%s' needs %d value%c in stack%s", prefix, token, pops, c, Suffix))
 	}
-	if stkLen-pops+action.Pushes() > cap(so.Stack.Values) {
+	if stkLen-pops+action.Pushes > cap(so.Stack.Values) {
 		return "", errors.New(fmt.Sprintf("%s'%s' would overflow stack%s", prefix, token, Suffix))
 	}
 	return action.Call(so)
 }
 
-// Fail pushes all `values` to the stack and returns an error containing `message`
+// Fail pushes all `values` to the stack and returns an error containing
+// `message`. It also prints Stack.Display if the StackOperator is interactive
 func (so *StackOperator) Fail(message string, values ...float64) error {
 	for _, f := range values {
 		so.Stack.Push(f)
@@ -165,7 +175,8 @@ func (so *StackOperator) Fail(message string, values ...float64) error {
 
 // MakePromptFunc sets the StackOperator.prompt value that will execute any
 // functions needed to build the prompt and will return a new string every time
-// it is called
+// it is called. This function returns an error if it could not make the prompt
+// function (should always return nil).
 func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 	promptFuncs := make([]func(*StackOperator) string, 0, strings.Count(format, string(fmtChar)))
 	promptFmt := []byte(format)
@@ -217,8 +228,8 @@ func (so *StackOperator) promptStash() string {
 }
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
-// given arguments and a default set of defined words.
-func NewStackOperator(actions *orderedmap.OrderedMap[string, *Action], maxStack int, interactive bool, strict bool) *StackOperator {
+// given arguments and a default set of defined words and formatters.
+func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, strict bool) *StackOperator {
 	var displayFmt string
 	if interactive {
 		displayFmt = "[ %s ]" + Suffix
