@@ -16,12 +16,6 @@ Install with [Go](https://go.dev). If you are not familiar with Go, the binary w
 go install github.com/jtompkin/goclacker@latest
 ```
 
-OR
-
-```
-go install github.com/jtompkin/goclacker@main
-```
-
 Build with Go.
 
 ```
@@ -32,7 +26,8 @@ go build .
 
 Live, laugh, love with Go.
 
-Binaries for linux are on the release page.
+Binaries are available on the
+[release](https://github.com/jtompkin/goclacker/releases/latest) page.
 
 ## Usage
 

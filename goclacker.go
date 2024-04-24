@@ -39,39 +39,39 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.1.1"
+	version   string = "v1.1.2"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action](26)
-	actions.Set("+", stack.Add())
-	actions.Set("-", stack.Subtract())
-	actions.Set("*", stack.Multiply())
-	actions.Set("/", stack.Divide())
-	actions.Set("%", stack.Modulo())
-	actions.Set("^", stack.Power())
-	actions.Set("!", stack.Factorial())
-	actions.Set("log", stack.Log())
-	actions.Set("ln", stack.Ln())
-	actions.Set("rad", stack.Radians())
-	actions.Set("deg", stack.Degrees())
-	actions.Set("sin", stack.Sine())
-	actions.Set("cos", stack.Cosine())
-	actions.Set("tan", stack.Tangent())
-	actions.Set("floor", stack.Floor())
-	actions.Set("ceil", stack.Ceiling())
-	actions.Set("round", stack.Round())
-	actions.Set("rand", stack.Random())
-	actions.Set(".", stack.Display())
-	actions.Set(",", stack.Pop())
-	actions.Set("stash", stack.Stash())
-	actions.Set("pull", stack.Pull())
-	actions.Set("clear", stack.Clear())
-	actions.Set("words", stack.Words())
-	actions.Set("help", stack.Help())
-	actions.Set("cls", stack.Cls())
+	actions.Set("+", stack.Add)
+	actions.Set("-", stack.Subtract)
+	actions.Set("*", stack.Multiply)
+	actions.Set("/", stack.Divide)
+	actions.Set("%", stack.Modulo)
+	actions.Set("^", stack.Power)
+	actions.Set("!", stack.Factorial)
+	actions.Set("log", stack.Log)
+	actions.Set("ln", stack.Ln)
+	actions.Set("rad", stack.Radians)
+	actions.Set("deg", stack.Degrees)
+	actions.Set("sin", stack.Sine)
+	actions.Set("cos", stack.Cosine)
+	actions.Set("tan", stack.Tangent)
+	actions.Set("floor", stack.Floor)
+	actions.Set("ceil", stack.Ceiling)
+	actions.Set("round", stack.Round)
+	actions.Set("rand", stack.Random)
+	actions.Set(".", stack.Display)
+	actions.Set(",", stack.Pop)
+	actions.Set("stash", stack.Stash)
+	actions.Set("pull", stack.Pull)
+	actions.Set("clear", stack.Clear)
+	actions.Set("words", stack.Words)
+	actions.Set("help", stack.Help)
+	actions.Set("cls", stack.ClearScreen)
 	return stack.NewStackOperator(actions, stackLimit, interactive, strict)
 }
 
@@ -96,7 +96,7 @@ func interactive(so *stack.StackOperator) {
 		}
 		fmt.Print(so.Prompt())
 	}
-	fmt.Println()
+    fmt.Print('\n')
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
@@ -115,6 +115,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) {
 		}
 		return
 	}
+
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
