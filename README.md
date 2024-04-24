@@ -37,28 +37,6 @@ If any positional arguments (`program...`) are supplied, they will be interprete
 
 Type a number and press enter to push it to the stack. Type an operator and press enter to execute that operator on the stack. Enter `help` to see available operators. Enter mutliple commands separated by a space and press enter to execute them in order.
 
-## Words
-
-Custom commands (called words) can be defined in interactive mode or in a file. To define words in a file, provide one word statement on each line. A word statement consists of the word itself and its definition. The word and definition are separated by a space, and all operations in the definition are separated by a space. Provide the path to this file when calling the program with `-w`. A file containing the following two lines would define two words: `sqrt`, which pushes 0.5 to the stack and then calls the exponent operator (which happens to take the square root (which I totally knew before making this thing)), and `pi`, which pushes the value of pi to the stack:
-
-```
-sqrt 0.5 ^
-pi 3.14159265358979323846
-```
-
-You can also define words in interactive mode!!!! To do so, start your command with `=` and then enter the word and its definition just like you would in a file. The following two commands would accomplish the same word definitions as the file above (the `>` is not typed, ya dingus).
-
-```
-  > = sqrt 0.5 ^
-  > = pi 3.14159265358979323846
-```
-
-These two words happen to be automagically defined whenever you start the program. If you hate them (or any other words you define) you can delete a defined word by providing its name after `=` without any definition. All currently defined words can be viewed by entering `words`.
-
-```
-  > = sqrt
-```
-
 ## Prompt
 
 If you're into accessorizing your command line RPN calculators (I know you are), you can create your own custom prompt with the `-p` flag. Just provide a single string that defines what you want the prompt to look like. If you wanna go really crazy, you can include format specifyers that will print information about your current calculating environment! All format specifyers are prefixed by a `&` character. Some examples:
@@ -75,3 +53,40 @@ If you're into accessorizing your command line RPN calculators (I know you are),
 |         s | current stash value |
 
 You can probably break this if you try hard enough, so please do.
+
+## Words
+
+Custom commands (called words) can be defined in a config file (see [config file](#config-file) if you wanna know how).
+
+You can also define words in interactive mode!! To do so, start your command with `=` and then type the word and the program you want to run when you enter the word (the `>` is not typed, ya dingus). Now, when `sqrt` is entered at the prompt, 0.5 is pushed to the stack, and the exponentiation operator is called. That is apparently the same thing as taking the square root. Crazy. Entering `pi` would simply push the value of pi to the stack.
+
+```
+  > = sqrt 0.5 ^
+  > = pi 3.14159265358979323846
+```
+
+These two words happen to be automagically defined whenever you start the program. If you hate them (or any other words you define) you can delete a defined word by providing its name after `=` without any definition. All currently defined words can be viewed by entering `words`.
+
+```
+  > = sqrt
+```
+
+## Config file
+
+If you have crafted a beautiful prompt or have a list of words that you can't live without, a config file is what you need. Provide the path to this text file with the `-c` flag, and it will set the prompt format and define any words inside every time you start goclacker.
+
+The format is as follows:
+- First line is the prompt format
+- Any other lines are word definitions
+
+The first line is **always** interpreted as the prompt format. Leave it blank if you want the default prompt. You can surround your format with `"` on either side if you would like (not `'`!!); surrounding double quotes will not be included in the prompt. If you want a blank prompt (because you are boring), use a single `"` as your first line. Any format provided with `-p` will ovveride whatever is in the config file.
+
+Word definitions are the same as in interactive mode, except the `=` is not included - i.e. The first word per line is the word itself.
+
+A configuration file containing the following three lines would set the prompt to look like `------> ` (notice the lack of `"`), and define the same words as in the [interactive](#words) example.
+
+```
+------> "
+sqrt 0.5 ^
+pi 3.14159265358979323846
+```
