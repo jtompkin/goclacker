@@ -22,10 +22,7 @@ Clearing and cleaning and configing
 - `cls` operator: clear the terminal screen (actual magic don't ask me how)
   (also not at all guaranteed to work in all terminals)
 - Define custom prompt and words in one config file! Provide path to config file
-  with `-c` flag. First line must be the prompt definition; you can surround it
-  in `"` if you wish. Leave the first line blank if you want the default prompt.
-  Every other line is a word definition. `-p` flag overrides the prompt
-  definition from this file.
+  with `-c` flag.
 
 ### Fixed
 
