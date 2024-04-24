@@ -83,7 +83,7 @@ The first line is **always** interpreted as the prompt format. Leave it blank if
 
 Word definitions are the same as in interactive mode, except the `=` is not included - i.e. The first word per line is the word itself.
 
-A configuration file containing the following three lines would set the prompt to look like `------> ` (notice the lack of `"`), and define the same words as in the [interactive](#words) example.
+A configuration file containing the following three lines would set the prompt to look like `------> ` (notice the lack of `"` and the preserved whitespace), and define the same words as in the [interactive](#words) example.
 
 ```
 ------> "
