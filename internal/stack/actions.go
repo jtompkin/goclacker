@@ -335,6 +335,7 @@ func Help() *Action {
 			for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
 				sb.Write([]byte(fmt.Sprintf("%s%c%q\n", p.Key, '\t', p.Value.Help)))
 			}
+            so.Actions.Reset()
 			return sb.String(), nil
 		}, 0, 0,
 		"display this information screen",

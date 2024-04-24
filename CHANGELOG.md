@@ -2,6 +2,7 @@
 
 - [1.0.0 - 2024-04-19](#100---2024-04-19)
 - [1.1.0 - 2024-04-23](#110---2024-04-23)
+- [1.1.1 - 2024-04-24](#111---2024-04-24)
 
 ## TODO
 
@@ -32,3 +33,11 @@ world.
 ### Changed
 
 - Removed external dependency for ordered map. All vanilla now.
+
+## [1.1.1](https://github.com/jtompkin/goclacker/releases/tag/v1.1.1) - 2024-04-24
+
+Whoopsies
+
+### Fixed
+
+- `help` can be ran multiple times now.

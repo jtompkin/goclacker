@@ -69,3 +69,8 @@ func (om *OrderedMap[K, V]) Next() *Pair[K, V] {
 	om.Current++
 	return om.Pairs[p.Key]
 }
+
+// Reset sets the value of OrderedMap.Current to 0.
+func (om *OrderedMap[K, V]) Reset() {
+    om.Current = 0
+}
