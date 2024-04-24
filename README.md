@@ -71,7 +71,7 @@ These two words happen to be automagically defined whenever you start the progra
   > = sqrt
 ```
 
-## Config file
+## Configuration
 
 If you have crafted a beautiful prompt or have a list of words that you can't live without, a config file is what you need. Provide the path to this text file with the `-c` flag, and it will set the prompt format and define any words inside every time you start goclacker.
 
