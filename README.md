@@ -9,13 +9,20 @@ https://github.com/jtompkin/goclacker
 
 ## Installation
 
-Install with Go
+Install with [Go](https://go.dev). If you are not familiar with Go, the binary will be in
+`~/go/bin` for linux, `C:\users\<USER>\go\bin` for windows.
 
 ```
 go install github.com/jtompkin/goclacker@latest
 ```
 
-Build with Go
+OR
+
+```
+go install github.com/jtompkin/goclacker@main
+```
+
+Build with Go.
 
 ```
 git clone https://github.com/jtompkin/goclacker.git
@@ -24,6 +31,8 @@ go build .
 ```
 
 Live, laugh, love with Go.
+
+Binaries for linux are on the release page.
 
 ## Usage
 
