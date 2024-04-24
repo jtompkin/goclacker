@@ -22,7 +22,6 @@ func (a *Action) Call(so *StackOperator) (string, error) {
 	return a.action(so)
 }
 
-
 // newAction returns a pointer to Action initialized with values given to
 // arguments.
 func newAction(
@@ -332,11 +331,11 @@ func Display() *Action {
 func Help() *Action {
 	return newAction(
 		func(so *StackOperator) (string, error) {
-            sb := &strings.Builder{}
-            for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
-                sb.Write([]byte(fmt.Sprintf("%s%c%q\n", p.Key, '\t', p.Value.Help)))
-            }
-            return sb.String(), nil
+			sb := &strings.Builder{}
+			for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
+				sb.Write([]byte(fmt.Sprintf("%s%c%q\n", p.Key, '\t', p.Value.Help)))
+			}
+			return sb.String(), nil
 		}, 0, 0,
 		"display this information screen",
 	)

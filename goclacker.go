@@ -20,10 +20,10 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -s, --strict
         Run in strict mode: entering something that is not a number, operator,
         or defined word will return an error instead of doing nothing.
-    -l, --stack-limit int
-        stack size limit (default 8); must be non-negative
-    -w, --words-file string
-        path to file containing word definitions
+    -l, --limit int
+        stack size limit, must be non-negative (default 8)
+    -c, --config string
+        path to config file
     -p, --prompt string
         format string for the interactive prompt (default " &c > ")
         format specifiers:
@@ -39,7 +39,7 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.0.1"
+	version   string = "v1.1.0"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
@@ -159,13 +159,13 @@ func main() {
 	flag.BoolVar(&printVersion, "version", false, "")
 	var stackLimit int
 	flag.IntVar(&stackLimit, "l", defLimit, "")
-	flag.IntVar(&stackLimit, "stack-limit", defLimit, "")
+	flag.IntVar(&stackLimit, "limit", defLimit, "")
 	var strictMode bool
 	flag.BoolVar(&strictMode, "s", false, "")
 	flag.BoolVar(&strictMode, "strict", false, "")
 	var configPath string
-	flag.StringVar(&configPath, "config-path", "", "")
 	flag.StringVar(&configPath, "c", "", "")
+	flag.StringVar(&configPath, "config", "", "")
 	var promptFormat string
 	flag.StringVar(&promptFormat, "p", "\000", "")
 	flag.StringVar(&promptFormat, "prompt", "\000", "")

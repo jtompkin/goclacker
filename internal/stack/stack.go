@@ -109,14 +109,14 @@ func (so *StackOperator) DefWord(def []string) (string, error) {
 	}
 	if len(noEmpty) == 1 {
 		if _, present := so.Words[word]; !present {
-            return "", errors.New(fmt.Sprintf("could not delete %s : not defined%s", word, Suffix))
+			return "", errors.New(fmt.Sprintf("could not delete %s : not defined%s", word, Suffix))
 		}
 		delete(so.Words, word)
 		return fmt.Sprintf("deleted %s%s", word, Suffix), nil
 	}
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s
-    return fmt.Sprintf(`defined %s : %s%s`, word, s, Suffix), nil
+	return fmt.Sprintf(`defined %s : %s%s`, word, s, Suffix), nil
 }
 
 // parseToken parses token that should be one word and either pushes it to the
@@ -128,8 +128,8 @@ func (so *StackOperator) parseToken(token string) (string, error) {
 	if err != nil {
 		return so.ExecuteToken(token)
 	}
-    err = so.Stack.Push(f)
-    return so.Stack.Display(), err
+	err = so.Stack.Push(f)
+	return so.Stack.Display(), err
 }
 
 // ExecuteToken determines if `token` is an Action token or defined word and
@@ -145,7 +145,7 @@ func (so *StackOperator) ExecuteToken(token string) (string, error) {
 		}
 		return so.ParseInput(def)
 	}
-    action := p.Value
+	action := p.Value
 	stkLen := len(so.Stack.Values)
 	pops := action.Pops
 	var c byte

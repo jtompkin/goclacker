@@ -1,6 +1,5 @@
 package stack
 
-
 // Pair contains a Key of type K and Value of type V.
 type Pair[K comparable, V any] struct {
 	Key   K
@@ -8,8 +7,8 @@ type Pair[K comparable, V any] struct {
 }
 
 type list[K comparable, V any] struct {
-	Values  []*Pair[K, V]
-	Len int
+	Values []*Pair[K, V]
+	Len    int
 }
 
 func newList[K comparable, V any](capacity int) *list[K, V] {
@@ -54,8 +53,8 @@ func (om *OrderedMap[K, V]) Set(key K, val V) {
 // Get returns the Pair at OrderedMap[key], and whether key is present in the
 // OrderedMap.
 func (om *OrderedMap[K, V]) Get(key K) (*Pair[K, V], bool) {
-    p, present := om.Pairs[key]
-    return p, present
+	p, present := om.Pairs[key]
+	return p, present
 }
 
 // Next returns the next Pair in OrderedMap sequentially, from the first one set
@@ -63,9 +62,9 @@ func (om *OrderedMap[K, V]) Get(key K) (*Pair[K, V], bool) {
 //
 // for p := om.Next(); p != nil; p = om.next() {...}
 func (om *OrderedMap[K, V]) Next() *Pair[K, V] {
-    if om.Current > om.list.Len-1 {
-        return nil
-    }
+	if om.Current > om.list.Len-1 {
+		return nil
+	}
 	p := om.list.Values[om.Current]
 	om.Current++
 	return om.Pairs[p.Key]
