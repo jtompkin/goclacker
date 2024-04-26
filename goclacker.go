@@ -45,7 +45,7 @@ const (
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
-	actions := stack.NewOrderedMap[string, *stack.Action](26)
+	actions := stack.NewOrderedMap[string, *stack.Action](64)
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
 	actions.Set("*", stack.Multiply)
@@ -72,7 +72,14 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("words", stack.Words)
 	actions.Set("help", stack.Help)
 	actions.Set("cls", stack.ClearScreen)
-	return stack.NewStackOperator(actions, stackLimit, interactive, strict)
+	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
+	so.Words = map[string]string{
+		"randn": "rand * ceil 1 -",
+		"sqrt":  "0.5 ^",
+		"logb":  "log stash log pull /",
+		"pi":    "3.141592653589793",
+	}
+	return so
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
@@ -96,7 +103,7 @@ func interactive(so *stack.StackOperator) {
 		}
 		fmt.Print(so.Prompt())
 	}
-    fmt.Print("\n")
+	fmt.Print("\n")
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)

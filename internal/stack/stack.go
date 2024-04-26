@@ -247,12 +247,7 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 		Actions:     actions,
 		notFound:    notFound,
 		Interactive: interactive,
-		Words: map[string]string{
-			"sqrt":  "0.5 ^",
-			"pi":    "3.141592653589793",
-			"logb":  "log stash log pull /",
-			"randn": "rand * ceil 1 -",
-		},
+		Words:       map[string]string{},
 		formatters: map[byte]func(*StackOperator) string{
 			'l': (*StackOperator).promptCap,
 			't': (*StackOperator).promptTop,
