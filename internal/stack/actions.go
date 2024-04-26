@@ -40,19 +40,6 @@ var Add = newAction(
 	"pop 'a', 'b'; push the result of 'a' + 'b'",
 )
 
-// Subtract returns a pointer to an Action that pops 'a', 'b'; pushes the result
-// of 'b' - 'a'.
-//func Subtract() *Action {
-//	return newAction(
-//		func(so *StackOperator) (string, error) {
-//			x := so.Stack.Pop()
-//			y := so.Stack.Pop()
-//			so.Stack.Push(y - x)
-//			return so.Stack.Display(), nil
-//		}, 2, 1,
-//		"pop 'a', 'b'; push the result of 'b' - 'a'",
-//	)
-//}
 
 var Subtract = newAction(
 	func(so *StackOperator) (string, error) {

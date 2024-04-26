@@ -96,7 +96,7 @@ func interactive(so *stack.StackOperator) {
 		}
 		fmt.Print(so.Prompt())
 	}
-    fmt.Print('\n')
+    fmt.Print("\n")
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
