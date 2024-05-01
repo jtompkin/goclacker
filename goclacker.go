@@ -116,7 +116,7 @@ func interactive(so *stack.StackOperator) {
 
 func configure(so *stack.StackOperator, path string, promptFmt string) {
 	gavePrompt := true
-	if promptFmt == "\000" {
+	if promptFmt == "\x00" {
 		promptFmt = defPrompt
 		gavePrompt = false
 	}
@@ -179,8 +179,8 @@ func main() {
 	flag.StringVar(&configPath, "c", "", "")
 	flag.StringVar(&configPath, "config", "", "")
 	var promptFormat string
-	flag.StringVar(&promptFormat, "p", "\000", "")
-	flag.StringVar(&promptFormat, "prompt", "\000", "")
+	flag.StringVar(&promptFormat, "p", "\x00", "")
+	flag.StringVar(&promptFormat, "prompt", "\x00", "")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
