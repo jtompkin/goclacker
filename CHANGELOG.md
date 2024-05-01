@@ -3,7 +3,7 @@
 - [1.0.0 - 2024-04-19](#100---2024-04-19)
 - [1.1.0 - 2024-04-23](#110---2024-04-23)
 - [1.1.1 - 2024-04-24](#111---2024-04-24)
-- [1.1.2 - TBD](#112---TBD)
+- [1.2.0 - TBD](#120---TBD)
 
 ## TODO
 
@@ -45,7 +45,7 @@ Whoopsies
 
 - `help` can be ran multiple times now.
 
-## [1.1.2](https://github.com/jtompkin/goclacker/releases/tag/v1.1.2) - TBD
+## [1.2.0](https://github.com/jtompkin/goclacker/releases/tag/v1.2.0) - TBD
 
 Stack Ops: Cold War
 
@@ -53,3 +53,7 @@ Stack Ops: Cold War
 
 - `swap` operator: swap top 2 stack values
 - `froll` & `rroll` operators: roll stack forward or backward
+
+### Changed
+
+- no stack limit if `-l` is negative

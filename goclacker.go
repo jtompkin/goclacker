@@ -21,7 +21,7 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
         Run in strict mode: entering something that is not a number, operator,
         or defined word will return an error instead of doing nothing.
     -l, --limit int
-        stack size limit, must be non-negative (default 8)
+        stack size limit, no limit if negative (default 8)
     -c, --config string
         path to config file
     -p, --prompt string
@@ -39,7 +39,7 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.1.2"
+	version   string = "v1.2.0"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
@@ -77,9 +77,10 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("cls", stack.ClearScreen)
 	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
 	so.Words = map[string]string{
+        "?" : "help",
 		"randn": "rand * ceil 1 -",
 		"sqrt":  "0.5 ^",
-		"logb":  "stash log pull log /",
+        "logb": "log swap log / -1 ^",
 		"pi":    "3.141592653589793",
 	}
 	return so
@@ -184,11 +185,6 @@ func main() {
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
-	if stackLimit < 0 {
-		fmt.Print("argument error: -s, --stack-limit must be non-negative\n\n")
-		fmt.Print(usage)
-		os.Exit(1)
-	}
 	if printVersion {
 		fmt.Printf("goclacker %s\n", version)
 		os.Exit(0)
