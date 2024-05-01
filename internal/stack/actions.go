@@ -315,8 +315,8 @@ var Swap = newAction(
 var Froll = newAction(
 	func(so *StackOperator) (string, error) {
 		newVals := make([]float64, len(so.Stack.Values))
-        newVals[0] = so.Stack.Values[len(so.Stack.Values)-1]
-        for i, f := range so.Stack.Values[:len(so.Stack.Values)-1] {
+		newVals[0] = so.Stack.Values[len(so.Stack.Values)-1]
+		for i, f := range so.Stack.Values[:len(so.Stack.Values)-1] {
 			newVals[i+1] = f
 		}
 		so.Stack.Values = newVals
@@ -327,12 +327,12 @@ var Froll = newAction(
 
 var Rroll = newAction(
 	func(so *StackOperator) (string, error) {
-		newVals:= make([]float64, len(so.Stack.Values))
-        for i, f := range so.Stack.Values[1:] {
-            newVals[i] = f
-        }
-        newVals[len(newVals)-1] = so.Stack.Values[0]
-        so.Stack.Values = newVals
+		newVals := make([]float64, len(so.Stack.Values))
+		for i, f := range so.Stack.Values[1:] {
+			newVals[i] = f
+		}
+		newVals[len(newVals)-1] = so.Stack.Values[0]
+		so.Stack.Values = newVals
 		return so.Stack.Display(), nil
 	}, 2, 2,
 	"roll the stack to the left one position",

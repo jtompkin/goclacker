@@ -39,13 +39,13 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.2.0"
+	version   string = "v1.2.1"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
-	actions := stack.NewOrderedMap[string, *stack.Action](64)
+	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
 	actions.Set("*", stack.Multiply)
@@ -66,9 +66,9 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("rand", stack.Random)
 	actions.Set(".", stack.Display)
 	actions.Set(",", stack.Pop)
-    actions.Set("swap", stack.Swap)
-    actions.Set("froll", stack.Froll)
-    actions.Set("rroll", stack.Rroll)
+	actions.Set("swap", stack.Swap)
+	actions.Set("froll", stack.Froll)
+	actions.Set("rroll", stack.Rroll)
 	actions.Set("stash", stack.Stash)
 	actions.Set("pull", stack.Pull)
 	actions.Set("clr", stack.Clear)
@@ -77,10 +77,10 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("cls", stack.ClearScreen)
 	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
 	so.Words = map[string]string{
-        "?" : "help",
+		"?":     "help",
 		"randn": "rand * ceil 1 -",
 		"sqrt":  "0.5 ^",
-        "logb": "log swap log / -1 ^",
+		"logb":  "log swap log / -1 ^",
 		"pi":    "3.141592653589793",
 	}
 	return so
