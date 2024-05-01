@@ -71,7 +71,7 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
     actions.Set("rroll", stack.Rroll)
 	actions.Set("stash", stack.Stash)
 	actions.Set("pull", stack.Pull)
-	actions.Set("clear", stack.Clear)
+	actions.Set("clr", stack.Clear)
 	actions.Set("words", stack.Words)
 	actions.Set("help", stack.Help)
 	actions.Set("cls", stack.ClearScreen)
