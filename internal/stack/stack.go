@@ -14,6 +14,7 @@ type Stack struct {
 	Values     []float64
 	Stash      float64
 	displayFmt string
+	Expandable bool
 }
 
 // Pop removes the last value in Stack.Values and returns the value removed.
@@ -27,7 +28,7 @@ func (stk *Stack) Pop() float64 {
 // Push attempts to append f to Stack.Values and returns an error if the stack
 // is at capacity.
 func (stk *Stack) Push(f float64) error {
-	if len(stk.Values)+1 > cap(stk.Values) {
+	if len(stk.Values)+1 > cap(stk.Values) && !stk.Expandable {
 		return errors.New(fmt.Sprintf("cannot push %v, stack at capacity (%d)\n", f, cap(stk.Values)))
 	}
 	stk.Values = append(stk.Values, f)
@@ -45,8 +46,8 @@ func (stk *Stack) Display() string {
 	return fmt.Sprintf(stk.displayFmt, s)
 }
 
-func newStack(values []float64, displayFmt string) *Stack {
-	return &Stack{Values: values, displayFmt: displayFmt}
+func newStack(values []float64, displayFmt string, expandable bool) *Stack {
+	return &Stack{Values: values, displayFmt: displayFmt, Expandable: expandable}
 }
 
 // StackOperator contains a map for converting string tokens into operations
@@ -236,23 +237,20 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 	} else {
 		displayFmt = "%s" + Suffix
 	}
-	var notFound func(string) error
+	notFound := func(s string) error { return nil }
 	if strict {
 		notFound = func(s string) error { return errors.New(fmt.Sprintf("command not found: %q\n", s)) }
-	} else {
-		notFound = func(s string) error { return nil }
+	}
+	capacity := maxStack
+	if maxStack < 0 {
+		capacity = 8
 	}
 	return &StackOperator{
-		Stack:       newStack(make([]float64, 0, maxStack), displayFmt),
+		Stack:       newStack(make([]float64, 0, capacity), displayFmt, maxStack < 0),
 		Actions:     actions,
 		notFound:    notFound,
 		Interactive: interactive,
-		Words: map[string]string{
-			"sqrt":  "0.5 ^",
-			"pi":    "3.141592653589793",
-			"logb":  "log stash log pull /",
-			"randn": "rand * ceil 1 -",
-		},
+		Words:       map[string]string{},
 		formatters: map[byte]func(*StackOperator) string{
 			'l': (*StackOperator).promptCap,
 			't': (*StackOperator).promptTop,

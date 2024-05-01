@@ -21,7 +21,7 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
         Run in strict mode: entering something that is not a number, operator,
         or defined word will return an error instead of doing nothing.
     -l, --limit int
-        stack size limit, must be non-negative (default 8)
+        stack size limit, no limit if negative (default 8)
     -c, --config string
         path to config file
     -p, --prompt string
@@ -39,40 +39,51 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.1.1"
+	version   string = "v1.2.0"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
-	actions := stack.NewOrderedMap[string, *stack.Action](26)
-	actions.Set("+", stack.Add())
-	actions.Set("-", stack.Subtract())
-	actions.Set("*", stack.Multiply())
-	actions.Set("/", stack.Divide())
-	actions.Set("%", stack.Modulo())
-	actions.Set("^", stack.Power())
-	actions.Set("!", stack.Factorial())
-	actions.Set("log", stack.Log())
-	actions.Set("ln", stack.Ln())
-	actions.Set("rad", stack.Radians())
-	actions.Set("deg", stack.Degrees())
-	actions.Set("sin", stack.Sine())
-	actions.Set("cos", stack.Cosine())
-	actions.Set("tan", stack.Tangent())
-	actions.Set("floor", stack.Floor())
-	actions.Set("ceil", stack.Ceiling())
-	actions.Set("round", stack.Round())
-	actions.Set("rand", stack.Random())
-	actions.Set(".", stack.Display())
-	actions.Set(",", stack.Pop())
-	actions.Set("stash", stack.Stash())
-	actions.Set("pull", stack.Pull())
-	actions.Set("clear", stack.Clear())
-	actions.Set("words", stack.Words())
-	actions.Set("help", stack.Help())
-	actions.Set("cls", stack.Cls())
-	return stack.NewStackOperator(actions, stackLimit, interactive, strict)
+	actions := stack.NewOrderedMap[string, *stack.Action](64)
+	actions.Set("+", stack.Add)
+	actions.Set("-", stack.Subtract)
+	actions.Set("*", stack.Multiply)
+	actions.Set("/", stack.Divide)
+	actions.Set("%", stack.Modulo)
+	actions.Set("^", stack.Power)
+	actions.Set("!", stack.Factorial)
+	actions.Set("log", stack.Log)
+	actions.Set("ln", stack.Ln)
+	actions.Set("rad", stack.Radians)
+	actions.Set("deg", stack.Degrees)
+	actions.Set("sin", stack.Sine)
+	actions.Set("cos", stack.Cosine)
+	actions.Set("tan", stack.Tangent)
+	actions.Set("floor", stack.Floor)
+	actions.Set("ceil", stack.Ceiling)
+	actions.Set("round", stack.Round)
+	actions.Set("rand", stack.Random)
+	actions.Set(".", stack.Display)
+	actions.Set(",", stack.Pop)
+    actions.Set("swap", stack.Swap)
+    actions.Set("froll", stack.Froll)
+    actions.Set("rroll", stack.Rroll)
+	actions.Set("stash", stack.Stash)
+	actions.Set("pull", stack.Pull)
+	actions.Set("clr", stack.Clear)
+	actions.Set("words", stack.Words)
+	actions.Set("help", stack.Help)
+	actions.Set("cls", stack.ClearScreen)
+	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
+	so.Words = map[string]string{
+        "?" : "help",
+		"randn": "rand * ceil 1 -",
+		"sqrt":  "0.5 ^",
+        "logb": "log swap log / -1 ^",
+		"pi":    "3.141592653589793",
+	}
+	return so
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
@@ -96,7 +107,7 @@ func interactive(so *stack.StackOperator) {
 		}
 		fmt.Print(so.Prompt())
 	}
-	fmt.Println()
+	fmt.Print("\n")
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
@@ -115,6 +126,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) {
 		}
 		return
 	}
+
 	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
@@ -173,11 +185,6 @@ func main() {
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
-	if stackLimit < 0 {
-		fmt.Print("argument error: -s, --stack-limit must be non-negative\n\n")
-		fmt.Print(usage)
-		os.Exit(1)
-	}
 	if printVersion {
 		fmt.Printf("goclacker %s\n", version)
 		os.Exit(0)
