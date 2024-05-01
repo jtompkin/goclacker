@@ -98,12 +98,13 @@ That is apparently the same thing as taking the square root. Crazy. Entering
 
 These two words happen to be automagically defined whenever you start the
 program. If you hate them (or any other words you define) you can delete a
-defined word by providing its name after `=` without any definition. All
-currently defined words can be viewed by entering `words`.
+defined word by providing its name after `=` without any definition.
 
 ```
   > = sqrt
 ```
+
+All currently defined words can be viewed by entering `words`.
 
 ## Configuration
 

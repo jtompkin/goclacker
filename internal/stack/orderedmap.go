@@ -17,8 +17,7 @@ type OrderedMap[K comparable, V any] struct {
 // NewOrderedMap returns a pointer to an OrderedMap that has a given capacity,
 // keys of type K, and values of type V.
 func NewOrderedMap[K comparable, V any]() *OrderedMap[K, V] {
-	om := &OrderedMap[K, V]{Pairs: make(map[K]*Pair[K, V], 16), list: make([]*Pair[K, V], 0, 16)}
-	return om
+	return &OrderedMap[K, V]{Pairs: make(map[K]*Pair[K, V], 16), list: make([]*Pair[K, V], 0, 16)}
 }
 
 // Set sets OrderedMap[key] = Pair{Key: key, Value: val} and panics if the key

@@ -136,7 +136,6 @@ func configure(so *stack.StackOperator, path string, promptFmt string) {
 	scanner := bufio.NewScanner(f)
 	scanner.Scan()
 	promptLine := scanner.Text()
-	var failed bool
 	if len(promptLine) > 0 && !gavePrompt {
 		promptLine = strings.TrimPrefix(promptLine, `"`)
 		promptLine = strings.TrimSuffix(promptLine, `"`)
@@ -149,6 +148,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) {
 			fmt.Fprint(os.Stderr, err.Error())
 		}
 	}
+	var failed bool
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if _, err := so.DefWord(strings.Split(line, " ")); err != nil {
