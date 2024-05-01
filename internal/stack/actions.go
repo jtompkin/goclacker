@@ -40,7 +40,6 @@ var Add = newAction(
 	"pop 'a', 'b'; push the result of 'a' + 'b'",
 )
 
-
 var Subtract = newAction(
 	func(so *StackOperator) (string, error) {
 		x := so.Stack.Pop()
@@ -300,4 +299,28 @@ var ClearScreen = newAction(
 		return "\033[2J\033[H", nil
 	}, 0, 0,
 	"clear the terminal screen",
+)
+
+var Swap = newAction(
+	func(so *StackOperator) (string, error) {
+		x := so.Stack.Pop()
+		y := so.Stack.Pop()
+		so.Stack.Push(x)
+		so.Stack.Push(y)
+		return so.Stack.Display(), nil
+	}, 2, 2,
+	"pop 'a', 'b'; push 'b', 'a'",
+)
+
+var Roll = newAction(
+    func(so *StackOperator) (string, error) {
+        fS := make([]float64, len(so.Stack.Values))
+        for i, f := range so.Stack.Values[:len(so.Stack.Values)-1] {
+            fS[i+1] = f
+        }
+        fS[0] = so.Stack.Values[len(so.Stack.Values)-1]
+        so.Stack.Values = fS
+        return so.Stack.Display(), nil
+    }, 2, 2,
+    "roll the stack to the right one position",
 )

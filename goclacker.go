@@ -66,6 +66,8 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("rand", stack.Random)
 	actions.Set(".", stack.Display)
 	actions.Set(",", stack.Pop)
+    actions.Set("swap", stack.Swap)
+    actions.Set("roll", stack.Roll)
 	actions.Set("stash", stack.Stash)
 	actions.Set("pull", stack.Pull)
 	actions.Set("clear", stack.Clear)
@@ -76,7 +78,7 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	so.Words = map[string]string{
 		"randn": "rand * ceil 1 -",
 		"sqrt":  "0.5 ^",
-		"logb":  "log stash log pull /",
+		"logb":  "stash log pull log /",
 		"pi":    "3.141592653589793",
 	}
 	return so
