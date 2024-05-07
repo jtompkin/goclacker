@@ -14,8 +14,8 @@ type OrderedMap[K comparable, V any] struct {
 	Current int
 }
 
-// NewOrderedMap returns a pointer to an OrderedMap that has a given capacity,
-// keys of type K, and values of type V.
+// NewOrderedMap returns a pointer to an OrderedMap with initialized values that
+// is ready to use.
 func NewOrderedMap[K comparable, V any]() *OrderedMap[K, V] {
 	return &OrderedMap[K, V]{Pairs: make(map[K]*Pair[K, V], 16), list: make([]*Pair[K, V], 0, 16)}
 }
@@ -34,16 +34,16 @@ func (om *OrderedMap[K, V]) Set(key K, val V) {
 
 // Get returns the Pair at OrderedMap[key], and whether key is present in the
 // OrderedMap.
-func (om *OrderedMap[K, V]) Get(key K) (*Pair[K, V], bool) {
-	p, present := om.Pairs[key]
-	return p, present
+func (om *OrderedMap[K, V]) Get(key K) (pair *Pair[K, V], present bool) {
+	pair, present = om.Pairs[key]
+	return pair, present
 }
 
 // Next returns the next Pair in OrderedMap sequentially, from the first one set
 // to the last.
 //
 // for p := om.Next(); p != nil; p = om.next() {...}
-func (om *OrderedMap[K, V]) Next() *Pair[K, V] {
+func (om *OrderedMap[K, V]) Next() (pair *Pair[K, V]) {
 	if om.Current > len(om.list)-1 {
 		return nil
 	}
