@@ -188,7 +188,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 				promptFmt[i] = '%'
 				promptFmt[i+1] = 's'
 			}
-			if next != '&' {
+			if next != fmtChar {
 				i++
 			}
 		}
