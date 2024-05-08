@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/jtompkin/goclacker/internal/stack"
-	"golang.org/x/term"
 )
 
 const usage string = `usage of goclacker:
@@ -101,37 +100,13 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 	fmt.Fprint(f, string(so.PrintBuf))
 }
 
-func interactive(so *stack.StackOperator) (err error) {
-	fds := []int{int(os.Stdin.Fd()), int(os.Stderr.Fd())}
-	for _, fd := range fds {
-		state, err := term.MakeRaw(fd)
-		if err != nil {
-			return err
-		}
-		defer term.Restore(fd, state)
-	}
-
-	it := term.NewTerminal(os.Stdin, so.Prompt())
-	et := term.NewTerminal(os.Stderr, "")
-	for {
-		line, err := it.ReadLine()
-		if err != nil {
-			it.SetPrompt("")
-			it.Write(nil)
-			return err
-		}
-		err = so.ParseInput(line)
-		it.Write(so.PrintBuf)
-		if err != nil {
-			et.Write([]byte(err.Error()))
-		}
-		it.SetPrompt(so.Prompt())
-	}
+func Interactive(so *stack.StackOperator) (err error) {
+    return interactive(so)
 }
 
 func start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
-		err = interactive(so)
+		err = Interactive(so)
 		return err
 	}
 	nonInteractive(so, progs)
