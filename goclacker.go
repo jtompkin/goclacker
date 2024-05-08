@@ -88,45 +88,49 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	return so
 }
 
-func parsePrint(so *stack.StackOperator, toParse string) (printTo io.Writer, toPrint string) {
-	toPrint, err := so.ParseInput(toParse)
-	if err != nil {
-		return os.Stderr, err.Error()
-	}
-	return os.Stdout, toPrint
-}
-
 func nonInteractive(so *stack.StackOperator, programs []string) {
 	for _, prog := range programs {
-		printTo, s := parsePrint(so, prog)
-		fmt.Fprint(printTo, s)
+		f := os.Stdin
+		err := so.ParseInput(prog)
+		if err != nil {
+			f = os.Stderr
+		}
+		fmt.Fprint(f, so.PrintBuf)
 	}
 }
 
 func interactive(so *stack.StackOperator) (err error) {
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		return err
+	fds := []int{int(os.Stdin.Fd()), int(os.Stderr.Fd())}
+	for _, fd := range fds {
+		state, err := term.MakeRaw(fd)
+		if err != nil {
+			return err
+		}
+		defer term.Restore(fd, state)
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
 
-	t := term.NewTerminal(os.Stdin, so.Prompt())
-    var line string
+	it := term.NewTerminal(os.Stdin, so.Prompt())
+	et := term.NewTerminal(os.Stderr, "")
 	for {
-        line, err = t.ReadLine()
-        if err != nil {
-            return err
-        }
-        s, _ := so.ParseInput(line)
-        t.Write([]byte(s))
-        t.SetPrompt(so.Prompt())
+		line, err := it.ReadLine()
+		if err != nil {
+            it.SetPrompt("")
+            it.Write([]byte{})
+			return err
+		}
+		err = so.ParseInput(line)
+		it.Write(so.PrintBuf)
+		if err != nil {
+			et.Write([]byte(err.Error()))
+		}
+		it.SetPrompt(so.Prompt())
 	}
 }
 
 func start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
 		err = interactive(so)
-        return err
+		return err
 	}
 	nonInteractive(so, progs)
 	return err
@@ -216,7 +220,7 @@ func main() {
 	if err := configure(so, configPath, promptFormat); err != nil {
 		log.Fatal(err)
 	}
-	if err := start(so, flag.Args()); err != nil && err != io.EOF{
+	if err := start(so, flag.Args()); err != nil && err != io.EOF {
 		log.Fatal(err)
 	}
 }

@@ -57,8 +57,9 @@ type StackOperator struct {
 	Words       map[string]string
 	Stack       *Stack
 	Interactive bool
-	formatters  map[byte]func(*StackOperator) string
 	Prompt      func() string
+	PrintBuf    []byte
+	formatters  map[byte]func(*StackOperator) string
 	notFound    func(string) error
 }
 
@@ -67,19 +68,23 @@ type StackOperator struct {
 // word or receives an error during token parsing, and returns the string and
 // error recieved. If it parses the entire input without error, it will return
 // the last string received and nil.
-func (so *StackOperator) ParseInput(input string) (toPrint string, err error) {
+func (so *StackOperator) ParseInput(input string) (err error) {
 	input = strings.TrimSpace(input)
 	split := strings.Split(input, " ")
-	for i, s := range split {
-		if s == "=" {
-			return so.DefWord(split[i+1:])
+	for i, token := range split {
+        var s string
+		if token == "=" {
+            s, err = so.DefWord(split[i+1:])
+            so.PrintBuf = []byte(s)
+            return err
 		}
-		toPrint, err = so.parseToken(s)
+		s, err = so.parseToken(token)
+        so.PrintBuf = []byte(s)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
-	return toPrint, nil
+    return err
 }
 
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
@@ -138,11 +143,12 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 	prefix := "operation error: "
 	p, present := so.Actions.Get(token)
 	if !present {
-		def := so.Words[token]
-		if def == "" {
+		def, present := so.Words[token]
+		if !present {
 			return "", so.notFound(token)
 		}
-		return so.ParseInput(def)
+        err := so.ParseInput(def)
+		return string(so.PrintBuf), err
 	}
 	action := p.Value
 	stkLen := len(so.Stack.Values)
@@ -165,9 +171,6 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 func (so *StackOperator) Fail(message string, values ...float64) error {
 	for _, f := range values {
 		so.Stack.Push(f)
-	}
-	if so.Interactive {
-		fmt.Print(so.Stack.Display())
 	}
 	return errors.New(fmt.Sprintf("operation error: %s%s", message, Suffix))
 }
