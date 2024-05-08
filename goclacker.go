@@ -41,7 +41,7 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.2.1"
+	version   string = "v1.3.0"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )

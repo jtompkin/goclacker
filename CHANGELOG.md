@@ -4,6 +4,7 @@
 - [1.1.0 - 2024-04-23](#110---2024-04-23)
 - [1.1.1 - 2024-04-24](#111---2024-04-24)
 - [1.2.0 - 2024-04-30](#120---2024-04-30)
+- [1.3.0 - TBD](#130---TBD)
 
 ## TODO
 
@@ -47,7 +48,7 @@ Whoopsies
 
 ## [1.2.0](https://github.com/jtompkin/goclacker/releases/tag/v1.2.0) - 2024-04-30
 
-Stack Ops: Cold War
+Stack Ops 2: Electric Boogaloo
 
 ### Added
 
@@ -57,3 +58,11 @@ Stack Ops: Cold War
 ### Changed
 
 - no stack limit if `-l` is negative
+
+## [1.3.0](https://github.com/jtompkin/goclacker/releases/tag/v1.3.0) - TBD
+
+Terminal woes
+
+### Added
+
+- Arrow keys scroll through history in interactive mode.
