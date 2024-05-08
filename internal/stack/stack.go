@@ -72,19 +72,19 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 	input = strings.TrimSpace(input)
 	split := strings.Split(input, " ")
 	for i, token := range split {
-        var s string
+		var s string
 		if token == "=" {
-            s, err = so.DefWord(split[i+1:])
-            so.PrintBuf = []byte(s)
-            return err
+			s, err = so.DefWord(split[i+1:])
+			so.PrintBuf = []byte(s)
+			return err
 		}
 		s, err = so.parseToken(token)
-        so.PrintBuf = []byte(s)
+		so.PrintBuf = []byte(s)
 		if err != nil {
 			return err
 		}
 	}
-    return err
+	return err
 }
 
 // DefWord adds a word to StackOperator.Words with the key being def[0] and the
@@ -147,7 +147,7 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 		if !present {
 			return "", so.notFound(token)
 		}
-        err := so.ParseInput(def)
+		err := so.ParseInput(def)
 		return string(so.PrintBuf), err
 	}
 	action := p.Value

@@ -94,22 +94,22 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 		err := so.ParseInput(prog)
 		if err != nil {
 			f = os.Stderr
-            so.PrintBuf = []byte(err.Error())
+			so.PrintBuf = []byte(err.Error())
 		}
 	}
 	fmt.Fprint(f, string(so.PrintBuf))
 }
 
 func Interactive(so *stack.StackOperator) (err error) {
-    return interactive(so)
+	return interactive(so)
 }
 
 func start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
 		err = Interactive(so)
-		return err
+	} else {
+		nonInteractive(so, progs)
 	}
-	nonInteractive(so, progs)
 	return err
 }
 
