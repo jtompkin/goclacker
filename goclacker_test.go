@@ -36,7 +36,8 @@ func TestPrompts(t *testing.T) {
 
 func prog(t *testing.T, program string, expected string, wantError bool, acceptAny bool) {
 	so := MakeStackOperator(8, false, false)
-	s, err := so.ParseInput(program)
+    err := so.ParseInput(program)
+    s := string(so.PrintBuf)
 	if err != nil {
 		if wantError {
 			return

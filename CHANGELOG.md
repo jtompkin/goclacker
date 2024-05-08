@@ -3,7 +3,8 @@
 - [1.0.0 - 2024-04-19](#100---2024-04-19)
 - [1.1.0 - 2024-04-23](#110---2024-04-23)
 - [1.1.1 - 2024-04-24](#111---2024-04-24)
-- [1.2.0 - TBD](#120---TBD)
+- [1.2.0 - 2024-04-30](#120---2024-04-30)
+- [1.3.0 - 2024-05-08](#130---2024-05-08)
 
 ## TODO
 
@@ -45,9 +46,9 @@ Whoopsies
 
 - `help` can be ran multiple times now.
 
-## [1.2.0](https://github.com/jtompkin/goclacker/releases/tag/v1.2.0) - TBD
+## [1.2.0](https://github.com/jtompkin/goclacker/releases/tag/v1.2.0) - 2024-04-30
 
-Stack Ops: Cold War
+Stack Ops 2: Electric Boogaloo
 
 ### Added
 
@@ -57,3 +58,15 @@ Stack Ops: Cold War
 ### Changed
 
 - no stack limit if `-l` is negative
+
+## [1.3.0](https://github.com/jtompkin/goclacker/releases/tag/v1.3.0) - 2024-05-08
+
+Terminal woes
+
+### Added
+
+- Arrow keys scroll through history in interactive mode.
+
+### Changed
+
+- Interactive mode generally better

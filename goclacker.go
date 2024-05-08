@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -39,13 +40,13 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.2.0"
+	version   string = "v1.3.0"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
-	actions := stack.NewOrderedMap[string, *stack.Action](64)
+	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
 	actions.Set("*", stack.Multiply)
@@ -66,9 +67,9 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("rand", stack.Random)
 	actions.Set(".", stack.Display)
 	actions.Set(",", stack.Pop)
-    actions.Set("swap", stack.Swap)
-    actions.Set("froll", stack.Froll)
-    actions.Set("rroll", stack.Rroll)
+	actions.Set("swap", stack.Swap)
+	actions.Set("froll", stack.Froll)
+	actions.Set("rroll", stack.Rroll)
 	actions.Set("stash", stack.Stash)
 	actions.Set("pull", stack.Pull)
 	actions.Set("clr", stack.Clear)
@@ -77,46 +78,44 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("cls", stack.ClearScreen)
 	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
 	so.Words = map[string]string{
-        "?" : "help",
+		"?":     "help",
 		"randn": "rand * ceil 1 -",
 		"sqrt":  "0.5 ^",
-        "logb": "log swap log / -1 ^",
+		"logb":  "log swap log / -1 ^",
 		"pi":    "3.141592653589793",
 	}
 	return so
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
-	for _, s := range programs {
-		if s, err := so.ParseInput(s); err != nil {
-			fmt.Fprint(os.Stderr, err)
-		} else {
-			fmt.Print(s)
+	var f io.Writer
+	for _, prog := range programs {
+		f = os.Stdout
+		err := so.ParseInput(prog)
+		if err != nil {
+			f = os.Stderr
+            so.PrintBuf = []byte(err.Error())
 		}
 	}
+	fmt.Fprint(f, string(so.PrintBuf))
 }
 
-func interactive(so *stack.StackOperator) {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print(so.Prompt())
-	for scanner.Scan() {
-		if s, err := so.ParseInput(scanner.Text()); err != nil {
-			fmt.Fprint(os.Stderr, err)
-		} else {
-			fmt.Print(s)
-		}
-		fmt.Print(so.Prompt())
-	}
-	fmt.Print("\n")
-
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
+func Interactive(so *stack.StackOperator) (err error) {
+    return interactive(so)
 }
 
-func configure(so *stack.StackOperator, path string, promptFmt string) {
+func start(so *stack.StackOperator, progs []string) (err error) {
+	if so.Interactive {
+		err = Interactive(so)
+		return err
+	}
+	nonInteractive(so, progs)
+	return err
+}
+
+func configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
 	gavePrompt := true
-	if promptFmt == "\000" {
+	if promptFmt == "\x00" {
 		promptFmt = defPrompt
 		gavePrompt = false
 	}
@@ -124,31 +123,34 @@ func configure(so *stack.StackOperator, path string, promptFmt string) {
 		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
 			fmt.Fprint(os.Stderr, err.Error())
 		}
-		return
+		return nil
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 	scanner.Scan()
+	if err := scanner.Err(); err != nil {
+		return err
+	}
 	promptLine := scanner.Text()
-	var failed bool
 	if len(promptLine) > 0 && !gavePrompt {
 		promptLine = strings.TrimPrefix(promptLine, `"`)
 		promptLine = strings.TrimSuffix(promptLine, `"`)
 		if err := so.MakePromptFunc(promptLine, fmtChar); err != nil {
-			log.Fatal(err)
+			return err
 		}
 		fmt.Print("sucessfully parsed prompt from file...\n")
 	} else {
 		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
-			fmt.Fprint(os.Stderr, err.Error())
+			return err
 		}
 	}
+	var failed bool
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if _, err := so.DefWord(strings.Split(line, " ")); err != nil {
@@ -157,12 +159,13 @@ func configure(so *stack.StackOperator, path string, promptFmt string) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return err
 	}
 	if failed {
 		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words...\n")
 	}
 	fmt.Print("sucessfully parsed config file\n")
+	return nil
 }
 
 func main() {
@@ -179,8 +182,8 @@ func main() {
 	flag.StringVar(&configPath, "c", "", "")
 	flag.StringVar(&configPath, "config", "", "")
 	var promptFormat string
-	flag.StringVar(&promptFormat, "p", "\000", "")
-	flag.StringVar(&promptFormat, "prompt", "\000", "")
+	flag.StringVar(&promptFormat, "p", "\x00", "")
+	flag.StringVar(&promptFormat, "prompt", "\x00", "")
 
 	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
@@ -190,11 +193,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	so := MakeStackOperator(stackLimit, !(len(flag.Args()) > 0), strictMode)
-	configure(so, configPath, promptFormat)
-	if so.Interactive {
-		interactive(so)
-	} else {
-		nonInteractive(so, flag.Args())
+	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode)
+	if err := configure(so, configPath, promptFormat); err != nil {
+		log.Fatal(err)
+	}
+	if err := start(so, flag.Args()); err != nil && err != io.EOF {
+		log.Fatal(err)
 	}
 }

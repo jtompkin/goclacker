@@ -5,7 +5,7 @@ import (
 )
 
 func getMaps() (*OrderedMap[string, int], map[string]int) {
-	om := NewOrderedMap[string, int](16)
+	om := NewOrderedMap[string, int]()
 	om.Set("arthropods", 0)
 	om.Set("are", 1)
 	om.Set("cool", 2)
