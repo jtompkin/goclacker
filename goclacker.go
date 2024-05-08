@@ -89,14 +89,16 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 }
 
 func nonInteractive(so *stack.StackOperator, programs []string) {
+	var f io.Writer
 	for _, prog := range programs {
-		f := os.Stdin
+		f = os.Stdout
 		err := so.ParseInput(prog)
 		if err != nil {
 			f = os.Stderr
+            so.PrintBuf = []byte(err.Error())
 		}
-		fmt.Fprint(f, so.PrintBuf)
 	}
+	fmt.Fprint(f, string(so.PrintBuf))
 }
 
 func interactive(so *stack.StackOperator) (err error) {
@@ -114,8 +116,8 @@ func interactive(so *stack.StackOperator) (err error) {
 	for {
 		line, err := it.ReadLine()
 		if err != nil {
-            it.SetPrompt("")
-            it.Write([]byte{})
+			it.SetPrompt("")
+			it.Write(nil)
 			return err
 		}
 		err = so.ParseInput(line)
