@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/jtompkin/goclacker/internal/stack"
+	"golang.org/x/term"
 )
 
 const usage string = `usage of goclacker:
@@ -103,28 +104,32 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 }
 
 func interactive(so *stack.StackOperator) (err error) {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print(so.Prompt())
-	for scanner.Scan() {
-		printTo, s := parsePrint(so, scanner.Text())
-		fmt.Fprint(printTo, s)
-		fmt.Print(so.Prompt())
-	}
-	fmt.Print("\n")
-
-	if err := scanner.Err(); err != nil {
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
 		return err
 	}
-	return nil
+	defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+	t := term.NewTerminal(os.Stdin, so.Prompt())
+    var line string
+	for {
+        line, err = t.ReadLine()
+        if err != nil {
+            return err
+        }
+        s, _ := so.ParseInput(line)
+        t.Write([]byte(s))
+        t.SetPrompt(so.Prompt())
+	}
 }
 
 func start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
 		err = interactive(so)
-		return err
+        return err
 	}
 	nonInteractive(so, progs)
-	return nil
+	return err
 }
 
 func configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
@@ -211,7 +216,7 @@ func main() {
 	if err := configure(so, configPath, promptFormat); err != nil {
 		log.Fatal(err)
 	}
-	if err := start(so, flag.Args()); err != nil {
+	if err := start(so, flag.Args()); err != nil && err != io.EOF{
 		log.Fatal(err)
 	}
 }
