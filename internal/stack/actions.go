@@ -290,11 +290,21 @@ var Display = &Action{
 // screen.
 var Help = &Action{
 	func(so *StackOperator) (string, error) {
-		sb := &strings.Builder{}
+		ops := make([]string, 0, len(so.Actions.Pairs))
+		var maxLen int
 		for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
-			sb.Write([]byte(fmt.Sprintf("%s\t%q\n", p.Key, p.Value.Help)))
+			ops = append(ops, p.Key)
+			if len(p.Key) > maxLen {
+				maxLen = len(p.Key)
+			}
 		}
 		so.Actions.Reset()
+		sb := new(strings.Builder)
+		for _, s := range ops {
+			pad := strings.Repeat(" ", maxLen-len(s))
+			p, _ := so.Actions.Get(s)
+			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, s, p.Value.Help))
+		}
 		return sb.String(), nil
 	}, 0, 0,
 	"display this information screen",
@@ -319,19 +329,19 @@ var Words = &Action{
 				return 1
 			}
 			if a > b {
-				return -1
+				return 1
 			}
 			if a < b {
-				return 1
+				return -1
 			}
 			return 0
 		})
-		defs := make([]string, len(keys))
-		for i, k := range keys {
+		sb := new(strings.Builder)
+		for _, k := range keys {
 			pad := strings.Repeat(" ", maxLen-len(k))
-			defs[i] = fmt.Sprintf("%s%s : %s", pad, k, so.Words[k])
+			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, k, so.Words[k]))
 		}
-		return strings.Join(defs, "\n") + Suffix, nil
+		return sb.String(), nil
 	}, 0, 0,
 	"display all defined words",
 }

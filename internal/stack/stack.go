@@ -198,10 +198,11 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 			last := make([]string, n)
 			for i := 0; i < n; i++ {
 				p := n - i - 1
-				if i > len(so.Stack.Values)-1 {
+				l := len(so.Stack.Values)
+				if i > l-1 {
 					last[p] = "N"
 				} else {
-					last[p] = fmt.Sprint(so.Stack.Values[len(so.Stack.Values)-i-1])
+					last[p] = fmt.Sprint(so.Stack.Values[l-i-1])
 				}
 			}
 			return strings.Join(last, " ")
@@ -213,10 +214,11 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 		if format[i] == fmtChar {
 			next := format[i+1]
 			sb := new(strings.Builder)
+			var extra int
 			for j := i + 1; next >= '0' && next <= '9' && j < len(format)-1; j++ {
 				sb.Write([]byte{next})
-				promptFmt[j+1] = 0
 				next = format[j+1]
+				extra++
 			}
 			conv, err := strconv.Atoi(sb.String())
 			if err != nil {
@@ -228,6 +230,9 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 				promptFuncs = append(promptFuncs, f)
 				promptFmt[i] = '%'
 				promptFmt[i+1] = 's'
+				for j := range extra {
+					promptFmt[i+j+2] = 0
+				}
 			}
 			if next != fmtChar {
 				i++
@@ -280,7 +285,7 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 			'l': func(so *StackOperator) string { return fmt.Sprint(cap(so.Stack.Values)) },
 			'c': func(so *StackOperator) string { return fmt.Sprint(len(so.Stack.Values)) },
 			's': func(so *StackOperator) string { return fmt.Sprint(so.Stack.Stash) },
-			't': func(so *StackOperator) string { return "" },
+			't': nil,
 		},
 	}
 }
