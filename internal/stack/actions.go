@@ -392,3 +392,15 @@ var Rroll = &Action{
 	}, 2, 2,
 	"roll the stack to the left one position",
 }
+
+var Sum = &Action{
+    func(so *StackOperator) (toPrint string, err error) {
+        var sum float64
+        for len(so.Stack.Values) > 0 {
+            sum += so.Stack.Pop()
+        }
+        so.Stack.Push(sum)
+        return so.Stack.Display(), nil
+    }, 1, 1,
+    "pop all values in the stack; push their sum",
+}

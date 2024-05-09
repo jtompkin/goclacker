@@ -80,6 +80,7 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay 
 	actions.Set("swap", stack.Swap)
 	actions.Set("froll", stack.Froll)
 	actions.Set("rroll", stack.Rroll)
+    actions.Set("sum", stack.Sum)
 	actions.Set("stash", stack.Stash)
 	actions.Set("pull", stack.Pull)
 	actions.Set("clr", stack.Clear)
