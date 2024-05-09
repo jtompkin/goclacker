@@ -88,7 +88,6 @@ var Modulo = &Action{
 	"pop 'a', 'b'; push the remainder of 'b' / 'a'",
 }
 
-
 // Factorial is an Action with the following description: pop 'a'; push the
 // factorial of 'a'.
 var Factorial = &Action{
@@ -274,7 +273,11 @@ var Pull = &Action{
 // the stack.
 var Display = &Action{
 	func(so *StackOperator) (string, error) {
-		return so.Stack.Display(), nil
+		sBuf := make([]string, len(so.Stack.Values))
+		for i, f := range so.Stack.Values {
+			sBuf[i] = fmt.Sprint(f)
+		}
+		return fmt.Sprintf("[ %s ]\n", strings.Join(sBuf, " ")), nil
 	}, 0, 0,
 	"display all values in the stack",
 }

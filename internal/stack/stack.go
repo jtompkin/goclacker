@@ -38,6 +38,9 @@ func (stk *Stack) Push(f float64) error {
 // Display returns a string of all values in the stack according to
 // Stack.displayFmt
 func (stk *Stack) Display() string {
+	if stk.displayFmt == "" {
+		return ""
+	}
 	ss := make([]string, len(stk.Values))
 	for i, f := range stk.Values {
 		ss[i] = fmt.Sprint(f)
@@ -105,15 +108,15 @@ func (so *StackOperator) DefWord(def []string) (message string, err error) {
 		return "", nil
 	}
 	word := noEmpty[0]
-    if _, err := strconv.ParseFloat(word, 64); err == nil {
-        return "", errors.New(fmt.Sprintf("counld not define %s : cannot redifine number%s", word, Suffix))
-    }
-    forbidden := []string{"=", "quit"}
-    for _, s := range forbidden {
-        if word == s {
-            return "", errors.New(fmt.Sprintf("could not define %s : word cannot be any of: %s%s", word, strings.Join(forbidden, " "), Suffix))
-        }
-    }
+	if _, err := strconv.ParseFloat(word, 64); err == nil {
+		return "", errors.New(fmt.Sprintf("counld not define %s : cannot redifine number%s", word, Suffix))
+	}
+	forbidden := []string{"=", "quit"}
+	for _, s := range forbidden {
+		if word == s {
+			return "", errors.New(fmt.Sprintf("could not define %s : word cannot be any of: %s%s", word, strings.Join(forbidden, " "), Suffix))
+		}
+	}
 	if _, present := so.Actions.Get(word); present {
 		return "", errors.New(fmt.Sprintf("could not define %s : cannot redifine operator%s", word, Suffix))
 	}
@@ -186,11 +189,36 @@ func (so *StackOperator) Fail(message string, values ...float64) error {
 // it is called. This function returns an error if it could not make the prompt
 // function (should always return nil).
 func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
+	getLastSetup := func(n int) func(*StackOperator) string {
+		return func(so *StackOperator) string {
+			last := make([]string, n)
+			for i := 0; i < n; i++ {
+				p := n - i - 1
+				if i > len(so.Stack.Values)-1 {
+					last[p] = "N"
+				} else {
+					last[p] = fmt.Sprint(so.Stack.Values[len(so.Stack.Values)-i-1])
+				}
+			}
+			return strings.Join(last, " ")
+		}
+	}
 	promptFuncs := make([]func(*StackOperator) string, 0, strings.Count(format, string(fmtChar)))
 	promptFmt := []byte(format)
 	for i := 0; i < len(format)-1; i++ {
 		if format[i] == fmtChar {
 			next := format[i+1]
+			sb := new(strings.Builder)
+			for j := i + 1; next >= '0' && next <= '9' && j < len(format)-1; j++ {
+				sb.Write([]byte{next})
+				promptFmt[j+1] = 0
+				next = format[j+1]
+			}
+			conv, err := strconv.Atoi(sb.String())
+            if err != nil {
+                conv = cap(so.Stack.Values)
+            }
+			so.formatters['t'] = getLastSetup(conv)
 			f := so.formatters[next]
 			if f != nil {
 				promptFuncs = append(promptFuncs, f)
@@ -204,7 +232,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 	}
 	promptSplit := strings.SplitAfter(string(promptFmt), "%s")
 	if len(promptSplit) != len(promptFuncs)+1 {
-		return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifyers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
+		return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifiers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
 	}
 
 	so.Prompt = func() string {
@@ -220,12 +248,15 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words and formatters.
-func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, strict bool) *StackOperator {
+func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, noDisplay bool, strict bool) *StackOperator {
 	var displayFmt string
 	if interactive {
 		displayFmt = "[ %s ]" + Suffix
 	} else {
 		displayFmt = "%s" + Suffix
+	}
+	if noDisplay {
+		displayFmt = ""
 	}
 	notFound := func(s string) error { return nil }
 	if strict {
@@ -243,19 +274,9 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 		Words:       map[string]string{},
 		formatters: map[byte]func(*StackOperator) string{
 			'l': func(so *StackOperator) string { return fmt.Sprint(cap(so.Stack.Values)) },
-			't': func(so *StackOperator) string {
-				l := len(so.Stack.Values)
-				if l == 0 {
-					return "NA"
-				}
-				return fmt.Sprint(so.Stack.Values[l-1])
-			},
 			'c': func(so *StackOperator) string { return fmt.Sprint(len(so.Stack.Values)) },
 			's': func(so *StackOperator) string { return fmt.Sprint(so.Stack.Stash) },
-			'w': func(so *StackOperator) string {
-                s := so.Stack.Display()
-                return s[:len(s)-1]
-            },
+			't': func(so *StackOperator) string { return "" },
 		},
 	}
 }

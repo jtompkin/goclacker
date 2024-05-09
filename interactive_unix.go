@@ -12,16 +12,14 @@ import (
 )
 
 func interactive(so *stack.StackOperator) (err error) {
-	fds := []int{int(os.Stdin.Fd()), int(os.Stderr.Fd())}
-	for _, fd := range fds {
-		state, err := term.MakeRaw(fd)
-		if err != nil {
-			return err
-		}
-		defer term.Restore(fd, state)
-	}
+    state, err := term.MakeRaw(int(os.Stdin.Fd()))
+    if err != nil {
+        return err
+    }
+    defer term.Restore(int(os.Stdin.Fd()), state)
 
 	it := term.NewTerminal(os.Stdin, so.Prompt())
+    ot := term.NewTerminal(os.Stdout, "")
 	et := term.NewTerminal(os.Stderr, "")
 	for {
 		line, err := it.ReadLine()
@@ -36,7 +34,7 @@ func interactive(so *stack.StackOperator) (err error) {
 			return err
 		}
 		err = so.ParseInput(line)
-		it.Write(so.PrintBuf)
+		ot.Write(so.PrintBuf)
 		if err != nil {
 			et.Write([]byte(err.Error()))
 		}

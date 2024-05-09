@@ -3,7 +3,9 @@
 Command line reverse Polish notation (RPN) calculator. This stack is ready to
 Go.
 
-Josh Tompkin
+Distributed under the MIT license
+
+Copyright 2024 Josh Tompkin
 
 jtompkin-dev@pm.me
 
@@ -17,7 +19,8 @@ Install with Go.
 go install github.com/jtompkin/goclacker@latest
 ```
 
-Build with Go.
+Build with Go. (Dependencies in
+[`go.mod`](https://raw.githubusercontent.com/jtompkin/goclacker/main/go.mod))
 
 ```
 git clone https://github.com/jtompkin/goclacker.git
@@ -30,13 +33,13 @@ Live, laugh, love with Go.
 If you are not familiar with [Go](https://go.dev), the binary will be in
 `~/go/bin` for linux, `C:\users\<USER>\go\bin` for windows (probably).
 
-Binaries are available on the
+Pre-built binaries are available on the
 [release](https://github.com/jtompkin/goclacker/releases/latest) page.
 
 ## Usage
 
 ```
-goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
+goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
 ```
 
 If any positional arguments (`program...`) are supplied, they will be
@@ -58,23 +61,24 @@ execute them in order.
 If you're into accessorizing your command line RPN calculators (I know you are),
 you can create your own custom prompt with the `-p` flag. Just provide a single
 string that defines what you want the prompt to look like. If you wanna go
-really crazy, you can include format specifyers that will print information
-about your current calculating environment! All format specifyers are prefixed
-by a `&` character. Some examples:
+really crazy, you can include format specifiers that will print information
+about your current calculating environment! All format specifiers are prefixed
+by a `&` character; some use parameters that come after the `&` and before the
+specifier. Some examples:
 
 `goclacker -p ' &c > '` would make a prompt that prints the current stack size
 and a greater than character. All spaces are preserved; no extra whitespace is
 ever added. This happens to be the default prompt.
 
-`goclacker -p '-&t-&l- <3 '` would make a prompt that prints the top value in
-the stack and the stack size limit surrounded by `-` characters and a heart. For
-when you're in the *mood* for that reverse Polish goodness.
+`goclacker -p '-&3t-&l- <3 '` would make a prompt that prints the top 3 values
+in the stack and the stack size limit surrounded by `-` characters, and a heart.
+For when you're in the *mood* for that reverse Polish goodness.
 
-| Specifyer | Value               |
+| specifier | Value               |
 |----------:|---------------------|
 |         l | stack size limit    |
 |         c | current stack size  |
-|         t | top stack value     |
+|        Nt | top stack value     |
 |         s | current stash value |
 
 You can probably break this if you try hard enough, so please do.
@@ -86,15 +90,18 @@ file](#configuration) if you wanna know how).
 
 You can also define words in interactive mode!! To do so, start your command
 with `=` and then type the word and the program you want to run when you enter
-the word (the `>` is not typed, ya dingus). Now, when `sqrt` is entered at the
-prompt, 0.5 is pushed to the stack, and the exponentiation operator is called.
-That is apparently the same thing as taking the square root. Crazy. Entering
-`pi` would simply push the value of pi to the stack.
+the word (the `>` is not typed, ya dingus). Consider entering the following
+lines at the interactive prompt:
 
 ```
   > = sqrt 0.5 ^
   > = pi 3.14159265358979323846
 ```
+
+Now, when `sqrt` is entered at the prompt, 0.5 is pushed to the stack, and the
+exponentiation operator is called. That is apparently the same thing as taking
+the square root. Crazy. Entering `pi` now simply pushes the value of pi to the
+stack.
 
 These two words happen to be automagically defined whenever you start the
 program. If you hate them (or any other words you define) you can delete a
@@ -122,11 +129,11 @@ The first line is **always** interpreted as the prompt format. Leave it blank if
 you want the default prompt. You can surround your format with `"` on either
 side if you would like (not `'`!!); surrounding double quotes will not be
 included in the prompt. If you want a blank prompt (because you are boring), use
-a single `"` as your first line. Any format provided with `-p` will ovveride
+a single `"` as your first line. Any format provided with `-p` will override
 whatever is in the config file.
 
-Word definitions are the same as in interactive mode, except the `=` is not
-included - i.e. The first word per line is the word itself.
+Word definitions are the same as in interactive mode, except that `=` is not
+included - i.e. the first word per line is the word itself.
 
 A configuration file containing the following three lines would set the prompt
 to look like `------> ` (notice the lack of `"` and the preserved whitespace),

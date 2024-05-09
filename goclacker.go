@@ -12,8 +12,12 @@ import (
 	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-const usage string = `usage of goclacker:
-goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
+const usage string = `goclacker %s
+Copyright 2024 Josh Tompkin
+Distributed under the MIT license
+
+usage of goclacker:
+goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
     -V, --version
         Print version information and exit.
     -h, --help
@@ -21,6 +25,8 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -s, --strict
         Run in strict mode: entering something that is not a number, operator,
         or defined word will return an error instead of doing nothing.
+    -n, --no-display
+        Do not display stack after operations. Useful if '&Nt' is in prompt.
     -l, --limit int
         stack size limit, no limit if negative (default 8)
     -c, --config string
@@ -28,10 +34,10 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
     -p, --prompt string
         format string for the interactive prompt (default " &c > ")
         format specifiers:
-            &l : stack limit
-            &c : current stack size
-            &t : top stack value
-            &s : current stash value
+            &l  : stack limit
+            &c  : current stack size
+            &Nt : top N stack values
+            &s  : current stash value
     [program...]
         Any positional arguments will be interpreted and executed by the
         calculator. Interactive mode will not be entered if any positional
@@ -40,12 +46,12 @@ goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
 
 const (
 	defPrompt string = " &c > "
-	version   string = "v1.3.0"
+	version   string = "v1.3.1"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
 
-func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
+func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
@@ -76,7 +82,7 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("words", stack.Words)
 	actions.Set("help", stack.Help)
 	actions.Set("cls", stack.ClearScreen)
-	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
+	so := stack.NewStackOperator(actions, stackLimit, interactive, noDisplay, strict)
 	so.Words = map[string]string{
 		"?":     "help",
 		"randn": "rand * ceil 1 -",
@@ -101,6 +107,8 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 }
 
 func Interactive(so *stack.StackOperator) (err error) {
+    fmt.Printf("goclacker %s by Josh Tompkin\n", version)
+    fmt.Print("Distributed under the MIT license\n\n")
 	return interactive(so)
 }
 
@@ -181,8 +189,11 @@ func main() {
 	var promptFormat string
 	flag.StringVar(&promptFormat, "p", "\x00", "")
 	flag.StringVar(&promptFormat, "prompt", "\x00", "")
+	var noDisplay bool
+	flag.BoolVar(&noDisplay, "n", false, "")
+	flag.BoolVar(&noDisplay, "no-display", false, "")
 
-	flag.Usage = func() { fmt.Print(usage) }
+	flag.Usage = func() { fmt.Printf(usage, version) }
 	flag.Parse()
 
 	if printVersion {
@@ -190,7 +201,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode)
+	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode, noDisplay)
 	if err := configure(so, configPath, promptFormat); err != nil {
 		log.Fatal(err)
 	}
