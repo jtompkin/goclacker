@@ -292,7 +292,7 @@ var Help = &Action{
 	func(so *StackOperator) (string, error) {
 		sb := &strings.Builder{}
 		for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
-			sb.Write([]byte(fmt.Sprintf("%s%c%q\n", p.Key, '\t', p.Value.Help)))
+			sb.Write([]byte(fmt.Sprintf("%s\t%q\n", p.Key, p.Value.Help)))
 		}
 		so.Actions.Reset()
 		return sb.String(), nil
@@ -304,13 +304,32 @@ var Help = &Action{
 var Words = &Action{
 	func(so *StackOperator) (string, error) {
 		keys := make([]string, 0, len(so.Words))
+		var maxLen int
 		for k := range so.Words {
 			keys = append(keys, k)
+			if len(k) > maxLen {
+				maxLen = len(k)
+			}
 		}
-		slices.Sort(keys)
+		slices.SortFunc(keys, func(a string, b string) int {
+			if len(a) > len(b) {
+				return -1
+			}
+			if len(a) < len(b) {
+				return 1
+			}
+			if a > b {
+				return -1
+			}
+			if a < b {
+				return 1
+			}
+			return 0
+		})
 		defs := make([]string, len(keys))
 		for i, k := range keys {
-			defs[i] = fmt.Sprintf("%s : %s", k, so.Words[k])
+			pad := strings.Repeat(" ", maxLen-len(k))
+			defs[i] = fmt.Sprintf("%s%s : %s", pad, k, so.Words[k])
 		}
 		return strings.Join(defs, "\n") + Suffix, nil
 	}, 0, 0,
@@ -393,14 +412,28 @@ var Rroll = &Action{
 	"roll the stack to the left one position",
 }
 
+// Sum is an Action with the following description: pop all values in the stack;
+// push their sum.
 var Sum = &Action{
-    func(so *StackOperator) (toPrint string, err error) {
-        var sum float64
-        for len(so.Stack.Values) > 0 {
-            sum += so.Stack.Pop()
-        }
-        so.Stack.Push(sum)
-        return so.Stack.Display(), nil
-    }, 1, 1,
-    "pop all values in the stack; push their sum",
+	func(so *StackOperator) (toPrint string, err error) {
+		var sum float64
+		for len(so.Stack.Values) > 0 {
+			sum += so.Stack.Pop()
+		}
+		so.Stack.Push(sum)
+		return so.Stack.Display(), nil
+	}, 1, 1,
+	"pop all values in the stack; push their sum",
+}
+
+// Average is an Action with the following description: pop all values in the
+// stack; push their average.
+var Average = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		n := float64(len(so.Stack.Values))
+		Sum.Call(so)
+		so.Stack.Push(so.Stack.Pop() / n)
+		return so.Stack.Display(), nil
+	}, 1, 1,
+	"pop all values in the stack; push their average",
 }
