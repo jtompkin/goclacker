@@ -88,13 +88,6 @@ var Modulo = &Action{
 	"pop 'a', 'b'; push the remainder of 'b' / 'a'",
 }
 
-func fact(x int) int {
-	p := 1
-	for i := 2; i <= x; i++ {
-		p *= i
-	}
-	return p
-}
 
 // Factorial is an Action with the following description: pop 'a'; push the
 // factorial of 'a'.
@@ -107,7 +100,11 @@ var Factorial = &Action{
 		if x < 0 {
 			return "", so.Fail("cannot take factorial of negative number", x)
 		}
-		so.Stack.Push(float64(fact(int(x))))
+		p := 1
+		for i := 2; i <= int(x); i++ {
+			p *= i
+		}
+		so.Stack.Push(float64(p))
 		return so.Stack.Display(), nil
 	}, 1, 1,
 	"pop 'a'; push the factorial of 'a'",

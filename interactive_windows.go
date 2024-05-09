@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/jtompkin/goclacker/internal/stack"
 	"golang.org/x/term"
@@ -13,6 +15,11 @@ func interactive(so *stack.StackOperator) (err error) {
 	for {
 		fmt.Print(so.Prompt())
 		line, err := it.ReadLine()
+        if strings.TrimSpace(line) == "quit" {
+			it.SetPrompt("")
+			it.Write(nil)
+            return io.EOF
+        }
 		if err != nil {
 			it.SetPrompt("")
 			it.Write(nil)

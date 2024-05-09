@@ -120,10 +120,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 		gavePrompt = false
 	}
 	if path == "" {
-		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
-			fmt.Fprint(os.Stderr, err.Error())
-		}
-		return nil
+		return so.MakePromptFunc(promptFmt, fmtChar)
 	}
 
 	f, err := os.Open(path)
@@ -164,7 +161,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	if failed {
 		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words...\n")
 	}
-	fmt.Print("sucessfully parsed config file\n")
+	fmt.Fprint(os.Stderr, "sucessfully parsed config file\n")
 	return nil
 }
 

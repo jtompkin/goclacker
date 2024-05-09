@@ -105,9 +105,15 @@ func (so *StackOperator) DefWord(def []string) (message string, err error) {
 		return "", nil
 	}
 	word := noEmpty[0]
-	if strings.Contains("0123456789=.", string(word[0])) {
-		return "", errors.New(fmt.Sprintf("could not define %s : cannot start word with digit, '=', or '.'%s", word, Suffix))
-	}
+    if _, err := strconv.ParseFloat(word, 64); err == nil {
+        return "", errors.New(fmt.Sprintf("counld not define %s : cannot redifine number%s", word, Suffix))
+    }
+    forbidden := []string{"=", "quit"}
+    for _, s := range forbidden {
+        if word == s {
+            return "", errors.New(fmt.Sprintf("could not define %s : word cannot be any of: %s%s", word, strings.Join(forbidden, " "), Suffix))
+        }
+    }
 	if _, present := so.Actions.Get(word); present {
 		return "", errors.New(fmt.Sprintf("could not define %s : cannot redifine operator%s", word, Suffix))
 	}
@@ -246,6 +252,10 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 			},
 			'c': func(so *StackOperator) string { return fmt.Sprint(len(so.Stack.Values)) },
 			's': func(so *StackOperator) string { return fmt.Sprint(so.Stack.Stash) },
+			'w': func(so *StackOperator) string {
+                s := so.Stack.Display()
+                return s[:len(s)-1]
+            },
 		},
 	}
 }
