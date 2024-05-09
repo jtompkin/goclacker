@@ -1,3 +1,7 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License that
+// can be found in the LICENSE file
+
 package stack
 
 import (
@@ -215,9 +219,9 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 				next = format[j+1]
 			}
 			conv, err := strconv.Atoi(sb.String())
-            if err != nil {
-                conv = cap(so.Stack.Values)
-            }
+			if err != nil {
+				conv = cap(so.Stack.Values)
+			}
 			so.formatters['t'] = getLastSetup(conv)
 			f := so.formatters[next]
 			if f != nil {

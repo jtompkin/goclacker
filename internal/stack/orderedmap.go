@@ -1,3 +1,7 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License that
+// can be found in the LICENSE file
+
 package stack
 
 // Pair contains a Key of type K and Value of type V.

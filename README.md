@@ -3,9 +3,9 @@
 Command line reverse Polish notation (RPN) calculator. This stack is ready to
 Go.
 
-Distributed under the MIT license
-
 Copyright 2024 Josh Tompkin
+
+Licensed under the MIT license
 
 jtompkin-dev@pm.me
 

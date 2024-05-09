@@ -1,3 +1,7 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License that
+// can be found in the LICENSE file
+
 package main
 
 import (
@@ -15,11 +19,11 @@ func interactive(so *stack.StackOperator) (err error) {
 	for {
 		fmt.Print(so.Prompt())
 		line, err := it.ReadLine()
-        if strings.TrimSpace(line) == "quit" {
+		if strings.TrimSpace(line) == "quit" {
 			it.SetPrompt("")
 			it.Write(nil)
-            return io.EOF
-        }
+			return io.EOF
+		}
 		if err != nil {
 			it.SetPrompt("")
 			it.Write(nil)

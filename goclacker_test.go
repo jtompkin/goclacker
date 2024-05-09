@@ -1,3 +1,7 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License that
+// can be found in the LICENSE file
+
 package main
 
 import (
@@ -80,7 +84,7 @@ func TestPrograms(t *testing.T) {
 		"pi sqrt":      {"1.7724538509055159" + s, false, false},
 		"+":            {"operation error: '+' needs 2 values in stack" + s, false, false},
 		"-1 log":       {"operation error: cannot take logarithm of non-positive number" + s, false, false},
-		"-1 ln":       {"operation error: cannot take logarithm of non-positive number" + s, false, false},
+		"-1 ln":        {"operation error: cannot take logarithm of non-positive number" + s, false, false},
 		"=":            {"", true, false},
 		"1 0 /":        {"", true, false},
 		"help":         {"", false, true},

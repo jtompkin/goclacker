@@ -1,3 +1,7 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License that
+// can be found in the LICENSE file
+
 package main
 
 import (
@@ -14,7 +18,7 @@ import (
 
 const usage string = `goclacker %s
 Copyright 2024 Josh Tompkin
-Distributed under the MIT license
+Licensed under the MIT license
 
 usage of goclacker:
 goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
@@ -107,8 +111,7 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 }
 
 func Interactive(so *stack.StackOperator) (err error) {
-    fmt.Printf("goclacker %s by Josh Tompkin\n", version)
-    fmt.Print("Distributed under the MIT license\n\n")
+	fmt.Printf("goclacker %s by Josh Tompkin\n", version)
 	return interactive(so)
 }
 

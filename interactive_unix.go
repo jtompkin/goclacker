@@ -1,3 +1,7 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License that
+// can be found in the LICENSE file
+
 //go:build aix || darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris || zos
 
 package main
@@ -12,14 +16,14 @@ import (
 )
 
 func interactive(so *stack.StackOperator) (err error) {
-    state, err := term.MakeRaw(int(os.Stdin.Fd()))
-    if err != nil {
-        return err
-    }
-    defer term.Restore(int(os.Stdin.Fd()), state)
+	state, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		return err
+	}
+	defer term.Restore(int(os.Stdin.Fd()), state)
 
 	it := term.NewTerminal(os.Stdin, so.Prompt())
-    ot := term.NewTerminal(os.Stdout, "")
+	ot := term.NewTerminal(os.Stdout, "")
 	et := term.NewTerminal(os.Stderr, "")
 	for {
 		line, err := it.ReadLine()
