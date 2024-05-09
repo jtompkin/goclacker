@@ -5,7 +5,7 @@ Go.
 
 Copyright 2024 Josh Tompkin
 
-Licensed under the MIT license
+This project is licensed under the terms of the MIT license.
 
 jtompkin-dev@pm.me
 
