@@ -133,7 +133,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 		gavePrompt = false
 	}
 	if path == "" {
-		return so.MakePromptFunc(promptFmt, fmtChar)
+        return so.MakePromptFunc(promptFmt, fmtChar)
 	}
 
 	f, err := os.Open(path)
@@ -151,15 +151,14 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	if len(promptLine) > 0 && !gavePrompt {
 		promptLine = strings.TrimPrefix(promptLine, `"`)
 		promptLine = strings.TrimSuffix(promptLine, `"`)
-		if err := so.MakePromptFunc(promptLine, fmtChar); err != nil {
-			return err
-		}
+        err = so.MakePromptFunc(promptLine, fmtChar)
 		fmt.Print("sucessfully parsed prompt from file...\n")
 	} else {
-		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
-			return err
-		}
+        err = so.MakePromptFunc(promptFmt, fmtChar)
 	}
+    if err != nil {
+        return err
+    }
 	var failed bool
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())

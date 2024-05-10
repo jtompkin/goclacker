@@ -214,7 +214,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 		if format[i] == fmtChar {
 			next := format[i+1]
 			sb := new(strings.Builder)
-			var extra int
+            var extra int
 			for j := i + 1; next >= '0' && next <= '9' && j < len(format)-1; j++ {
 				sb.Write([]byte{next})
 				next = format[j+1]
@@ -230,7 +230,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 				promptFuncs = append(promptFuncs, f)
 				promptFmt[i] = '%'
 				promptFmt[i+1] = 's'
-				for j := range extra {
+				for j := 0; j < extra; j++ {
 					promptFmt[i+j+2] = 0
 				}
 			}
@@ -239,7 +239,13 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 			}
 		}
 	}
-	promptSplit := strings.SplitAfter(string(promptFmt), "%s")
+    noNull := []byte{}
+    for _, b := range promptFmt {
+        if b != 0 {
+            noNull = append(noNull, b)
+        }
+    }
+	promptSplit := strings.SplitAfter(string(noNull), "%s")
 	if len(promptSplit) != len(promptFuncs)+1 {
 		return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifiers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
 	}

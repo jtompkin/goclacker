@@ -31,7 +31,7 @@ func TestPrompts(t *testing.T) {
 		fmt.Sprintf("-%c", fmtChar):    fmt.Sprintf("-%c", fmtChar),
 		fmt.Sprintf(" %c > ", fmtChar): fmt.Sprintf(" %c > ", fmtChar),
 		fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar):                fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar),
-		fmt.Sprintf("%cl%cc%cs%ct", fmtChar, fmtChar, fmtChar, fmtChar): "8012NA",
+		fmt.Sprintf("%cl%cc&3t%cs%c10t", fmtChar, fmtChar, fmtChar, fmtChar): "80N N N12N N N N N N N N N N",
 	}
 	for format, expected := range formats {
 		prompt(t, format, expected)
