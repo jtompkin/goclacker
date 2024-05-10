@@ -1,6 +1,5 @@
 // Copyright 2024 Josh Tompkin
-// Licensed under the MIT License that
-// can be found in the LICENSE file
+// Licensed under the MIT License
 
 package main
 

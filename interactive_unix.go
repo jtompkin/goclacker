@@ -1,6 +1,5 @@
 // Copyright 2024 Josh Tompkin
-// Licensed under the MIT License that
-// can be found in the LICENSE file
+// Licensed under the MIT License
 
 //go:build aix || darwin || dragonfly || freebsd || linux || netbsd || openbsd || solaris || zos
 
