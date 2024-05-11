@@ -15,9 +15,10 @@ import (
 	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-const usage string = `goclacker %s
+const usage string =
+`goclacker %s
 Copyright 2024 Josh Tompkin
-Licensed under the terms of the MIT license.
+Licensed under the MIT license.
 
 usage of goclacker:
 goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
@@ -51,7 +52,7 @@ const (
 	defPrompt string = " &c > "
 	version   string = "v1.3.1"
 	fmtChar   byte   = '&'
-	defLimit  int    = 8
+	defLimit  int    = -1
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
@@ -201,7 +202,7 @@ func main() {
 
 	if printVersion {
 		fmt.Printf("goclacker %s\n", version)
-		os.Exit(0)
+        return
 	}
 
 	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode, noDisplay)
