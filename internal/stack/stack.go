@@ -172,7 +172,7 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 	if stkLen < pops {
 		return "", errors.New(fmt.Sprintf("%s'%s' needs %d value%c in stack%s", prefix, token, pops, c, Suffix))
 	}
-	if stkLen-pops+action.Pushes > cap(so.Stack.Values) {
+	if stkLen-pops+action.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
 		return "", errors.New(fmt.Sprintf("%s'%s' would overflow stack%s", prefix, token, Suffix))
 	}
 	return action.Call(so)
@@ -213,7 +213,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 		if format[i] == fmtChar {
 			next := format[i+1]
 			sb := new(strings.Builder)
-            var extra int
+			var extra int
 			for j := i + 1; next >= '0' && next <= '9' && j < len(format)-1; j++ {
 				sb.Write([]byte{next})
 				next = format[j+1]
@@ -238,12 +238,12 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 			}
 		}
 	}
-    noNull := []byte{}
-    for _, b := range promptFmt {
-        if b != 0 {
-            noNull = append(noNull, b)
-        }
-    }
+	noNull := []byte{}
+	for _, b := range promptFmt {
+		if b != 0 {
+			noNull = append(noNull, b)
+		}
+	}
 	promptSplit := strings.SplitAfter(string(noNull), "%s")
 	if len(promptSplit) != len(promptFuncs)+1 {
 		return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifiers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
