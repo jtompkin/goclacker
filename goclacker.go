@@ -15,8 +15,8 @@ import (
 	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-const usage string =
-`goclacker %s
+const (
+	usage string = `goclacker %s
 Copyright 2024 Josh Tompkin
 Licensed under the MIT license.
 
@@ -47,8 +47,6 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
         calculator. Interactive mode will not be entered if any positional
         arguments are supplied.
 `
-
-const (
 	defPrompt string = " &c > "
 	version   string = "v1.3.1"
 	fmtChar   byte   = '&'
@@ -88,10 +86,13 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay 
 	actions.Set("words", stack.Words)
 	actions.Set("help", stack.Help)
 	actions.Set("cls", stack.ClearScreen)
+	actions.Set("Dclip", stack.Clip)
+	actions.Set("Dgrow", stack.Grow)
+	actions.Set("Dfill", stack.Fill)
 	so := stack.NewStackOperator(actions, stackLimit, interactive, noDisplay, strict)
 	so.Words = map[string]string{
 		"?":     "help",
-		"randn": "rand * ceil 1 -",
+		"randn": "rand * floor",
 		"sqrt":  "0.5 ^",
 		"logb":  "log swap log / -1 ^",
 		"pi":    "3.141592653589793",
@@ -133,7 +134,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 		gavePrompt = false
 	}
 	if path == "" {
-        return so.MakePromptFunc(promptFmt, fmtChar)
+		return so.MakePromptFunc(promptFmt, fmtChar)
 	}
 
 	f, err := os.Open(path)
@@ -151,14 +152,14 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	if len(promptLine) > 0 && !gavePrompt {
 		promptLine = strings.TrimPrefix(promptLine, `"`)
 		promptLine = strings.TrimSuffix(promptLine, `"`)
-        err = so.MakePromptFunc(promptLine, fmtChar)
+		err = so.MakePromptFunc(promptLine, fmtChar)
 		fmt.Print("sucessfully parsed prompt from file...\n")
 	} else {
-        err = so.MakePromptFunc(promptFmt, fmtChar)
+		err = so.MakePromptFunc(promptFmt, fmtChar)
 	}
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	var failed bool
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -202,7 +203,7 @@ func main() {
 
 	if printVersion {
 		fmt.Printf("goclacker %s\n", version)
-        return
+		return
 	}
 
 	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode, noDisplay)

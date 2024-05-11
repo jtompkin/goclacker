@@ -289,21 +289,22 @@ var Display = &Action{
 // screen.
 var Help = &Action{
 	func(so *StackOperator) (string, error) {
-		ops := make([]string, 0, len(so.Actions.Pairs))
-		var maxLen int
+		header := "operator"
+		maxLen := len(header)
 		for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
-			ops = append(ops, p.Key)
 			if len(p.Key) > maxLen {
 				maxLen = len(p.Key)
 			}
 		}
 		so.Actions.Reset()
 		sb := new(strings.Builder)
-		for _, s := range ops {
-			pad := strings.Repeat(" ", maxLen-len(s))
-			p, _ := so.Actions.Get(s)
-			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, s, p.Value.Help))
+		pad := strings.Repeat(" ", maxLen-len(header))
+		sb.WriteString(fmt.Sprintf("%s%s | %s\n", pad, header, "description"))
+		for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
+			pad := strings.Repeat(" ", maxLen-len(p.Key))
+			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, p.Key, p.Value.Help))
 		}
+		so.Actions.Reset()
 		return sb.String(), nil
 	}, 0, 0,
 	"display this information screen",
@@ -313,7 +314,8 @@ var Help = &Action{
 var Words = &Action{
 	func(so *StackOperator) (string, error) {
 		keys := make([]string, 0, len(so.Words))
-		var maxLen int
+		header := "word"
+		maxLen := len(header)
 		for k := range so.Words {
 			keys = append(keys, k)
 			if len(k) > maxLen {
@@ -336,6 +338,8 @@ var Words = &Action{
 			return 0
 		})
 		sb := new(strings.Builder)
+		pad := strings.Repeat(" ", maxLen-len(header))
+		sb.WriteString(fmt.Sprintf("%s%s | definition\n", pad, header))
 		for _, k := range keys {
 			pad := strings.Repeat(" ", maxLen-len(k))
 			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, k, so.Words[k]))
@@ -446,4 +450,51 @@ var Average = &Action{
 		return so.Stack.Display(), nil
 	}, 1, 1,
 	"pop all values in the stack; push their average",
+}
+
+var Clip = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		c := cap(so.Stack.Values)
+		so.Stack.Values = slices.Clip(so.Stack.Values)
+		return fmt.Sprintf("clipped %d capacity\n", c-cap(so.Stack.Values)), nil
+	}, 0, 0,
+	"DEBUG: clip unused stack capacity",
+}
+
+// Grow is an Action with the following description: DEBUG: pop 'a'; push 'a';
+// grow stack to accomadate 'a' more values. Will commit blasphemy and grow
+// stack by 1 if cap(Stack.Values) == 0.
+var Grow = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		if cap(so.Stack.Values) == 0 {
+			so.Stack.Values = slices.Grow(so.Stack.Values, 1)
+			return fmt.Sprintf("new stack capacity is %d\n", cap(so.Stack.Values)), nil
+		}
+		if len(so.Stack.Values) == 0 {
+			return "", nil
+		}
+		n := so.Stack.Pop()
+		if n != float64(int(n)) {
+			return "", so.Fail("cannot grow stack by non-integer value", n)
+		}
+		if n < 0 {
+			return "", so.Fail("cannot grow stack by negative value", n)
+		}
+		so.Stack.Push(n)
+		so.Stack.Values = slices.Grow(so.Stack.Values, int(n))
+		return fmt.Sprintf("new stack capacity is %d\n", cap(so.Stack.Values)), nil
+	}, 0, 0,
+	"DEBUG: pop 'a'; push 'a'; grow stack to accomadate 'a' more values",
+}
+
+var Fill = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		for i := 0; i < cap(so.Stack.Values); i++ {
+			if i > len(so.Stack.Values)-1 {
+				so.Stack.Values = append(so.Stack.Values, float64(rand.Intn(255)))
+			}
+		}
+		return so.Stack.Display(), nil
+	}, 0, 0,
+	"DEBUG: fill stack with random values",
 }
