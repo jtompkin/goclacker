@@ -395,10 +395,11 @@ var Swap = &Action{
 // right one position.
 var Froll = &Action{
 	func(so *StackOperator) (string, error) {
-		newVals := make([]float64, len(so.Stack.Values))
-		newVals[0] = so.Stack.Values[len(so.Stack.Values)-1]
-		for i, f := range so.Stack.Values[:len(so.Stack.Values)-1] {
-			newVals[i+1] = f
+		newVals := make([]float64, 0, cap(so.Stack.Values))
+		l := len(so.Stack.Values)
+		newVals = append(newVals, so.Stack.Values[l-1])
+		for _, f := range so.Stack.Values[:l-1] {
+			newVals = append(newVals, f)
 		}
 		so.Stack.Values = newVals
 		return so.Stack.Display(), nil
@@ -410,11 +411,11 @@ var Froll = &Action{
 // one position.
 var Rroll = &Action{
 	func(so *StackOperator) (string, error) {
-		newVals := make([]float64, len(so.Stack.Values))
-		for i, f := range so.Stack.Values[1:] {
-			newVals[i] = f
+		newVals := make([]float64, 0, cap(so.Stack.Values))
+		for _, f := range so.Stack.Values[1:] {
+			newVals = append(newVals, f)
 		}
-		newVals[len(newVals)-1] = so.Stack.Values[0]
+		newVals = append(newVals, so.Stack.Values[0])
 		so.Stack.Values = newVals
 		return so.Stack.Display(), nil
 	}, 2, 2,

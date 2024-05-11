@@ -52,7 +52,7 @@ const (
 	defPrompt string = " &c > "
 	version   string = "v1.3.1"
 	fmtChar   byte   = '&'
-	defLimit  int    = -1
+	defLimit  int    = 8
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
