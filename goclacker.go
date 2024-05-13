@@ -17,8 +17,7 @@ import (
 
 const (
 	usage string = `goclacker %s
-Copyright 2024 Josh Tompkin
-Licensed under the MIT license.
+by Josh Tompkin
 
 usage of goclacker:
 goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
