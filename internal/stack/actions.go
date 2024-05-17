@@ -487,6 +487,8 @@ var Grow = &Action{
 	"DEBUG: pop 'a'; push 'a'; grow stack to accomadate 'a' more values",
 }
 
+// Fill is an Action with the following description: DEBUG: fill stack with
+// random values
 var Fill = &Action{
 	func(so *StackOperator) (toPrint string, err error) {
 		for i := 0; i < cap(so.Stack.Values); i++ {

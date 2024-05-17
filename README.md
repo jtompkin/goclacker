@@ -3,7 +3,7 @@
 Command line reverse Polish notation (RPN) calculator. This stack is ready to
 Go.
 
-by Josh Tompkin
+By Josh Tompkin
 
 jtompkin-dev@pm.me
 
@@ -29,7 +29,7 @@ go build .
 Live, laugh, love with Go.
 
 If you are not familiar with [Go](https://go.dev), the binary will be in
-`~/go/bin` for linux, `C:\users\<USER>\go\bin` for windows (probably).
+`~/go/bin` for Linux, `C:\users\<USER>\go\bin` for Windows (probably).
 
 Pre-built binaries are available on the
 [release](https://github.com/jtompkin/goclacker/releases/latest) page.
@@ -51,7 +51,7 @@ god and it will then work as intended.
 
 Type a number and press enter to push it to the stack. Type an operator and
 press enter to execute that operator on the stack. Enter `help` to see available
-operators. Enter mutliple commands separated by a space and press enter to
+operators. Enter multiple commands separated by a space and press enter to
 execute them in order.
 
 ## Prompt
@@ -104,7 +104,7 @@ to the stack.
 These two words happen to be automagically defined whenever you start the
 program. If you hate them (or any other words you define) you can delete a
 defined word by providing its name after `=` without any definition. You can
-also freely redifine any currently defined word.
+also freely redefine any currently defined word.
 
 ```
   > = sqrt
@@ -146,4 +146,5 @@ pi 3.14159265358979323846
 
 ## License
 
-Licensed under the MIT license
+Licensed under
+the [MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE) license

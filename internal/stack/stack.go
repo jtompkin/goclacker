@@ -63,17 +63,12 @@ type StackOperator struct {
 	Words       map[string]string
 	Stack       *Stack
 	Interactive bool
-	Prompt      func() string
+	Prompt      func() (prompt string)
 	PrintBuf    []byte
 	formatters  map[byte]func(*StackOperator) string
 	notFound    func(string) error
 }
 
-// ParseInput splits input into words and either begins defining a calculator
-// word or parses each word as a token. It stops parsing input if it defines a
-// word or receives an error during token parsing, and returns the string and
-// error recieved. If it parses the entire input without error, it will return
-// the last string received and nil.
 func (so *StackOperator) ParseInput(input string) (err error) {
 	input = strings.TrimSpace(input)
 	split := strings.Split(input, " ")
@@ -192,7 +187,7 @@ func (so *StackOperator) Fail(message string, values ...float64) error {
 // it is called. This function returns an error if it could not make the prompt
 // function (should always return nil).
 func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
-	getLastSetup := func(n int) func(*StackOperator) string {
+	getTopSetup := func(n int) func(*StackOperator) string {
 		return func(so *StackOperator) string {
 			last := make([]string, n)
 			for i := 0; i < n; i++ {
@@ -215,7 +210,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 			sb := new(strings.Builder)
 			var extra int
 			for j := i + 1; next >= '0' && next <= '9' && j < len(format)-1; j++ {
-				sb.Write([]byte{next})
+				sb.WriteByte(next)
 				next = format[j+1]
 				extra++
 			}
@@ -223,7 +218,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 			if err != nil {
 				conv = cap(so.Stack.Values)
 			}
-			so.formatters['t'] = getLastSetup(conv)
+			so.formatters['t'] = getTopSetup(conv)
 			f := so.formatters[next]
 			if f != nil {
 				promptFuncs = append(promptFuncs, f)
@@ -238,25 +233,25 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 			}
 		}
 	}
-	noNull := []byte{}
+	buf := []byte{}
 	for _, b := range promptFmt {
 		if b != 0 {
-			noNull = append(noNull, b)
+			buf = append(buf, b)
 		}
 	}
-	promptSplit := strings.SplitAfter(string(noNull), "%s")
-	if len(promptSplit) != len(promptFuncs)+1 {
-		return errors.New(fmt.Sprintf("Something done gone wrong with the prompt...\nspecifiers: %d, functions: %d", len(promptSplit)-1, len(promptFuncs)))
+	noNull := string(buf)
+	if n := strings.Count(noNull, "%s"); n != len(promptFuncs) {
+		return errors.New(fmt.Sprintf("Prompt screwed up...\nformat num = %d : func num = %d", n, len(promptFuncs)))
 	}
+	vals := make([]any, len(promptFuncs))
 
 	so.Prompt = func() string {
-		sb := new(strings.Builder)
 		for i, f := range promptFuncs {
-			sb.WriteString(fmt.Sprintf(promptSplit[i], f(so)))
+			vals[i] = f(so)
 		}
-		sb.WriteString(promptSplit[len(promptSplit)-1])
-		return sb.String()
+		return fmt.Sprintf(noNull, vals...)
 	}
+
 	return nil
 }
 
@@ -285,7 +280,7 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 		Actions:     actions,
 		notFound:    notFound,
 		Interactive: interactive,
-		Words:       map[string]string{},
+		Words:       make(map[string]string),
 		formatters: map[byte]func(*StackOperator) string{
 			'l': func(so *StackOperator) string { return fmt.Sprint(cap(so.Stack.Values)) },
 			'c': func(so *StackOperator) string { return fmt.Sprint(len(so.Stack.Values)) },

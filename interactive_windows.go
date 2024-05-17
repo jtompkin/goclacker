@@ -19,8 +19,6 @@ func interactive(so *stack.StackOperator) (err error) {
 		fmt.Print(so.Prompt())
 		line, err := it.ReadLine()
 		if strings.TrimSpace(line) == "quit" {
-			it.SetPrompt("")
-			it.Write(nil)
 			return io.EOF
 		}
 		if err != nil {
