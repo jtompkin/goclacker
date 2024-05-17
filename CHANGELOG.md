@@ -76,6 +76,10 @@ Terminal woes
 
 Topper
 
+### Added
+
+- Debug operators
+
 ### Changed
 
 - `&t` now `&Nt` format specifier: display top N values of the stack. Probably buggy
