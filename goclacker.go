@@ -146,12 +146,12 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	if err := scanner.Err(); err != nil {
 		return err
 	}
+	fmt.Fprintf(os.Stderr, "parsing config file... %s\n", path)
 	promptLine := scanner.Text()
 	if len(promptLine) > 0 && !gavePrompt {
 		promptLine = strings.TrimPrefix(promptLine, `"`)
 		promptLine = strings.TrimSuffix(promptLine, `"`)
 		err = so.MakePromptFunc(promptLine, fmtChar)
-		fmt.Print("sucessfully parsed prompt from file...\n")
 	} else {
 		err = so.MakePromptFunc(promptFmt, fmtChar)
 	}
@@ -160,19 +160,17 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	}
 	var failed bool
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if _, err := so.DefWord(strings.Split(line, " ")); err != nil {
-			fmt.Fprintf(os.Stderr, "definition error: %s", err.Error())
+		if err := so.ParseInput(strings.TrimSpace(scanner.Text())); err != nil {
+			fmt.Fprint(os.Stderr, err)
 			failed = true
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-	if failed {
-		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words...\n")
+	if !failed {
+		fmt.Fprint(os.Stderr, "sucessfully parsed config file\n")
 	}
-	fmt.Fprint(os.Stderr, "sucessfully parsed config file\n")
 	return nil
 }
 

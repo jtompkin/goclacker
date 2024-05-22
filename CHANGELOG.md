@@ -82,4 +82,6 @@ Topper
 
 ### Changed
 
-- `&t` now `&Nt` format specifier: display top N values of the stack. Probably buggy
+- `&t` now `&Nt` format specifier: display top N values of the stack. Probably
+buggy
+- Config file now interprets any additional lines as regular programs

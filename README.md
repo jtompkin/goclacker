@@ -1,5 +1,16 @@
 # goclacker
 
+<!--toc:start-->
+- [goclacker](#goclacker)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Interactive mode](#interactive-mode)
+  - [Prompt](#prompt)
+  - [Words](#words)
+  - [Configuration](#configuration)
+  - [License](#license)
+<!--toc:end-->
+
 Command line reverse Polish notation (RPN) calculator. This stack is ready to
 Go.
 
@@ -98,8 +109,8 @@ lines at the interactive prompt:
 
 Now, when `sqrt` is entered at the prompt, 0.5 is pushed to the stack, and the
 exponentiation operator is called. That is apparently the same thing as taking
-the square root. Math is crazy. Now, entering `pi` simply pushes the value of pi
-to the stack.
+the square root. Math is crazy. Further, entering `pi` simply pushes the value
+of pi to the stack.
 
 These two words happen to be automagically defined whenever you start the
 program. If you hate them (or any other words you define) you can delete a
@@ -116,13 +127,13 @@ All currently defined words can be viewed by entering `words`.
 
 If you have crafted a beautiful prompt or have a list of words that you can't
 live without, a config file is what you need. Provide the path to this text file
-with the `-c` flag, and it will set the prompt format and define any words
-inside every time you start goclacker.
+with the `-c` flag, and it will set the prompt format and execute any additional
+programs you supply.
 
 The format is as follows:
 
-- First line is the prompt format
-- Any other lines are word definitions
+- First line is the prompt format.
+- All other lines are programs to execute.
 
 The first line is **always** interpreted as the prompt format. Leave it blank if
 you want the default prompt. You can surround your format with `"` on either
@@ -131,17 +142,25 @@ will not be included in the prompt. If you want a blank prompt (because you are
 boring), place a single `"` in the first line. Any format provided with `-p`
 will override whatever is in the config file.
 
-Word definitions are the same as in interactive mode, except that `=` is not
-included—i.e. the first word per line is the word itself.
+Any other lines are interpreted just as if they were entered in interactive
+mode. Defining words that will be present each time you start the program is the
+most useful use of this, but any regular calculations can also be done here, if
+you want certain values to be in your stack at start-up.
 
-A configuration file containing the following three lines would set the prompt
-to look like `------> ` (notice the lack of `"` and the preserved whitespace),
-and define the same words as in the [interactive](#words) example.
+A configuration file containing the following lines would set the prompt to look
+like `------> ` (notice the lack of `"` and the preserved whitespace), and
+define the same words as in the [interactive](#words) example. It would then
+push the square root of pi, push the value 2, and call the multiplication
+operator. These last three lines could all be put on the same line—just like in
+interactive mode.
 
 ```
 ------> "
-sqrt 0.5 ^
-pi 3.14159265358979323846
+= sqrt 0.5 ^
+= pi 3.14159265358979323846
+pi sqrt
+2
+*
 ```
 
 ## License
