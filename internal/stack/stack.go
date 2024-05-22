@@ -98,7 +98,7 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 // and an empty string and an error if not.
 func (so *StackOperator) DefWord(def []string) (message string, err error) {
 	if len(def) == 0 {
-		return "", errors.New(fmt.Sprintf("define word: = example 2 2 +; remove word: = example\n"))
+		return "", errors.New(fmt.Sprintf(`define word: "= example 2 2 +"; remove word: "= example"%s`, "\n"))
 	}
 	noEmpty := make([]string, 0, len(def))
 	for _, s := range def {
