@@ -98,10 +98,12 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay 
 	return so
 }
 
-func nonInteractive(so *stack.StackOperator, programs []string) {
-	var f io.Writer
+// NonInteractive parses each string in programs as a line of input to so. It
+// prints the last message or error returned by parsing. It always returns
+// io.EOF
+func NonInteractive(so *stack.StackOperator, programs []string) (eof error) {
+	f := os.Stdout
 	for _, prog := range programs {
-		f = os.Stdout
 		err := so.ParseInput(prog)
 		if err != nil {
 			f = os.Stderr
@@ -109,23 +111,26 @@ func nonInteractive(so *stack.StackOperator, programs []string) {
 		}
 	}
 	fmt.Fprint(f, string(so.PrintBuf))
+	eof = io.EOF
+	return eof
 }
 
+// Interactive starts interactive mode as determined by the operating system.
 func Interactive(so *stack.StackOperator) (err error) {
 	fmt.Printf("goclacker %s by Josh Tompkin\n", version)
 	return interactive(so)
 }
 
-func start(so *stack.StackOperator, progs []string) (err error) {
+func Start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
 		err = Interactive(so)
 	} else {
-		nonInteractive(so, progs)
+		err = NonInteractive(so, progs)
 	}
 	return err
 }
 
-func configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
+func Configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
 	gavePrompt := true
 	if promptFmt == "\x00" {
 		promptFmt = defPrompt
@@ -204,10 +209,10 @@ func main() {
 	}
 
 	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode, noDisplay)
-	if err := configure(so, configPath, promptFormat); err != nil {
+	if err := Configure(so, configPath, promptFormat); err != nil {
 		log.Fatal(err)
 	}
-	if err := start(so, flag.Args()); err != io.EOF {
+	if err := Start(so, flag.Args()); err != io.EOF {
 		log.Fatal(err)
 	}
 }
