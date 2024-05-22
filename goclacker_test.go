@@ -6,8 +6,6 @@ package main
 import (
 	"fmt"
 	"testing"
-
-	"github.com/jtompkin/goclacker/internal/stack"
 )
 
 func prompt(t *testing.T, format string, expected string) {
@@ -62,33 +60,32 @@ type progParams struct {
 }
 
 func TestPrograms(t *testing.T) {
-	s := stack.Suffix
 	programs := map[string]*progParams{
 		"":             {"", false, false},
 		"      ":       {"", false, false},
 		"test":         {"", false, false},
-		"1 2 3 4 5 6":  {"1 2 3 4 5 6" + s, false, false},
-		"2 2 +":        {"4" + s, false, false},
-		"6 2 -":        {"4" + s, false, false},
-		"2 2 *":        {"4" + s, false, false},
-		"8 2 /":        {"4" + s, false, false},
-		"15 4 %":       {"3" + s, false, false},
-		"2 3 ^":        {"8" + s, false, false},
-		"4 !":          {"24" + s, false, false},
-		"10 log":       {"1" + s, false, false},
-		"10 ln":        {"2.302585092994046" + s, false, false},
-		"4 sqrt":       {"2" + s, false, false},
-		"= pi":         {"deleted pi" + s, false, false},
-		"= test 2 2 +": {"defined test : 2 2 +" + s, false, false},
-		"pi sqrt":      {"1.7724538509055159" + s, false, false},
-		"+":            {"operation error: '+' needs 2 values in stack" + s, false, false},
-		"-1 log":       {"operation error: cannot take logarithm of non-positive number" + s, false, false},
-		"-1 ln":        {"operation error: cannot take logarithm of non-positive number" + s, false, false},
+		"1 2 3 4 5 6":  {"1 2 3 4 5 6\n", false, false},
+		"2 2 +":        {"4\n", false, false},
+		"6 2 -":        {"4\n", false, false},
+		"2 2 *":        {"4\n", false, false},
+		"8 2 /":        {"4\n", false, false},
+		"15 4 %":       {"3\n", false, false},
+		"2 3 ^":        {"8\n", false, false},
+		"4 !":          {"24\n", false, false},
+		"10 log":       {"1\n", false, false},
+		"10 ln":        {"2.302585092994046\n", false, false},
+		"4 sqrt":       {"2\n", false, false},
+		"= pi":         {"deleted pi\n", false, false},
+		"= test 2 2 +": {"defined test : 2 2 +\n", false, false},
+		"pi sqrt":      {"1.7724538509055159\n", false, false},
+		"+":            {"operation error: '+' needs 2 values in stack\n", false, false},
+		"-1 log":       {"operation error: cannot take logarithm of non-positive number\n", false, false},
+		"-1 ln":        {"operation error: cannot take logarithm of non-positive number\n", false, false},
 		"=":            {"", true, false},
 		"1 0 /":        {"", true, false},
 		"help":         {"", false, true},
 		"words":        {"", false, true},
-		"  3 4 * 4455 -    23         + 4 4332     ": {fmt.Sprintf("-4420 4 4332%s", stack.Suffix), false, false},
+		"  3 4 * 4455 -    23         + 4 4332     ": {"-4420 4 4332\n", false, false},
 	}
 	for program, expected := range programs {
 		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)

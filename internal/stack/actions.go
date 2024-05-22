@@ -368,7 +368,7 @@ var Clear = &Action{
 			c = 's'
 		}
 		so.Stack.Values = make([]float64, 0, cap(so.Stack.Values))
-		return fmt.Sprintf("cleared %d value%c%s", n, c, Suffix), nil
+		return fmt.Sprintf("cleared %d value%c\n", n, c), nil
 	}, 0, 0,
 	"pop all values in the stack",
 }

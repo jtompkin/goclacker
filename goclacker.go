@@ -176,6 +176,7 @@ func configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	return nil
 }
 
+// main parses command line arguments and starts the program.
 func main() {
 	var printVersion bool
 	flag.BoolVar(&printVersion, "V", false, "")
@@ -208,7 +209,7 @@ func main() {
 	if err := configure(so, configPath, promptFormat); err != nil {
 		log.Fatal(err)
 	}
-	if err := start(so, flag.Args()); err != nil && err != io.EOF {
+	if err := start(so, flag.Args()); err != io.EOF {
 		log.Fatal(err)
 	}
 }
