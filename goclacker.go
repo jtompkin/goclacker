@@ -123,11 +123,9 @@ func Interactive(so *stack.StackOperator) (err error) {
 
 func Start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
-		err = Interactive(so)
-	} else {
-		err = NonInteractive(so, progs)
+		return Interactive(so)
 	}
-	return err
+	return NonInteractive(so, progs)
 }
 
 func Configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
