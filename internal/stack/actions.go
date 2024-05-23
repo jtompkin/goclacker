@@ -458,7 +458,7 @@ var Clip = &Action{
 		so.Stack.Values = slices.Clip(so.Stack.Values)
 		return fmt.Sprintf("clipped %d capacity\n", c-cap(so.Stack.Values)), nil
 	}, 0, 0,
-	"DEBUG: clip unused stack capacity",
+	"DEBUG; clip unused stack capacity",
 }
 
 // Grow is an Action with the following description: DEBUG: pop 'a'; push 'a';
@@ -484,7 +484,7 @@ var Grow = &Action{
 		so.Stack.Values = slices.Grow(so.Stack.Values, int(n))
 		return fmt.Sprintf("new stack capacity is %d\n", cap(so.Stack.Values)), nil
 	}, 0, 0,
-	"DEBUG: pop 'a'; push 'a'; grow stack to accomadate 'a' more values",
+	"DEBUG; pop 'a'; push 'a'; grow stack to accomadate 'a' more values",
 }
 
 // Fill is an Action with the following description: DEBUG: fill stack with
@@ -498,5 +498,5 @@ var Fill = &Action{
 		}
 		return so.Stack.Display(), nil
 	}, 0, 0,
-	"DEBUG: fill stack with random values",
+	"DEBUG; fill stack with random values",
 }

@@ -128,26 +128,57 @@ func Start(so *stack.StackOperator, progs []string) (err error) {
 	return NonInteractive(so, progs)
 }
 
+func CheckDefConfigPaths() (path string) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+	fromHome := func(s string) string { return fmt.Sprintf("%s%c%s", home, os.PathSeparator, s) }
+	defConfigPaths := []string{
+		".goclacker",
+		fromHome(".goclacker"),
+		fromHome(".config/goclacker/goclacker.conf"),
+	}
+	for _, path = range defConfigPaths {
+		if _, err = os.Open(path); err == nil {
+			return path
+		}
+	}
+	return ""
+}
+
 func Configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
 	gavePrompt := true
 	if promptFmt == "\x00" {
 		promptFmt = defPrompt
 		gavePrompt = false
 	}
-	if path == "" {
-		return so.MakePromptFunc(promptFmt, fmtChar)
+	gavePath := true
+	if path == "\x00" {
+		path = ""
+		gavePath = false
+	}
+	if !gavePath {
+		path = CheckDefConfigPaths()
+		if path == "" {
+			return so.MakePromptFunc(promptFmt, fmtChar)
+		}
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		if path != "" {
+			fmt.Fprintf(os.Stderr, "could not read config file : %v\n", err)
+		}
+		return so.MakePromptFunc(promptFmt, fmtChar)
 	}
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 	scanner.Scan()
 	if err := scanner.Err(); err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "could not read config file : %v\n", err)
+		return so.MakePromptFunc(promptFmt, fmtChar)
 	}
 	fmt.Fprintf(os.Stderr, "parsing config file... %s\n", path)
 	promptLine := scanner.Text()
@@ -189,8 +220,8 @@ func main() {
 	flag.BoolVar(&strictMode, "s", false, "")
 	flag.BoolVar(&strictMode, "strict", false, "")
 	var configPath string
-	flag.StringVar(&configPath, "c", "", "")
-	flag.StringVar(&configPath, "config", "", "")
+	flag.StringVar(&configPath, "c", "\x00", "")
+	flag.StringVar(&configPath, "config", "\x00", "")
 	var promptFormat string
 	flag.StringVar(&promptFormat, "p", "\x00", "")
 	flag.StringVar(&promptFormat, "prompt", "\x00", "")

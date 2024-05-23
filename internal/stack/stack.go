@@ -287,7 +287,7 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 			'l': func(so *StackOperator) string { return fmt.Sprint(cap(so.Stack.Values)) },
 			'c': func(so *StackOperator) string { return fmt.Sprint(len(so.Stack.Values)) },
 			's': func(so *StackOperator) string { return fmt.Sprint(so.Stack.Stash) },
-			't': nil,
+			't': func(*StackOperator) string { return "" },
 		},
 	}
 }
