@@ -165,5 +165,5 @@ pi sqrt
 
 ## License
 
-Licensed under
-the [MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE) license
+Licensed under the
+[MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE) license

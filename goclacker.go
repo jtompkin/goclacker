@@ -20,20 +20,20 @@ const (
 by Josh Tompkin
 
 usage of goclacker:
-goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
+goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
     -V, --version
         Print version information and exit.
     -h, --help
         Print usage information and exit.
     -s, --strict
         Run in strict mode: entering something that is not a number, operator,
-        or defined word will return an error instead of doing nothing.
+        or defined word will print an error instead of doing nothing.
     -n, --no-display
         Do not display stack after operations. Useful if '&Nt' is in prompt.
     -l, --limit int
         stack size limit, no limit if negative (default 8)
     -c, --config string
-        path to config file
+        path to config file, looks in default locations if not provided
     -p, --prompt string
         format string for the interactive prompt (default " &c > ")
         format specifiers:

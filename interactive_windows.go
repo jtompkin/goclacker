@@ -13,6 +13,7 @@ import (
 	"golang.org/x/term"
 )
 
+// interactive is the windows implementation of interactive mode.
 func interactive(so *stack.StackOperator) (err error) {
 	it := term.NewTerminal(os.Stdin, "")
 	for {

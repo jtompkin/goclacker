@@ -15,6 +15,7 @@ type Stack struct {
 	Values     []float64
 	Stash      float64
 	displayFmt string
+	// Expandable signifies whether stack capacity can be increased or not.
 	Expandable bool
 }
 

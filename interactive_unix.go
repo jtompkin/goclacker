@@ -14,6 +14,7 @@ import (
 	"golang.org/x/term"
 )
 
+// interactive is the unix-like implementation of interactive mode.
 func interactive(so *stack.StackOperator) (err error) {
 	state, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
