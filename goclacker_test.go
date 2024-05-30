@@ -1,14 +1,15 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License
+
 package main
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/jtompkin/goclacker/internal/stack"
 )
 
 func prompt(t *testing.T, format string, expected string) {
-	so := MakeStackOperator(8, false, false)
+	so := MakeStackOperator(8, false, false, false)
 	so.Stack.Stash = 12
 	so.MakePromptFunc(format, '&')
 	if s := so.Prompt(); s != expected {
@@ -26,8 +27,8 @@ func TestPrompts(t *testing.T) {
 		fmt.Sprintf("%c-", fmtChar):    fmt.Sprintf("%c-", fmtChar),
 		fmt.Sprintf("-%c", fmtChar):    fmt.Sprintf("-%c", fmtChar),
 		fmt.Sprintf(" %c > ", fmtChar): fmt.Sprintf(" %c > ", fmtChar),
-		fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar):                fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar),
-		fmt.Sprintf("%cl%cc%cs%ct", fmtChar, fmtChar, fmtChar, fmtChar): "8012NA",
+		fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar):                     fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar),
+		fmt.Sprintf("%cl%cc&3t%cs%c10t", fmtChar, fmtChar, fmtChar, fmtChar): "80N N N12N N N N N N N N N N",
 	}
 	for format, expected := range formats {
 		prompt(t, format, expected)
@@ -35,9 +36,9 @@ func TestPrompts(t *testing.T) {
 }
 
 func prog(t *testing.T, program string, expected string, wantError bool, acceptAny bool) {
-	so := MakeStackOperator(8, false, false)
-    err := so.ParseInput(program)
-    s := string(so.PrintBuf)
+	so := MakeStackOperator(8, false, false, false)
+	err := so.ParseInput(program)
+	s := string(so.PrintBuf)
 	if err != nil {
 		if wantError {
 			return
@@ -58,27 +59,33 @@ type progParams struct {
 	AcceptAny bool
 }
 
-func newProgParams(expected string, wantError bool, acceptAny bool) *progParams {
-	return &progParams{Expected: expected, WantError: wantError, AcceptAny: acceptAny}
-}
-
 func TestPrograms(t *testing.T) {
 	programs := map[string]*progParams{
-		"":             newProgParams("", false, false),
-		"      ":       newProgParams("", false, false),
-		"test":         newProgParams("", false, false),
-		"1 2 3 4 5 6":  newProgParams(fmt.Sprintf("1 2 3 4 5 6%s", stack.Suffix), false, false),
-		"2 2 +":        newProgParams(fmt.Sprintf("4%s", stack.Suffix), false, false),
-		"4 sqrt":       newProgParams(fmt.Sprintf("2%s", stack.Suffix), false, false),
-		"= pi":         newProgParams(fmt.Sprintf("deleted pi%s", stack.Suffix), false, false),
-		"= test 2 2 +": newProgParams(fmt.Sprintf("defined test : 2 2 +%s", stack.Suffix), false, false),
-		"pi sqrt":      newProgParams(fmt.Sprintf("1.7724538509055159%s", stack.Suffix), false, false),
-		"+":            newProgParams(fmt.Sprintf("operation error: '+' needs 2 values in stack%s", stack.Suffix), false, false),
-		"=":            newProgParams("", true, false),
-		"1 0 /":        newProgParams("", true, false),
-		"help":         newProgParams("", false, true),
-		"words":        newProgParams("", false, true),
-		"  3 4 * 4455 -    23         + 4 4332     ": newProgParams(fmt.Sprintf("-4420 4 4332%s", stack.Suffix), false, false),
+		"":             {"", false, false},
+		"      ":       {"", false, false},
+		"test":         {"", false, false},
+		"1 2 3 4 5 6":  {"1 2 3 4 5 6\n", false, false},
+		"2 2 +":        {"4\n", false, false},
+		"6 2 -":        {"4\n", false, false},
+		"2 2 *":        {"4\n", false, false},
+		"8 2 /":        {"4\n", false, false},
+		"15 4 %":       {"3\n", false, false},
+		"2 3 ^":        {"8\n", false, false},
+		"4 !":          {"24\n", false, false},
+		"10 log":       {"1\n", false, false},
+		"10 ln":        {"2.302585092994046\n", false, false},
+		"4 sqrt":       {"2\n", false, false},
+		"= pi":         {"deleted pi\n", false, false},
+		"= test 2 2 +": {"defined test : 2 2 +\n", false, false},
+		"pi sqrt":      {"1.7724538509055159\n", false, false},
+		"+":            {"operation error: '+' needs 2 values in stack\n", false, false},
+		"-1 log":       {"operation error: cannot take logarithm of non-positive number\n", false, false},
+		"-1 ln":        {"operation error: cannot take logarithm of non-positive number\n", false, false},
+		"=":            {"", true, false},
+		"1 0 /":        {"", true, false},
+		"help":         {"", false, true},
+		"words":        {"", false, true},
+		"  3 4 * 4455 -    23         + 4 4332     ": {"-4420 4 4332\n", false, false},
 	}
 	for program, expected := range programs {
 		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)

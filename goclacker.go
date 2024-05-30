@@ -1,3 +1,6 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License
+
 package main
 
 import (
@@ -12,40 +15,44 @@ import (
 	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-const usage string = `usage of goclacker:
-goclacker [-V] [-h] [-s] [-l] int [-w] string [-p] string [program...]
+const (
+	usage string = `goclacker %s
+by Josh Tompkin
+
+usage of goclacker:
+goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
     -V, --version
         Print version information and exit.
     -h, --help
         Print usage information and exit.
     -s, --strict
         Run in strict mode: entering something that is not a number, operator,
-        or defined word will return an error instead of doing nothing.
+        or defined word will print an error instead of doing nothing.
+    -n, --no-display
+        Do not display stack after operations. Useful if '&Nt' is in prompt.
     -l, --limit int
         stack size limit, no limit if negative (default 8)
     -c, --config string
-        path to config file
+        path to config file, looks in default locations if not provided
     -p, --prompt string
         format string for the interactive prompt (default " &c > ")
         format specifiers:
-            &l : stack limit
-            &c : current stack size
-            &t : top stack value
-            &s : current stash value
+            &l  : stack limit
+            &c  : current stack size
+            &Nt : top N stack values
+            &s  : current stash value
     [program...]
         Any positional arguments will be interpreted and executed by the
         calculator. Interactive mode will not be entered if any positional
         arguments are supplied.
 `
-
-const (
 	defPrompt string = " &c > "
-	version   string = "v1.3.0"
+	version   string = "v1.3.1"
 	fmtChar   byte   = '&'
 	defLimit  int    = 8
 )
 
-func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.StackOperator {
+func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
@@ -70,104 +77,137 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool) *stack.Sta
 	actions.Set("swap", stack.Swap)
 	actions.Set("froll", stack.Froll)
 	actions.Set("rroll", stack.Rroll)
+	actions.Set("sum", stack.Sum)
+	actions.Set("avg", stack.Average)
 	actions.Set("stash", stack.Stash)
 	actions.Set("pull", stack.Pull)
 	actions.Set("clr", stack.Clear)
 	actions.Set("words", stack.Words)
 	actions.Set("help", stack.Help)
 	actions.Set("cls", stack.ClearScreen)
-	so := stack.NewStackOperator(actions, stackLimit, interactive, strict)
-	so.Words = map[string]string{
-		"?":     "help",
-		"randn": "rand * ceil 1 -",
-		"sqrt":  "0.5 ^",
-		"logb":  "log swap log / -1 ^",
-		"pi":    "3.141592653589793",
-	}
+	actions.Set("Dclip", stack.Clip)
+	actions.Set("Dgrow", stack.Grow)
+	actions.Set("Dfill", stack.Fill)
+	so := stack.NewStackOperator(actions, stackLimit, interactive, noDisplay, strict)
+	split := func(s string) []string { return strings.Split(s, " ") }
+	so.DefWord(split("? help"))
+	so.DefWord(split("randn rand * floor"))
+	so.DefWord(split("sqrt 0.5 ^"))
+	so.DefWord(split("logb log swap log / -1 ^"))
+	so.DefWord(split("pi 3.141592653589793"))
 	return so
 }
 
-func nonInteractive(so *stack.StackOperator, programs []string) {
-	var f io.Writer
+// NonInteractive parses each string in programs as a line of input to so. It
+// prints the last message or error returned by parsing. It always returns
+// io.EOF
+func NonInteractive(so *stack.StackOperator, programs []string) (eof error) {
+	f := os.Stdout
 	for _, prog := range programs {
-		f = os.Stdout
 		err := so.ParseInput(prog)
 		if err != nil {
 			f = os.Stderr
-            so.PrintBuf = []byte(err.Error())
+			so.PrintBuf = []byte(err.Error())
 		}
 	}
 	fmt.Fprint(f, string(so.PrintBuf))
+	eof = io.EOF
+	return eof
 }
 
-func Interactive(so *stack.StackOperator) (err error) {
-    return interactive(so)
-}
-
-func start(so *stack.StackOperator, progs []string) (err error) {
+// Start begins interactive mode or passes progs to non-interactive mode.
+func Start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
-		err = Interactive(so)
-		return err
+		fmt.Printf("goclacker %s by Josh Tompkin\n", version)
+		return interactive(so)
 	}
-	nonInteractive(so, progs)
-	return err
+	return NonInteractive(so, progs)
 }
 
-func configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
+// CheckDefConfigPaths checks if files exist in any of the default config file
+// paths and returns the path to the first one that exists. It returns an empty
+// string if none exist.
+func CheckDefConfigPaths() (path string) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+	fromHome := func(s string) string { return fmt.Sprintf("%s%c%s", home, os.PathSeparator, s) }
+	defConfigPaths := []string{
+		".goclacker",
+		fromHome(".goclacker"),
+		fromHome(".config/goclacker/goclacker.conf"),
+	}
+	for _, path = range defConfigPaths {
+		if _, err = os.Open(path); err == nil {
+			return path
+		}
+	}
+	return ""
+}
+
+func Configure(so *stack.StackOperator, path string, promptFmt string) (err error) {
 	gavePrompt := true
 	if promptFmt == "\x00" {
 		promptFmt = defPrompt
 		gavePrompt = false
 	}
-	if path == "" {
-		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
-			fmt.Fprint(os.Stderr, err.Error())
+	gavePath := true
+	if path == "\x00" {
+		path = ""
+		gavePath = false
+	}
+	if !gavePath {
+		path = CheckDefConfigPaths()
+		if path == "" {
+			return so.MakePromptFunc(promptFmt, fmtChar)
 		}
-		return nil
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		if path != "" {
+			fmt.Fprintf(os.Stderr, "could not read config file : %v\n", err)
+		}
+		return so.MakePromptFunc(promptFmt, fmtChar)
 	}
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 	scanner.Scan()
 	if err := scanner.Err(); err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "could not read config file : %v\n", err)
+		return so.MakePromptFunc(promptFmt, fmtChar)
 	}
+	fmt.Fprintf(os.Stderr, "parsing config file... %s\n", path)
 	promptLine := scanner.Text()
 	if len(promptLine) > 0 && !gavePrompt {
 		promptLine = strings.TrimPrefix(promptLine, `"`)
 		promptLine = strings.TrimSuffix(promptLine, `"`)
-		if err := so.MakePromptFunc(promptLine, fmtChar); err != nil {
-			return err
-		}
-		fmt.Print("sucessfully parsed prompt from file...\n")
+		err = so.MakePromptFunc(promptLine, fmtChar)
 	} else {
-		if err := so.MakePromptFunc(promptFmt, fmtChar); err != nil {
-			return err
-		}
+		err = so.MakePromptFunc(promptFmt, fmtChar)
+	}
+	if err != nil {
+		return err
 	}
 	var failed bool
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if _, err := so.DefWord(strings.Split(line, " ")); err != nil {
-			fmt.Fprintf(os.Stderr, "definition error: %s", err.Error())
+		if err := so.ParseInput(strings.TrimSpace(scanner.Text())); err != nil {
+			fmt.Fprint(os.Stderr, err)
 			failed = true
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return err
 	}
-	if failed {
-		fmt.Fprint(os.Stderr, "enter 'help' to see list of operators that cannot be used as words...\n")
+	if !failed {
+		fmt.Fprint(os.Stderr, "sucessfully parsed config file\n")
 	}
-	fmt.Print("sucessfully parsed config file\n")
 	return nil
 }
 
+// main parses command line arguments and starts the program.
 func main() {
 	var printVersion bool
 	flag.BoolVar(&printVersion, "V", false, "")
@@ -179,25 +219,28 @@ func main() {
 	flag.BoolVar(&strictMode, "s", false, "")
 	flag.BoolVar(&strictMode, "strict", false, "")
 	var configPath string
-	flag.StringVar(&configPath, "c", "", "")
-	flag.StringVar(&configPath, "config", "", "")
+	flag.StringVar(&configPath, "c", "\x00", "")
+	flag.StringVar(&configPath, "config", "\x00", "")
 	var promptFormat string
 	flag.StringVar(&promptFormat, "p", "\x00", "")
 	flag.StringVar(&promptFormat, "prompt", "\x00", "")
+	var noDisplay bool
+	flag.BoolVar(&noDisplay, "n", false, "")
+	flag.BoolVar(&noDisplay, "no-display", false, "")
 
-	flag.Usage = func() { fmt.Print(usage) }
+	flag.Usage = func() { fmt.Printf(usage, version) }
 	flag.Parse()
 
 	if printVersion {
 		fmt.Printf("goclacker %s\n", version)
-		os.Exit(0)
+		return
 	}
 
-	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode)
-	if err := configure(so, configPath, promptFormat); err != nil {
+	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode, noDisplay)
+	if err := Configure(so, configPath, promptFormat); err != nil {
 		log.Fatal(err)
 	}
-	if err := start(so, flag.Args()); err != nil && err != io.EOF {
+	if err := Start(so, flag.Args()); err != io.EOF {
 		log.Fatal(err)
 	}
 }

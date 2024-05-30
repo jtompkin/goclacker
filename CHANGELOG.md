@@ -5,10 +5,11 @@
 - [1.1.1 - 2024-04-24](#111---2024-04-24)
 - [1.2.0 - 2024-04-30](#120---2024-04-30)
 - [1.3.0 - 2024-05-08](#130---2024-05-08)
+- [1.3.1 - 2024-05-30](#131---2024-05-30)
 
 ## TODO
 
-- [ ] Command history
+- [ ] better prompt format parsing
 
 ## [1.0.0](https://github.com/jtompkin/goclacker/releases/tag/v1.0.0) - 2024-04-19
 
@@ -70,3 +71,17 @@ Terminal woes
 ### Changed
 
 - Interactive mode generally better
+
+## [1.3.1](https://github.com/jtompkin/goclacker/releases/tag/v1.3.1) - 2024-05-30
+
+Topper
+
+### Added
+
+- Debug operators
+
+### Changed
+
+- `&t` now `&Nt` format specifier: display top N values of the stack. Probably
+buggy
+- Config file now interprets any additional lines as regular programs
