@@ -5,7 +5,7 @@
 - [1.1.1 - 2024-04-24](#111---2024-04-24)
 - [1.2.0 - 2024-04-30](#120---2024-04-30)
 - [1.3.0 - 2024-05-08](#130---2024-05-08)
-- [1.3.1 - TBD](#131---TBD)
+- [1.3.1 - 2024-05-30](#131---2024-05-30)
 
 ## TODO
 
@@ -72,7 +72,7 @@ Terminal woes
 
 - Interactive mode generally better
 
-## [1.3.1](https://github.com/jtompkin/goclacker/releases/tag/v1.3.1) - TBD
+## [1.3.1](https://github.com/jtompkin/goclacker/releases/tag/v1.3.1) - 2024-05-30
 
 Topper
 

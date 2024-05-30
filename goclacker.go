@@ -115,19 +115,18 @@ func NonInteractive(so *stack.StackOperator, programs []string) (eof error) {
 	return eof
 }
 
-// Interactive starts interactive mode as determined by the operating system.
-func Interactive(so *stack.StackOperator) (err error) {
-	fmt.Printf("goclacker %s by Josh Tompkin\n", version)
-	return interactive(so)
-}
-
+// Start begins interactive mode or passes progs to non-interactive mode.
 func Start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
-		return Interactive(so)
+		fmt.Printf("goclacker %s by Josh Tompkin\n", version)
+		return interactive(so)
 	}
 	return NonInteractive(so, progs)
 }
 
+// CheckDefConfigPaths checks if files exist in any of the default config file
+// paths and returns the path to the first one that exists. It returns an empty
+// string if none exist.
 func CheckDefConfigPaths() (path string) {
 	home, err := os.UserHomeDir()
 	if err != nil {
