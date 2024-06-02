@@ -40,14 +40,14 @@ func (stk *Stack) Push(f float64) error {
 // Display returns a string of all values in the stack according to
 // Stack.displayFmt
 func (stk *Stack) Display() string {
-	if stk.displayFmt == "" {
-		return ""
+	if strings.Count(stk.displayFmt, "%s") == 0 {
+		return stk.displayFmt
 	}
-	ss := make([]string, len(stk.Values))
+	sNums := make([]string, len(stk.Values))
 	for i, f := range stk.Values {
-		ss[i] = fmt.Sprint(f)
+		sNums[i] = fmt.Sprint(f)
 	}
-	s := strings.Join(ss, " ")
+	s := strings.Join(sNums, " ")
 	return fmt.Sprintf(stk.displayFmt, s)
 }
 
@@ -66,7 +66,7 @@ type StackOperator struct {
 	PrintBuf    []byte
 	formatters  map[byte]func(*StackOperator) string
 	// notFound should return nil if the StackOperator does not care about
-	// entering missing input or an error if it does.
+	// entering missing input, or an error if it does.
 	notFound func(string) error
 }
 

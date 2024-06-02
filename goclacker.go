@@ -207,7 +207,6 @@ func Configure(so *stack.StackOperator, path string, promptFmt string) (err erro
 	return nil
 }
 
-// main parses command line arguments and starts the program.
 func main() {
 	var printVersion bool
 	flag.BoolVar(&printVersion, "V", false, "")
