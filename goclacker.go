@@ -118,7 +118,7 @@ func NonInteractive(so *stack.StackOperator, programs []string) (eof error) {
 // Start begins interactive mode or passes progs to non-interactive mode.
 func Start(so *stack.StackOperator, progs []string) (err error) {
 	if so.Interactive {
-		fmt.Printf("goclacker %s by Josh Tompkin\n", version)
+		fmt.Printf("goclacker %s\n", version)
 		return interactive(so)
 	}
 	return NonInteractive(so, progs)
