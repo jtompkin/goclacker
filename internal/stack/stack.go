@@ -128,7 +128,7 @@ func (so *StackOperator) DefWord(def []string) (message string, err error) {
 			return "", errors.New(fmt.Sprintf("could not delete %s : not defined\n", word))
 		}
 		delete(so.Words, word)
-		return fmt.Sprintf("deleted %s\n", word), nil
+		return fmt.Sprintf("deleted word: %s\n", word), nil
 	}
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s

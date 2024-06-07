@@ -41,7 +41,7 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
             &c  : current stack size
             &Nt : top N stack values
             &s  : current stash value
-    [program...]
+    [program]...
         Any positional arguments will be interpreted and executed by the
         calculator. Interactive mode will not be entered if any positional
         arguments are supplied.
@@ -99,20 +99,17 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay 
 }
 
 // NonInteractive parses each string in programs as a line of input to so. It
-// prints the last message or error returned by parsing. It always returns
+// prints any errors encountered and the last regular message. It always returns
 // io.EOF
 func NonInteractive(so *stack.StackOperator, programs []string) (eof error) {
-	f := os.Stdout
-	for _, prog := range programs {
-		err := so.ParseInput(prog)
+	for _, s := range programs {
+		err := so.ParseInput(s)
 		if err != nil {
-			f = os.Stderr
-			so.PrintBuf = []byte(err.Error())
+			fmt.Fprint(os.Stderr, err)
 		}
 	}
-	fmt.Fprint(f, string(so.PrintBuf))
-	eof = io.EOF
-	return eof
+	fmt.Print(string(so.PrintBuf))
+	return io.EOF
 }
 
 // Start begins interactive mode or passes progs to non-interactive mode.
