@@ -85,8 +85,9 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 			return err
 		}
 		s, err = so.parseToken(token)
-		so.PrintBuf = []byte(s)
-		if err != nil {
+		if err == nil {
+			so.PrintBuf = []byte(s)
+		} else {
 			return err
 		}
 	}
@@ -255,7 +256,6 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 		}
 		return fmt.Sprintf(noNull, vals...)
 	}
-
 	return nil
 }
 

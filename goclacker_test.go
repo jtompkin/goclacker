@@ -35,21 +35,21 @@ func TestPrompts(t *testing.T) {
 	}
 }
 
-func prog(t *testing.T, program string, expected string, wantError bool, acceptAny bool) {
+func prog(t *testing.T, program string, params progParams) {
 	so := MakeStackOperator(8, false, false, false)
 	err := so.ParseInput(program)
 	s := string(so.PrintBuf)
 	if err != nil {
-		if wantError {
+		if params.WantError {
 			return
 		}
 		s = err.Error()
 	}
-	if wantError {
+	if params.WantError {
 		t.Fatalf(`program = "%s" : wanted error, none raised`, program)
 	}
-	if s != expected && !acceptAny {
-		t.Fatalf(`program = "%s" : expected = %q : got = %q`, program, expected, s)
+	if s != params.Expected && !params.AcceptAny {
+		t.Fatalf(`program = "%s" : expected = %q : got = %q`, program, params.Expected, s)
 	}
 }
 
@@ -60,7 +60,7 @@ type progParams struct {
 }
 
 func TestPrograms(t *testing.T) {
-	programs := map[string]*progParams{
+	programs := map[string]progParams{
 		"":             {"", false, false},
 		"      ":       {"", false, false},
 		"test":         {"", false, false},
@@ -87,7 +87,7 @@ func TestPrograms(t *testing.T) {
 		"words":        {"", false, true},
 		"  3 4 * 4455 -    23         + 4 4332     ": {"-4420 4 4332\n", false, false},
 	}
-	for program, expected := range programs {
-		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)
+	for program, params := range programs {
+		prog(t, program, params)
 	}
 }

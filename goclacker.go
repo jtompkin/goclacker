@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	usage string = `goclacker %s
+	Usage string = `goclacker %s
 by Josh Tompkin
 
 usage of goclacker:
@@ -47,9 +47,15 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
         arguments are supplied.
 `
 	DefPrompt string = " &c > "
-	Version   string = "v1.3.1"
+	Version   string = "v1.3.2"
 	FmtChar   byte   = '&'
 	DefLimit  int    = 8
+)
+
+var (
+	PrintVersion, StrictMode, NoDisplay bool
+	ConfigPath, PromptFmt               string
+	StackLimit                          int
 )
 
 func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
@@ -96,14 +102,6 @@ func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay 
 	so.DefWord(split("logb log swap log / -1 ^"))
 	so.DefWord(split("pi 3.141592653589793"))
 	return so
-}
-
-func RunProgram(so *stack.StackOperator, program string) {
-	err := so.ParseInput(program)
-	if err != nil {
-		fmt.Fprint(os.Stderr, err)
-	}
-	fmt.Print(string(so.PrintBuf))
 }
 
 // CheckDefConfigPaths checks if files exist in any of the default config file
@@ -172,53 +170,74 @@ func ReadProgLines(scanner *bufio.Scanner, so *stack.StackOperator) {
 	}
 }
 
-func main() {
-	var printVersion bool
-	flag.BoolVar(&printVersion, "V", false, "")
-	flag.BoolVar(&printVersion, "version", false, "")
-	var stackLimit int
-	flag.IntVar(&stackLimit, "l", DefLimit, "")
-	flag.IntVar(&stackLimit, "limit", DefLimit, "")
-	var strictMode bool
-	flag.BoolVar(&strictMode, "s", false, "")
-	flag.BoolVar(&strictMode, "strict", false, "")
-	var configPath string
-	flag.StringVar(&configPath, "c", "\x00", "")
-	flag.StringVar(&configPath, "config", "\x00", "")
-	var promptFormat string
-	flag.StringVar(&promptFormat, "p", "\x00", "")
-	flag.StringVar(&promptFormat, "prompt", "\x00", "")
-	var noDisplay bool
-	flag.BoolVar(&noDisplay, "n", false, "")
-	flag.BoolVar(&noDisplay, "no-display", false, "")
+func RunProgram(so *stack.StackOperator, program string) {
+	err := so.ParseInput(program)
+	if err != nil {
+		fmt.Fprint(os.Stderr, err)
+	}
+	fmt.Print(string(so.PrintBuf))
+}
 
-	flag.Usage = func() { fmt.Printf(usage, Version) }
-	flag.Parse()
+func ExecutePrograms(so *stack.StackOperator, programs []string) (eof error) {
+	for _, s := range programs {
+		if err := so.ParseInput(s); err != nil {
+			fmt.Fprint(os.Stderr, err)
+		}
+	}
+	fmt.Print(string(so.PrintBuf))
+	return io.EOF
+}
 
-	if printVersion {
+func run() error {
+	if PrintVersion {
 		fmt.Printf("goclacker %s\n", Version)
-		return
+		return io.EOF
 	}
 
-	so := MakeStackOperator(stackLimit, len(flag.Args()) == 0, strictMode, noDisplay)
-	if configPath == "\x00" {
-		configPath = CheckDefConfigPaths()
+	so := MakeStackOperator(StackLimit, len(flag.Args()) == 0, StrictMode, NoDisplay)
+	if ConfigPath == "\x00" {
+		ConfigPath = CheckDefConfigPaths()
 	}
-	scanner := GetConfigScanner(configPath)
-	if s := ReadPromptLine(scanner); promptFormat == "\x00" {
-		promptFormat = s
+	scanner := GetConfigScanner(ConfigPath)
+	if s := ReadPromptLine(scanner); PromptFmt == "\x00" {
+		PromptFmt = s
 	}
 	ReadProgLines(scanner, so)
+
 	if !so.Interactive {
-		for _, s := range flag.Args() {
-			RunProgram(so, s)
-		}
-		return
+		return ExecutePrograms(so, flag.Args())
 	}
-	if err := so.MakePromptFunc(promptFormat, FmtChar); err != nil {
-		log.Fatal(err)
+
+	if err := so.MakePromptFunc(PromptFmt, FmtChar); err != nil {
+		return err
 	}
-	if err := interactive(so); err != io.EOF {
+	fmt.Fprintf(os.Stderr, "goclacker %s\n", Version)
+	return interactive(so)
+}
+
+func main() {
+	flag.BoolVar(&PrintVersion, "V", false, "")
+	flag.BoolVar(&PrintVersion, "version", false, "")
+
+	flag.IntVar(&StackLimit, "l", DefLimit, "")
+	flag.IntVar(&StackLimit, "limit", DefLimit, "")
+
+	flag.BoolVar(&StrictMode, "s", false, "")
+	flag.BoolVar(&StrictMode, "strict", false, "")
+
+	flag.StringVar(&ConfigPath, "c", "\x00", "")
+	flag.StringVar(&ConfigPath, "config", "\x00", "")
+
+	flag.StringVar(&PromptFmt, "p", "\x00", "")
+	flag.StringVar(&PromptFmt, "prompt", "\x00", "")
+
+	flag.BoolVar(&NoDisplay, "n", false, "")
+	flag.BoolVar(&NoDisplay, "no-display", false, "")
+
+	flag.Usage = func() { fmt.Printf(Usage, Version) }
+	flag.Parse()
+
+	if err := run(); err != io.EOF {
 		log.Fatal(err)
 	}
 }
