@@ -58,7 +58,7 @@ var (
 	StackLimit                          int
 )
 
-func MakeStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
+func GetStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
@@ -194,7 +194,7 @@ func run() error {
 		return io.EOF
 	}
 
-	so := MakeStackOperator(StackLimit, len(flag.Args()) == 0, StrictMode, NoDisplay)
+	so := GetStackOperator(StackLimit, len(flag.Args()) == 0, StrictMode, NoDisplay)
 	if ConfigPath == "\x00" {
 		ConfigPath = CheckDefConfigPaths()
 	}
