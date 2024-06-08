@@ -21,14 +21,14 @@ func TestPrompts(t *testing.T) {
 	formats := map[string]string{
 		"":                             "",
 		"     ":                        "     ",
-		fmt.Sprintf("%c", fmtChar):     fmt.Sprintf("%c", fmtChar),
-		fmt.Sprintf(" %c", fmtChar):    fmt.Sprintf(" %c", fmtChar),
-		fmt.Sprintf("%c ", fmtChar):    fmt.Sprintf("%c ", fmtChar),
-		fmt.Sprintf("%c-", fmtChar):    fmt.Sprintf("%c-", fmtChar),
-		fmt.Sprintf("-%c", fmtChar):    fmt.Sprintf("-%c", fmtChar),
-		fmt.Sprintf(" %c > ", fmtChar): fmt.Sprintf(" %c > ", fmtChar),
-		fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar):                     fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar),
-		fmt.Sprintf("%cl%cc&3t%cs%c10t", fmtChar, fmtChar, fmtChar, fmtChar): "80N N N12N N N N N N N N N N",
+		fmt.Sprintf("%c", FmtChar):     fmt.Sprintf("%c", FmtChar),
+		fmt.Sprintf(" %c", FmtChar):    fmt.Sprintf(" %c", FmtChar),
+		fmt.Sprintf("%c ", FmtChar):    fmt.Sprintf("%c ", FmtChar),
+		fmt.Sprintf("%c-", FmtChar):    fmt.Sprintf("%c-", FmtChar),
+		fmt.Sprintf("-%c", FmtChar):    fmt.Sprintf("-%c", FmtChar),
+		fmt.Sprintf(" %c > ", FmtChar): fmt.Sprintf(" %c > ", FmtChar),
+		fmt.Sprintf("%c%c%c", FmtChar, FmtChar, FmtChar):                     fmt.Sprintf("%c%c%c", FmtChar, FmtChar, FmtChar),
+		fmt.Sprintf("%cl%cc&3t%cs%c10t", FmtChar, FmtChar, FmtChar, FmtChar): "80N N N12N N N N N N N N N N",
 	}
 	for format, expected := range formats {
 		prompt(t, format, expected)
@@ -75,7 +75,7 @@ func TestPrograms(t *testing.T) {
 		"10 log":       {"1\n", false, false},
 		"10 ln":        {"2.302585092994046\n", false, false},
 		"4 sqrt":       {"2\n", false, false},
-		"= pi":         {"deleted pi\n", false, false},
+		"= pi":         {"deleted word: pi\n", false, false},
 		"= test 2 2 +": {"defined test : 2 2 +\n", false, false},
 		"pi sqrt":      {"1.7724538509055159\n", false, false},
 		"+":            {"operation error: '+' needs 2 values in stack\n", false, false},

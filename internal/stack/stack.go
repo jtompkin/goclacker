@@ -262,8 +262,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words and formatters.
 func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, noDisplay bool, strict bool) *StackOperator {
-	var displayFmt string
-	displayFmt = "%s\n"
+	displayFmt := "%s\n"
 	if interactive {
 		displayFmt = "[ %s ]\n"
 	}
