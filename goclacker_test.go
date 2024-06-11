@@ -91,3 +91,16 @@ func TestPrograms(t *testing.T) {
 		prog(t, program, params)
 	}
 }
+
+func TestConfig(t *testing.T) {
+	testPath := "./test/test.conf"
+	DefConfigPaths = append(DefConfigPaths, testPath)
+	path := CheckDefConfigPaths()
+	if path != testPath {
+		t.Fatalf("Default config path %s not found.", testPath)
+	}
+	scanner := GetConfigScanner(path)
+	if scanner == nil {
+		t.Fatalf("Could not open config file %s", testPath)
+	}
+}

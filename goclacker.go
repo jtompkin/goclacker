@@ -58,6 +58,8 @@ var (
 	StackLimit                          int
 )
 
+var DefConfigPaths = make([]string, 0)
+
 func GetStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
@@ -113,12 +115,15 @@ func CheckDefConfigPaths() (path string) {
 		home = "."
 	}
 	fromHome := func(s string) string { return fmt.Sprintf("%s%c%s", home, os.PathSeparator, s) }
-	defConfigPaths := []string{
+	paths := []string{
 		".goclacker",
 		fromHome(".goclacker"),
 		fromHome(".config/goclacker/goclacker.conf"),
 	}
-	for _, path = range defConfigPaths {
+	for _, s := range paths {
+		DefConfigPaths = append(DefConfigPaths, s)
+	}
+	for _, path = range DefConfigPaths {
 		if _, err = os.Open(path); err == nil {
 			return path
 		}
