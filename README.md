@@ -135,7 +135,7 @@ locations and loads the first on it finds:
 - `~/.goclacker`
 - `~/.config/goclacker/goclacker.conf`
 
-Passing anything—including an empty string—to `-c` will disable default config
+Passing anything---including an empty string---to `-c` will disable default config
 files.
 
 The format is as follows:
@@ -174,4 +174,5 @@ pi sqrt
 ## License
 
 Licensed under the
-[MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE) license
+[MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE)
+license. See LICENSE file.
