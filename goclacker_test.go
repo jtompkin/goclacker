@@ -9,7 +9,7 @@ import (
 )
 
 func prompt(t *testing.T, format string, expected string) {
-	so := GetStackOperator(8, false, false, false)
+	so := GetStackOperator(false)
 	so.Stack.Stash = 12
 	so.MakePromptFunc(format, '&')
 	if s := so.Prompt(); s != expected {
@@ -18,6 +18,7 @@ func prompt(t *testing.T, format string, expected string) {
 }
 
 func TestPrompts(t *testing.T) {
+	StackLimit = 8
 	formats := map[string]string{
 		"":                             "",
 		"     ":                        "     ",
@@ -36,7 +37,7 @@ func TestPrompts(t *testing.T) {
 }
 
 func prog(t *testing.T, program string, params progParams) {
-	so := GetStackOperator(8, false, false, false)
+	so := GetStackOperator(false)
 	err := so.ParseInput(program)
 	s := string(so.PrintBuf)
 	if err != nil {
@@ -60,6 +61,7 @@ type progParams struct {
 }
 
 func TestPrograms(t *testing.T) {
+	StackLimit = 8
 	programs := map[string]progParams{
 		"":             {"", false, false},
 		"      ":       {"", false, false},
@@ -78,7 +80,7 @@ func TestPrograms(t *testing.T) {
 		"= pi":         {"deleted word: pi\n", false, false},
 		"= test 2 2 +": {"defined test : 2 2 +\n", false, false},
 		"pi sqrt":      {"1.7724538509055159\n", false, false},
-		"+":            {"operation error: '+' needs 2 values in stack\n", false, false},
+		"+":            {"operation error: + needs 2 values in stack\n", false, false},
 		"-1 log":       {"operation error: cannot take logarithm of non-positive number\n", false, false},
 		"-1 ln":        {"operation error: cannot take logarithm of non-positive number\n", false, false},
 		"=":            {"", true, false},
@@ -93,14 +95,27 @@ func TestPrograms(t *testing.T) {
 }
 
 func TestConfig(t *testing.T) {
-	testPath := "./test/test.conf"
-	DefConfigPaths = append(DefConfigPaths, testPath)
-	path := CheckDefConfigPaths()
-	if path != testPath {
-		t.Fatalf("Default config path %s not found.", testPath)
+	// TODO: Make better
+	testPaths := []string{
+		"./test/test.conf",
+		"./test/empty.conf",
 	}
-	scanner := GetConfigScanner(path)
+	testPath := testPaths[0]
+	DefConfigPaths = append(DefConfigPaths, testPath)
+	if path := CheckDefConfigPaths(); path != testPath {
+		t.Fatalf("CheckDefConfigPaths : Default config path %s not found. Returned %s", testPath, path)
+	}
+
+	if scanner, msg := GetConfigScanner("./test/nothere"); scanner != nil {
+		t.Fatalf("GetConfigScanner : Returned non-existant scanner: msg = %s", msg)
+	}
+
+	if scanner, msg := GetConfigScanner(""); scanner != nil || msg != "" {
+		t.Fatalf(`GetConfigScanner : wanted: scanner = nil , msg = "" - got: scanner = %v , msg = %s`, scanner, msg)
+	}
+
+	scanner, msg := GetConfigScanner(testPath)
 	if scanner == nil {
-		t.Fatalf("Could not open config file %s", testPath)
+		t.Fatalf("GetConfigScanner : Could not open config file %s: msg = %q", testPath, msg)
 	}
 }

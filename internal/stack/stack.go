@@ -170,10 +170,10 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 		c = 's'
 	}
 	if stkLen < pops {
-		return "", errors.New(fmt.Sprintf("operation error: '%s' needs %d value%c in stack\n", token, pops, c))
+		return "", errors.New(fmt.Sprintf("operation error: %s needs %d value%c in stack\n", token, pops, c))
 	}
 	if stkLen-pops+action.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
-		return "", errors.New(fmt.Sprintf("operation error: '%s' would overflow stack\n", token))
+		return "", errors.New(fmt.Sprintf("operation error: %s would overflow stack\n", token))
 	}
 	return action.Call(so)
 }
