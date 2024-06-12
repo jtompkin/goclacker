@@ -97,12 +97,15 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions.Set("Dgrow", stack.Grow)
 	actions.Set("Dfill", stack.Fill)
 	so := stack.NewStackOperator(actions, StackLimit, interactive, NoDisplay, StrictMode)
-	split := func(s string) []string { return strings.Split(s, " ") }
-	so.DefWord(split("? help"))
-	so.DefWord(split("randn rand * floor"))
-	so.DefWord(split("sqrt 0.5 ^"))
-	so.DefWord(split("logb log swap log / -1 ^"))
-	so.DefWord(split("pi 3.141592653589793"))
+	for _, s := range []string{
+		"? help",
+		"randn rand * floor",
+		"sqrt 0.5 ^",
+		"logb log swap log / -1 ^",
+		"pi 3.141592653589793",
+	} {
+		so.DefWord(strings.Split(s, " "))
+	}
 	return so
 }
 
