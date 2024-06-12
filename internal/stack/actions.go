@@ -307,6 +307,8 @@ var Help = &Action{
 			}
 		}
 		so.Actions.Reset()
+		pad = strings.Repeat(" ", maxLen-len("quit"))
+		sb.WriteString(fmt.Sprintf("%squit : exit goclacker\n", pad))
 		return sb.String(), nil
 	}, 0, 0,
 	"display this information screen",
