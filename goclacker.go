@@ -60,7 +60,7 @@ var (
 
 var DefConfigPaths = make([]string, 0)
 
-func GetStackOperator(stackLimit int, interactive bool, strict bool, noDisplay bool) *stack.StackOperator {
+func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action]()
 	actions.Set("+", stack.Add)
 	actions.Set("-", stack.Subtract)
@@ -96,7 +96,7 @@ func GetStackOperator(stackLimit int, interactive bool, strict bool, noDisplay b
 	actions.Set("Dclip", stack.Clip)
 	actions.Set("Dgrow", stack.Grow)
 	actions.Set("Dfill", stack.Fill)
-	so := stack.NewStackOperator(actions, stackLimit, interactive, noDisplay, strict)
+	so := stack.NewStackOperator(actions, StackLimit, interactive, NoDisplay, StrictMode)
 	split := func(s string) []string { return strings.Split(s, " ") }
 	so.DefWord(split("? help"))
 	so.DefWord(split("randn rand * floor"))
@@ -131,35 +131,35 @@ func CheckDefConfigPaths() (path string) {
 	return ""
 }
 
-func GetConfigScanner(path string) *bufio.Scanner {
+func GetConfigScanner(path string) (scanner *bufio.Scanner, msg string) {
 	if path == "" {
-		return nil
+		return nil, ""
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "could not open config file : %v\n", err)
-		return nil
+		return nil, fmt.Sprintf("could not open config file : %v\n", err)
 	}
-	fmt.Fprintf(os.Stderr, "parsing config file... %s\n", path)
-	return bufio.NewScanner(f)
+	return bufio.NewScanner(f), fmt.Sprintf("parsing config file... %s\n", path)
 }
 
-func ReadPromptLine(scanner *bufio.Scanner) (promptFmt string) {
+func ReadPromptLine(scanner *bufio.Scanner) (promptFmt string, msg string) {
 	if scanner == nil {
-		return DefPrompt
+		return DefPrompt, ""
 	}
 	scanner.Scan()
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "could not read prompt line : %v\n", err)
-		return DefPrompt
+		return DefPrompt, fmt.Sprintf("could not read prompt line : %v\n", err)
 	}
 	promptFmt = scanner.Text()
+	if promptFmt == "" {
+		return DefPrompt, ""
+	}
 	promptFmt = strings.TrimPrefix(promptFmt, `"`)
 	promptFmt = strings.TrimSuffix(promptFmt, `"`)
-	return promptFmt
+	return promptFmt, ""
 }
 
-func ReadProgLines(scanner *bufio.Scanner, so *stack.StackOperator) {
+func ReadProgLines(scanner *bufio.Scanner, so *stack.StackOperator) (msg string) {
 	if scanner == nil {
 		return
 	}
@@ -169,18 +169,9 @@ func ReadProgLines(scanner *bufio.Scanner, so *stack.StackOperator) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "could not read config file : %v\n", err)
-	} else {
-		fmt.Fprint(os.Stderr, "sucessfully parsed config file\n")
+		return fmt.Sprintf("could not read config file : %v\n", err)
 	}
-}
-
-func RunProgram(so *stack.StackOperator, program string) {
-	err := so.ParseInput(program)
-	if err != nil {
-		fmt.Fprint(os.Stderr, err)
-	}
-	fmt.Print(string(so.PrintBuf))
+	return "sucessfully parsed config file\n"
 }
 
 func ExecutePrograms(so *stack.StackOperator, programs []string) (eof error) {
@@ -199,15 +190,21 @@ func run() error {
 		return io.EOF
 	}
 
-	so := GetStackOperator(StackLimit, len(flag.Args()) == 0, StrictMode, NoDisplay)
+	so := GetStackOperator(len(flag.Args()) == 0)
 	if ConfigPath == "\x00" {
 		ConfigPath = CheckDefConfigPaths()
 	}
-	scanner := GetConfigScanner(ConfigPath)
-	if s := ReadPromptLine(scanner); PromptFmt == "\x00" {
+	scanner, msg := GetConfigScanner(ConfigPath)
+	fmt.Fprint(os.Stderr, msg)
+
+	s, msg := ReadPromptLine(scanner)
+	if PromptFmt == "\x00" {
 		PromptFmt = s
 	}
-	ReadProgLines(scanner, so)
+	fmt.Fprint(os.Stderr, msg)
+
+	msg = ReadProgLines(scanner, so)
+	fmt.Fprint(os.Stderr, msg)
 
 	if !so.Interactive {
 		return ExecutePrograms(so, flag.Args())
