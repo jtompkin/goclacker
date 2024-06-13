@@ -290,23 +290,27 @@ var Display = &Action{
 var Help = &Action{
 	func(so *StackOperator) (string, error) {
 		header := "operator"
-		maxLen := len(header)
-		for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
-			if len(p.Key) > maxLen {
-				maxLen = len(p.Key)
+		maxLen := len(slices.MaxFunc(so.Actions.List, func(a string, b string) int {
+			if len(a) > len(b) {
+				return 1
 			}
+			if len(b) < len(a) {
+				return -1
+			}
+			return 0
+		}))
+		if maxLen < len(header) {
+			maxLen = len(header)
 		}
-		so.Actions.Reset()
 		sb := new(strings.Builder)
 		pad := strings.Repeat(" ", maxLen-len(header))
 		sb.WriteString(fmt.Sprintf("%s%s | %s\n", pad, header, "description"))
-		for p := so.Actions.Next(); p != nil; p = so.Actions.Next() {
-			if p.Key[0] != 'D' {
-				pad := strings.Repeat(" ", maxLen-len(p.Key))
-				sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, p.Key, p.Value.Help))
+		for k, v, ok := so.Actions.Next(); ok; k, v, ok = so.Actions.Next() {
+			if k[0] != 'D' {
+				pad := strings.Repeat(" ", maxLen-len(k))
+				sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, k, v.Help))
 			}
 		}
-		so.Actions.Reset()
 		pad = strings.Repeat(" ", maxLen-len("quit"))
 		sb.WriteString(fmt.Sprintf("%squit : exit goclacker\n", pad))
 		return sb.String(), nil

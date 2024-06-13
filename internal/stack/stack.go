@@ -153,18 +153,17 @@ func (so *StackOperator) parseToken(token string) (toPrint string, err error) {
 // executes it accordingly. Returns the string and error from doing what it
 // needs to do.
 func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) {
-	p, present := so.Actions.Get(token)
-	if !present {
-		def, present := so.Words[token]
-		if !present {
+	a, pres := so.Actions.Get(token)
+	if !pres {
+		def, pres := so.Words[token]
+		if !pres {
 			return "", so.notFound(token)
 		}
 		err := so.ParseInput(def)
 		return string(so.PrintBuf), err
 	}
-	action := p.Value
 	stkLen := len(so.Stack.Values)
-	pops := action.Pops
+	pops := a.Pops
 	var c byte
 	if pops != 1 {
 		c = 's'
@@ -172,10 +171,10 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 	if stkLen < pops {
 		return "", errors.New(fmt.Sprintf("operation error: %s needs %d value%c in stack\n", token, pops, c))
 	}
-	if stkLen-pops+action.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
+	if stkLen-pops+a.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
 		return "", errors.New(fmt.Sprintf("operation error: %s would overflow stack\n", token))
 	}
-	return action.Call(so)
+	return a.Call(so)
 }
 
 // Fail pushes all values to the stack and returns an error containing
