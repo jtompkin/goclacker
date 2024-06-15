@@ -128,7 +128,15 @@ All currently defined words can be viewed by entering `words`.
 If you have crafted a beautiful prompt or have a list of words that you can't
 live without, a config file is what you need. Provide the path to this text file
 with the `-c` flag, and it will set the prompt format and execute any additional
-programs you supply.
+programs you supply. Goclacker looks for default config files in the following
+locations and loads the first on it finds:
+
+- `./.goclacker`
+- `~/.goclacker`
+- `~/.config/goclacker/goclacker.conf`
+
+Passing anything---including an empty string---to `-c` will disable default config
+files.
 
 The format is as follows:
 
@@ -151,7 +159,7 @@ A configuration file containing the following lines would set the prompt to look
 like `------> ` (notice the lack of `"` and the preserved whitespace), and
 define the same words as in the [interactive](#words) example. It would then
 push the square root of pi, push the value 2, and call the multiplication
-operator. These last three lines could all be put on the same line—just like in
+operator. These last three lines could all be put on the same line, just like in
 interactive mode.
 
 ```
@@ -166,4 +174,5 @@ pi sqrt
 ## License
 
 Licensed under the
-[MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE) license
+[MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE)
+license. See LICENSE file.

@@ -9,7 +9,7 @@ import (
 )
 
 func prompt(t *testing.T, format string, expected string) {
-	so := MakeStackOperator(8, false, false, false)
+	so := GetStackOperator(false)
 	so.Stack.Stash = 12
 	so.MakePromptFunc(format, '&')
 	if s := so.Prompt(); s != expected {
@@ -18,38 +18,39 @@ func prompt(t *testing.T, format string, expected string) {
 }
 
 func TestPrompts(t *testing.T) {
+	StackLimit = 8
 	formats := map[string]string{
 		"":                             "",
 		"     ":                        "     ",
-		fmt.Sprintf("%c", fmtChar):     fmt.Sprintf("%c", fmtChar),
-		fmt.Sprintf(" %c", fmtChar):    fmt.Sprintf(" %c", fmtChar),
-		fmt.Sprintf("%c ", fmtChar):    fmt.Sprintf("%c ", fmtChar),
-		fmt.Sprintf("%c-", fmtChar):    fmt.Sprintf("%c-", fmtChar),
-		fmt.Sprintf("-%c", fmtChar):    fmt.Sprintf("-%c", fmtChar),
-		fmt.Sprintf(" %c > ", fmtChar): fmt.Sprintf(" %c > ", fmtChar),
-		fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar):                     fmt.Sprintf("%c%c%c", fmtChar, fmtChar, fmtChar),
-		fmt.Sprintf("%cl%cc&3t%cs%c10t", fmtChar, fmtChar, fmtChar, fmtChar): "80N N N12N N N N N N N N N N",
+		fmt.Sprintf("%c", FmtChar):     fmt.Sprintf("%c", FmtChar),
+		fmt.Sprintf(" %c", FmtChar):    fmt.Sprintf(" %c", FmtChar),
+		fmt.Sprintf("%c ", FmtChar):    fmt.Sprintf("%c ", FmtChar),
+		fmt.Sprintf("%c-", FmtChar):    fmt.Sprintf("%c-", FmtChar),
+		fmt.Sprintf("-%c", FmtChar):    fmt.Sprintf("-%c", FmtChar),
+		fmt.Sprintf(" %c > ", FmtChar): fmt.Sprintf(" %c > ", FmtChar),
+		fmt.Sprintf("%c%c%c", FmtChar, FmtChar, FmtChar):                     fmt.Sprintf("%c%c%c", FmtChar, FmtChar, FmtChar),
+		fmt.Sprintf("%cl%cc&3t%cs%c10t", FmtChar, FmtChar, FmtChar, FmtChar): "80N N N12N N N N N N N N N N",
 	}
 	for format, expected := range formats {
 		prompt(t, format, expected)
 	}
 }
 
-func prog(t *testing.T, program string, expected string, wantError bool, acceptAny bool) {
-	so := MakeStackOperator(8, false, false, false)
+func prog(t *testing.T, program string, params progParams) {
+	so := GetStackOperator(false)
 	err := so.ParseInput(program)
 	s := string(so.PrintBuf)
 	if err != nil {
-		if wantError {
+		if params.WantError {
 			return
 		}
 		s = err.Error()
 	}
-	if wantError {
+	if params.WantError {
 		t.Fatalf(`program = "%s" : wanted error, none raised`, program)
 	}
-	if s != expected && !acceptAny {
-		t.Fatalf(`program = "%s" : expected = %q : got = %q`, program, expected, s)
+	if s != params.Expected && !params.AcceptAny {
+		t.Fatalf(`program = "%s" : expected = %q : got = %q`, program, params.Expected, s)
 	}
 }
 
@@ -60,7 +61,8 @@ type progParams struct {
 }
 
 func TestPrograms(t *testing.T) {
-	programs := map[string]*progParams{
+	StackLimit = 8
+	programs := map[string]progParams{
 		"":             {"", false, false},
 		"      ":       {"", false, false},
 		"test":         {"", false, false},
@@ -75,10 +77,10 @@ func TestPrograms(t *testing.T) {
 		"10 log":       {"1\n", false, false},
 		"10 ln":        {"2.302585092994046\n", false, false},
 		"4 sqrt":       {"2\n", false, false},
-		"= pi":         {"deleted pi\n", false, false},
+		"= pi":         {"deleted word: pi\n", false, false},
 		"= test 2 2 +": {"defined test : 2 2 +\n", false, false},
 		"pi sqrt":      {"1.7724538509055159\n", false, false},
-		"+":            {"operation error: '+' needs 2 values in stack\n", false, false},
+		"+":            {"operation error: + needs 2 values in stack\n", false, false},
 		"-1 log":       {"operation error: cannot take logarithm of non-positive number\n", false, false},
 		"-1 ln":        {"operation error: cannot take logarithm of non-positive number\n", false, false},
 		"=":            {"", true, false},
@@ -87,7 +89,33 @@ func TestPrograms(t *testing.T) {
 		"words":        {"", false, true},
 		"  3 4 * 4455 -    23         + 4 4332     ": {"-4420 4 4332\n", false, false},
 	}
-	for program, expected := range programs {
-		prog(t, program, expected.Expected, expected.WantError, expected.AcceptAny)
+	for program, params := range programs {
+		prog(t, program, params)
+	}
+}
+
+func TestConfig(t *testing.T) {
+	// TODO: Make better
+	testPaths := []string{
+		"./test/test.conf",
+		"./test/empty.conf",
+	}
+	testPath := testPaths[0]
+	DefConfigPaths = append(DefConfigPaths, testPath)
+	if path := CheckDefConfigPaths(); path != testPath {
+		t.Fatalf("CheckDefConfigPaths : Default config path %s not found. Returned %s", testPath, path)
+	}
+
+	if scanner, msg := GetConfigScanner("./test/nothere"); scanner != nil {
+		t.Fatalf("GetConfigScanner : Returned non-existant scanner: msg = %s", msg)
+	}
+
+	if scanner, msg := GetConfigScanner(""); scanner != nil || msg != "" {
+		t.Fatalf(`GetConfigScanner : wanted: scanner = nil , msg = "" - got: scanner = %v , msg = %s`, scanner, msg)
+	}
+
+	scanner, msg := GetConfigScanner(testPath)
+	if scanner == nil {
+		t.Fatalf("GetConfigScanner : Could not open config file %s: msg = %q", testPath, msg)
 	}
 }

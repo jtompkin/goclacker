@@ -14,7 +14,8 @@ import (
 	"golang.org/x/term"
 )
 
-// interactive is the unix-like implementation of interactive mode.
+// interactive is the unix-like implementation of interactive mode. Returns an
+// io.EOF on graceful exit.
 func interactive(so *stack.StackOperator) (err error) {
 	state, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {

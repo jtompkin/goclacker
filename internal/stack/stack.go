@@ -40,14 +40,14 @@ func (stk *Stack) Push(f float64) error {
 // Display returns a string of all values in the stack according to
 // Stack.displayFmt
 func (stk *Stack) Display() string {
-	if stk.displayFmt == "" {
-		return ""
+	if strings.Count(stk.displayFmt, "%s") == 0 {
+		return stk.displayFmt
 	}
-	ss := make([]string, len(stk.Values))
+	sNums := make([]string, len(stk.Values))
 	for i, f := range stk.Values {
-		ss[i] = fmt.Sprint(f)
+		sNums[i] = fmt.Sprint(f)
 	}
-	s := strings.Join(ss, " ")
+	s := strings.Join(sNums, " ")
 	return fmt.Sprintf(stk.displayFmt, s)
 }
 
@@ -66,7 +66,7 @@ type StackOperator struct {
 	PrintBuf    []byte
 	formatters  map[byte]func(*StackOperator) string
 	// notFound should return nil if the StackOperator does not care about
-	// entering missing input or an error if it does.
+	// entering missing input, or an error if it does.
 	notFound func(string) error
 }
 
@@ -85,8 +85,9 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 			return err
 		}
 		s, err = so.parseToken(token)
-		so.PrintBuf = []byte(s)
-		if err != nil {
+		if err == nil {
+			so.PrintBuf = []byte(s)
+		} else {
 			return err
 		}
 	}
@@ -128,7 +129,7 @@ func (so *StackOperator) DefWord(def []string) (message string, err error) {
 			return "", errors.New(fmt.Sprintf("could not delete %s : not defined\n", word))
 		}
 		delete(so.Words, word)
-		return fmt.Sprintf("deleted %s\n", word), nil
+		return fmt.Sprintf("deleted word: %s\n", word), nil
 	}
 	s := strings.Join(noEmpty[1:], " ")
 	so.Words[word] = s
@@ -152,29 +153,28 @@ func (so *StackOperator) parseToken(token string) (toPrint string, err error) {
 // executes it accordingly. Returns the string and error from doing what it
 // needs to do.
 func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) {
-	p, present := so.Actions.Get(token)
-	if !present {
-		def, present := so.Words[token]
-		if !present {
+	a, pres := so.Actions.Get(token)
+	if !pres {
+		def, pres := so.Words[token]
+		if !pres {
 			return "", so.notFound(token)
 		}
 		err := so.ParseInput(def)
 		return string(so.PrintBuf), err
 	}
-	action := p.Value
 	stkLen := len(so.Stack.Values)
-	pops := action.Pops
+	pops := a.Pops
 	var c byte
 	if pops != 1 {
 		c = 's'
 	}
 	if stkLen < pops {
-		return "", errors.New(fmt.Sprintf("operation error: '%s' needs %d value%c in stack\n", token, pops, c))
+		return "", errors.New(fmt.Sprintf("operation error: %s needs %d value%c in stack\n", token, pops, c))
 	}
-	if stkLen-pops+action.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
-		return "", errors.New(fmt.Sprintf("operation error: '%s' would overflow stack\n", token))
+	if stkLen-pops+a.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
+		return "", errors.New(fmt.Sprintf("operation error: %s would overflow stack\n", token))
 	}
-	return action.Call(so)
+	return a.Call(so)
 }
 
 // Fail pushes all values to the stack and returns an error containing
@@ -255,15 +255,13 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 		}
 		return fmt.Sprintf(noNull, vals...)
 	}
-
 	return nil
 }
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words and formatters.
 func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, noDisplay bool, strict bool) *StackOperator {
-	var displayFmt string
-	displayFmt = "%s\n"
+	displayFmt := "%s\n"
 	if interactive {
 		displayFmt = "[ %s ]\n"
 	}

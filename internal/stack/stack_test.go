@@ -3,9 +3,7 @@
 
 package stack
 
-import (
-	"testing"
-)
+import "testing"
 
 func getMaps() (*OrderedMap[string, int], map[string]int) {
 	om := NewOrderedMap[string, int]()
@@ -22,9 +20,9 @@ func getMaps() (*OrderedMap[string, int], map[string]int) {
 
 func TestOrderedMapIteration(t *testing.T) {
 	om, m := getMaps()
-	for p := om.Next(); p != nil; p = om.Next() {
-		if val := m[p.Key]; val != p.Value {
-			t.Fatalf("om key = %q : expected value = %d : actual value = %d", p.Key, val, p.Value)
+	for k, v, ok := om.Next(); ok; k, v, ok = om.Next() {
+		if mapVal := m[k]; mapVal != v {
+			t.Fatalf("OrderedMap key = %q : expected value = %d : actual value = %d", k, mapVal, v)
 		}
 	}
 }
@@ -32,12 +30,12 @@ func TestOrderedMapIteration(t *testing.T) {
 func TestOrderedMapGet(t *testing.T) {
 	om, m := getMaps()
 	for s, i := range m {
-		p, pres := om.Get(s)
-		if p.Value != i {
-			t.Fatalf("om key = %q : expected value = %d : actual value = %d", p.Key, i, p.Value)
-		}
+		v, pres := om.Get(s)
 		if !pres {
-			t.Fatalf("om key = %q : not present", p.Key)
+			t.Fatalf("OrderedMap key = %q : not present", s)
+		}
+		if v != i {
+			t.Fatalf("OrderedMap key = %q : expected value = %d : actual value = %d", s, i, v)
 		}
 	}
 }

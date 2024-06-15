@@ -6,6 +6,7 @@
 - [1.2.0 - 2024-04-30](#120---2024-04-30)
 - [1.3.0 - 2024-05-08](#130---2024-05-08)
 - [1.3.1 - 2024-05-30](#131---2024-05-30)
+- [1.3.2 - TBD](#132---TBD)
 
 ## TODO
 
@@ -85,3 +86,11 @@ Topper
 - `&t` now `&Nt` format specifier: display top N values of the stack. Probably
 buggy
 - Config file now interprets any additional lines as regular programs
+
+## [1.3.2](https://github.com/jtompkin/goclacker/releases/tag/v1.3.2) - TBD
+
+Idunno
+
+### Changed
+
+- Debug operators no longer show in help.
