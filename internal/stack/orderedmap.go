@@ -3,6 +3,8 @@
 
 package stack
 
+// OrderedMap is a probably really really bad implementation of a map that is
+// ordered... shocking.
 type OrderedMap[K comparable, V any] struct {
 	List    []K
 	Pairs   map[K]V
