@@ -1,3 +1,6 @@
+// Copyright 2024 Josh Tompkin
+// Licensed under the MIT License
+
 package stack
 
 type OrderedMap[K comparable, V any] struct {
