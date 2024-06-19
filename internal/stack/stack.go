@@ -200,7 +200,7 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 				if i > l-1 {
 					last[p] = "N"
 				} else {
-					last[p] = fmt.Sprintf("%v", so.Stack.Values[l-i-1])
+					last[p] = fmt.Sprintf("%.6g", so.Stack.Values[l-i-1])
 				}
 			}
 			return strings.Join(last, " ")

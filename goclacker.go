@@ -117,11 +117,10 @@ func CheckDefConfigPaths() (path string) {
 	if err != nil {
 		home = "."
 	}
-	fromHome := func(s string) string { return fmt.Sprintf("%s%c%s", home, os.PathSeparator, s) }
-	paths := []string{
-		".goclacker",
-		fromHome(".goclacker"),
-		fromHome(".config/goclacker/goclacker.conf"),
+	paths := []string{".goclacker"}
+	fromHome := []string{".goclacker", ".config/goclacker/goclacker.conf"}
+	for _, s := range fromHome {
+		paths = append(paths, fmt.Sprintf("%s%c%s", home, os.PathSeparator, s))
 	}
 	for _, s := range paths {
 		DefConfigPaths = append(DefConfigPaths, s)
