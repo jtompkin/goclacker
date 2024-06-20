@@ -79,13 +79,8 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 	input = strings.TrimSpace(input)
 	split := strings.Split(input, " ")
 	for i, token := range split {
-		if token == "=" {
-			s, err := so.DefWord(split[i+1:])
-			so.PrintBuf = []byte(s)
-			return err
-		}
-		if token == "==" {
-			s, err := so.DefValWord(split[i+1:])
+		if token == "=" || token == "==" {
+			s, err := so.ParseWordDef(split[i:])
 			so.PrintBuf = []byte(s)
 			return err
 		}
@@ -98,41 +93,23 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 	return err
 }
 
-func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
-	if len(def) == 0 {
-		return "", errors.New("define value word: == example 2")
-	}
-	word := def[0]
-	if _, pres := so.Words[word]; pres {
-		return "", errors.New(fmt.Sprintf("could not define %s : already a defined word\n", word))
-	}
-	if f, pres := so.valWords[word]; pres {
-		delete(so.valWords, word)
-		return fmt.Sprintf("deleted value word: %s = %g\n", word, f), nil
-	}
-	// TODO: Make so methods return calculated value so don't need temp so
-	tmp := NewStackOperator(so.Actions, -1, false, false, false)
-	tmp.Words = so.Words
-	tmp.Stack.Values = so.Stack.Values
-	err = tmp.ParseInput(strings.Join(def[1:], " "))
-	if len(tmp.Stack.Values) == 0 {
-		return "", nil
-	}
-	f := tmp.Stack.Values[len(tmp.Stack.Values)-1]
-	so.valWords[word] = f
-	return fmt.Sprintf("defined value word %s = %g\n", word, f), nil
-}
-
-// DefWord adds a word to StackOperator.Words with the key being def[0] and the
+// ParseWordDef adds a word to StackOperator.Words with the key being def[0] and the
 // value being the rest of the slice. It deletes def[0] from StackOperator.Words
 // if len(def) == 1. It returns a string and nil if the operator was successful
 // and an empty string and an error if not.
-func (so *StackOperator) DefWord(def []string) (message string, err error) {
+func (so *StackOperator) ParseWordDef(def []string) (message string, err error) {
 	if len(def) == 0 {
-		return "", errors.New(fmt.Sprintf("define word: = example 2 2 +; remove word: = example\n"))
+		return "", errors.New("This shouldn't happen")
 	}
-	noEmpty := make([]string, 0, len(def))
-	for _, s := range def {
+	wordType := "word"
+	if def[0] == "==" {
+		wordType = "value word"
+	}
+	if len(def) == 1 {
+		return "", errors.New(fmt.Sprintf("define %s: = example 2 2 +; remove word: = example\n", wordType))
+	}
+	noEmpty := make([]string, 0, len(def[1:]))
+	for _, s := range def[1:] {
 		if s != "" {
 			noEmpty = append(noEmpty, s)
 		}
@@ -153,16 +130,55 @@ func (so *StackOperator) DefWord(def []string) (message string, err error) {
 	if _, present := so.Actions.Get(word); present {
 		return "", errors.New(fmt.Sprintf("could not define %s : cannot redifine operator\n", word))
 	}
-	if len(noEmpty) == 1 {
-		if _, present := so.Words[word]; !present {
+	if wordType == "word" {
+		return so.DefNormWord(noEmpty)
+	}
+	return so.DefValWord(noEmpty)
+}
+
+func (so *StackOperator) DefNormWord(def []string) (msg string, err error) {
+	word := def[0]
+	if _, pres := so.valWords[word]; pres {
+		return "", errors.New(fmt.Sprintf("could not define %s: already a defined value word\n", word))
+	}
+	if len(def) == 1 {
+		if _, pres := so.Words[word]; !pres {
 			return "", errors.New(fmt.Sprintf("could not delete %s : not defined\n", word))
 		}
 		delete(so.Words, word)
 		return fmt.Sprintf("deleted word: %s\n", word), nil
 	}
-	s := strings.Join(noEmpty[1:], " ")
-	so.Words[word] = s
-	return fmt.Sprintf("defined word %s : %s\n", word, s), nil
+	s := strings.Join(def[1:], " ")
+	so.Words[def[0]] = s
+	return fmt.Sprintf("defined word %s : %s\n", def[0], s), nil
+}
+
+func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
+	word := def[0]
+	if _, pres := so.Words[word]; pres {
+		return "", errors.New(fmt.Sprintf("could not define %s: already a defined word\n", word))
+	}
+	if len(def) == 1 {
+		if _, pres := so.valWords[word]; !pres {
+			return "", errors.New(fmt.Sprintf("could not delete %s : not defined\n", word))
+		}
+		delete(so.valWords, word)
+		return fmt.Sprintf("deleted value word: %s\n", word), nil
+	}
+	// TODO: Make so methods return calculated value so don't need temp so
+	tmp := NewStackOperator(so.Actions, -1, false, false, false)
+	tmp.Words = so.Words
+	tmp.Stack.Values = so.Stack.Values
+	err = tmp.ParseInput(strings.Join(def[1:], " "))
+	if err != nil {
+		return "", err
+	}
+	if len(tmp.Stack.Values) == 0 {
+		return "", nil
+	}
+	f := tmp.Stack.Values[len(tmp.Stack.Values)-1]
+	so.valWords[def[0]] = f
+	return fmt.Sprintf("defined value word %s = %g\n", def[0], f), nil
 }
 
 // parseToken parses token that should be one word and either pushes it to the

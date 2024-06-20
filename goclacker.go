@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -76,6 +77,9 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions.Set("sin", stack.Sine)
 	actions.Set("cos", stack.Cosine)
 	actions.Set("tan", stack.Tangent)
+	actions.Set("asin", stack.Arcsine)
+	actions.Set("acos", stack.Arccosine)
+	actions.Set("atan", stack.Arctangent)
 	actions.Set("floor", stack.Floor)
 	actions.Set("ceil", stack.Ceiling)
 	actions.Set("round", stack.Round)
@@ -103,9 +107,14 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 		"sqrt 0.5 ^",
 		"logb log swap log / -1 ^",
 	} {
-		so.DefWord(strings.Split(s, " "))
+		so.DefNormWord(strings.Split(s, " "))
 	}
-	so.DefValWord(strings.Split("pi 3.141592653589793", " "))
+	for _, s := range []string{
+		fmt.Sprintf("pi %g", math.Pi),
+		fmt.Sprintf("e %g", math.E),
+	} {
+		so.DefValWord(strings.Split(s, " "))
+	}
 	return so
 }
 
