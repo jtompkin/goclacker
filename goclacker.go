@@ -102,10 +102,10 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 		"randn rand * floor",
 		"sqrt 0.5 ^",
 		"logb log swap log / -1 ^",
-		"pi 3.141592653589793",
 	} {
 		so.DefWord(strings.Split(s, " "))
 	}
+	so.DefValWord(strings.Split("pi 3.141592653589793", " "))
 	return so
 }
 
@@ -244,4 +244,5 @@ func main() {
 	if err := run(); err != io.EOF {
 		log.Fatal(err)
 	}
+	fmt.Println()
 }

@@ -321,15 +321,24 @@ var Help = &Action{
 // Words is an Action with the following description: display all defined words.
 var Words = &Action{
 	func(so *StackOperator) (string, error) {
-		keys := make([]string, 0, len(so.Words))
-		header := "word"
-		maxLen := len(header)
+		keys := make([]string, 0, len(so.Words)+len(so.valWords)+1)
 		for k := range so.Words {
 			keys = append(keys, k)
-			if len(k) > maxLen {
-				maxLen = len(k)
-			}
 		}
+		for k := range so.valWords {
+			keys = append(keys, k)
+		}
+		maxLen := len(slices.MaxFunc(keys,
+			func(a string, b string) int {
+				if len(a) > len(b) {
+					return 1
+				}
+				if len(a) < len(b) {
+					return -1
+				}
+				return 0
+			},
+		))
 		slices.SortFunc(keys,
 			func(a string, b string) int {
 				if len(a) > len(b) {
@@ -347,16 +356,32 @@ var Words = &Action{
 				return 0
 			},
 		)
+		head := "word"
+		if len(head) > maxLen {
+			maxLen = len(head)
+		}
 		sb := new(strings.Builder)
-		pad := strings.Repeat(" ", maxLen-len(header))
-		sb.WriteString(fmt.Sprintf("%s%s | definition\n", pad, header))
+		pad := strings.Repeat(" ", maxLen-len(head))
+		sb.WriteString(fmt.Sprintf("%s%s | definition\n", pad, head))
 		for _, k := range keys {
-			pad := strings.Repeat(" ", maxLen-len(k))
-			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, k, so.Words[k]))
+			pad = strings.Repeat(" ", maxLen-len(k))
+			val, sep := getWordVal(so, k)
+			sb.WriteString(fmt.Sprintf("%s%s %c %s\n", pad, k, sep, val))
 		}
 		return sb.String(), nil
 	}, 0, 0,
 	"display all defined words",
+}
+
+func getWordVal(so *StackOperator, word string) (val string, sep byte) {
+	if s, pres := so.Words[word]; pres {
+		return s, ':'
+	}
+	if f, pres := so.valWords[word]; pres {
+		val = fmt.Sprint(f)
+		return val, '='
+	}
+	return word, '|'
 }
 
 // Pop is an Action with the following description: pop 'a'.
