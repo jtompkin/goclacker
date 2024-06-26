@@ -102,11 +102,13 @@ func (so *StackOperator) ParseWordDef(def []string) (message string, err error) 
 		return "", errors.New("This shouldn't happen")
 	}
 	wordType := "word"
+	var extra byte
 	if def[0] == "==" {
 		wordType = "value word"
+		extra = '='
 	}
 	if len(def) == 1 {
-		return "", errors.New(fmt.Sprintf("define %s: = example 2 2 +; remove word: = example\n", wordType))
+		return "", errors.New(fmt.Sprintf("define %s: =%c example 2 2 +; remove %s word: =%c example\n", wordType, extra, wordType, extra))
 	}
 	noEmpty := make([]string, 0, len(def[1:]))
 	for _, s := range def[1:] {
