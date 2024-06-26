@@ -48,11 +48,12 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
         arguments are supplied.
 `
 	DefPrompt string = " &c > "
-	Version   string = "v1.3.2"
+	Version   string = "v1.4.0"
 	FmtChar   byte   = '&'
 	DefLimit  int    = 8
 )
 
+// Command line flag
 var (
 	PrintVersion, StrictMode, NoDisplay bool
 	ConfigPath, PromptFmt               string

@@ -208,6 +208,8 @@ var Tangent = &Action{
 	"Pop 'a'; push the tangent of 'a' in radians.",
 }
 
+// Arcsine is an Action with the following description: Pop 'a'; push the
+// arcsine of 'a' in radians.
 var Arcsine = &Action{
 	func(so *StackOperator) (toPrint string, err error) {
 		f := so.Stack.Pop()
@@ -220,6 +222,8 @@ var Arcsine = &Action{
 	"Pop 'a'; push the arcsine of 'a' in radians.",
 }
 
+// Arccosine is an Action with the following description: Pop 'a'; push the
+// arccosine of 'a' in radians.
 var Arccosine = &Action{
 	func(so *StackOperator) (toPrint string, err error) {
 		f := so.Stack.Pop()
@@ -232,6 +236,8 @@ var Arccosine = &Action{
 	"Pop 'a'; push the arccosine of 'a' in radians.",
 }
 
+// Arctangent is an Action with the following description: Pop 'a'; push the
+// argtangent of 'a' in radians.
 var Arctangent = &Action{
 	func(so *StackOperator) (toPrint string, err error) {
 		so.Stack.Push(math.Atan(so.Stack.Pop()))
