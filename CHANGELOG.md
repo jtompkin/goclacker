@@ -7,6 +7,7 @@
 - [1.3.0 - 2024-05-08](#130---2024-05-08)
 - [1.3.1 - 2024-05-30](#131---2024-05-30)
 - [1.3.2 - 2024-06-14](#132---2024-06-14)
+- [1.4.0 - 2024-06-26](#140---2024-06-26)
 
 ## TODO
 
@@ -95,3 +96,19 @@ Idunno
 
 - Debug operators no longer show in help.
 - Other stuff probably.
+
+## [1.4.0](https://github.com/jtompkin/goclacker/releases/tag/v1.4.0) - 2024-06-26
+
+Double value
+
+### Added
+
+- Value words: use `==` to define value words. They execute their definition and
+  alias the top value in the resulting stack to the word, as opposed to aliasing
+  the definition itself.
+- `e` value word: alias for the value of e
+- `asin`, `acos`, `atan` operators for arc trig functions.
+
+### Changed
+
+- `pi` is now a value word.

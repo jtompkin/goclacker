@@ -23,8 +23,6 @@ func interactive(so *stack.StackOperator) (err error) {
 			return io.EOF
 		}
 		if err != nil {
-			it.SetPrompt("")
-			it.Write(nil)
 			return err
 		}
 		err = so.ParseInput(line)

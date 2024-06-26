@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -47,11 +48,12 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
         arguments are supplied.
 `
 	DefPrompt string = " &c > "
-	Version   string = "v1.3.2"
+	Version   string = "v1.4.0"
 	FmtChar   byte   = '&'
 	DefLimit  int    = 8
 )
 
+// Command line flag
 var (
 	PrintVersion, StrictMode, NoDisplay bool
 	ConfigPath, PromptFmt               string
@@ -76,6 +78,9 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions.Set("sin", stack.Sine)
 	actions.Set("cos", stack.Cosine)
 	actions.Set("tan", stack.Tangent)
+	actions.Set("asin", stack.Arcsine)
+	actions.Set("acos", stack.Arccosine)
+	actions.Set("atan", stack.Arctangent)
 	actions.Set("floor", stack.Floor)
 	actions.Set("ceil", stack.Ceiling)
 	actions.Set("round", stack.Round)
@@ -102,9 +107,14 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 		"randn rand * floor",
 		"sqrt 0.5 ^",
 		"logb log swap log / -1 ^",
-		"pi 3.141592653589793",
 	} {
-		so.DefWord(strings.Split(s, " "))
+		so.DefNormWord(strings.Split(s, " "))
+	}
+	for _, s := range []string{
+		fmt.Sprintf("pi %g", math.Pi),
+		fmt.Sprintf("e %g", math.E),
+	} {
+		so.DefValWord(strings.Split(s, " "))
 	}
 	return so
 }
@@ -117,11 +127,10 @@ func CheckDefConfigPaths() (path string) {
 	if err != nil {
 		home = "."
 	}
-	fromHome := func(s string) string { return fmt.Sprintf("%s%c%s", home, os.PathSeparator, s) }
-	paths := []string{
-		".goclacker",
-		fromHome(".goclacker"),
-		fromHome(".config/goclacker/goclacker.conf"),
+	paths := []string{".goclacker"}
+	fromHome := []string{".goclacker", ".config/goclacker/goclacker.conf"}
+	for _, s := range fromHome {
+		paths = append(paths, fmt.Sprintf("%s%c%s", home, os.PathSeparator, s))
 	}
 	for _, s := range paths {
 		DefConfigPaths = append(DefConfigPaths, s)
@@ -245,4 +254,5 @@ func main() {
 	if err := run(); err != io.EOF {
 		log.Fatal(err)
 	}
+	fmt.Println()
 }

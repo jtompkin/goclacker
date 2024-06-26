@@ -39,7 +39,7 @@ var Add = &Action{
 		return so.Stack.Display(), nil
 	},
 	2, 1,
-	"pop 'a', 'b'; push the result of summing 'a' and 'b'",
+	"Pop 'a', 'b'; push the result of summing 'a' and 'b'.",
 }
 
 // Subtract is an Action with the following description:
@@ -50,7 +50,7 @@ var Subtract = &Action{
 		so.Stack.Push(y - x)
 		return so.Stack.Display(), nil
 	}, 2, 1,
-	"pop 'a', 'b'; push the result of subtracting 'a' from 'b'",
+	"Pop 'a', 'b'; push the result of subtracting 'a' from 'b'.",
 }
 
 // Multiply is an Action with the following description: pop 'a', 'b'; push the
@@ -60,7 +60,7 @@ var Multiply = &Action{
 		so.Stack.Push(so.Stack.Pop() * so.Stack.Pop())
 		return so.Stack.Display(), nil
 	}, 2, 1,
-	"pop 'a', 'b'; push the result of multiplying 'a' and 'b'",
+	"Pop 'a', 'b'; push the result of multiplying 'a' and 'b'.",
 }
 
 // Divide is an Action with the following description: pop 'a', 'b'; push the
@@ -74,7 +74,7 @@ var Divide = &Action{
 		so.Stack.Push(so.Stack.Pop() / divisor)
 		return so.Stack.Display(), nil
 	}, 2, 1,
-	"pop 'a', 'b'; push the result of dividing 'b' by 'a'",
+	"Pop 'a', 'b'; push the result of dividing 'b' by 'a'.",
 }
 
 // Modulo is an Action with the following description: pop 'a', 'b'; push the
@@ -88,7 +88,7 @@ var Modulo = &Action{
 		so.Stack.Push(math.Mod(so.Stack.Pop(), divisor))
 		return so.Stack.Display(), nil
 	}, 2, 1,
-	"pop 'a', 'b'; push the remainder of dividing 'b' by 'a'",
+	"Pop 'a', 'b'; push the remainder of dividing 'b' by 'a'.",
 }
 
 // Factorial is an Action with the following description: pop 'a'; push the
@@ -109,7 +109,7 @@ var Factorial = &Action{
 		so.Stack.Push(float64(p))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the factorial of 'a'",
+	"Pop 'a'; push the factorial of 'a'.",
 }
 
 // Power is an Action with the following description: pop 'a', 'b'; push the
@@ -127,7 +127,7 @@ var Power = &Action{
 		so.Stack.Push(math.Pow(base, exponent))
 		return so.Stack.Display(), nil
 	}, 2, 1,
-	"pop 'a', 'b'; push the result of raising 'b' to the power 'a'",
+	"Pop 'a', 'b'; push the result of raising 'b' to the power 'a'.",
 }
 
 // Log is an Action with the following description: pop 'a'; push the logarithm
@@ -141,7 +141,7 @@ var Log = &Action{
 		so.Stack.Push(math.Log10(x))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the logarithm base 10 of 'a'",
+	"Pop 'a'; push the logarithm base 10 of 'a'.",
 }
 
 // Ln is an Action with the following description: pop 'a'; push the natural
@@ -155,7 +155,7 @@ var Ln = &Action{
 		so.Stack.Push(math.Log(x))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the natural logarithm of 'a'",
+	"Pop 'a'; push the natural logarithm of 'a'.",
 }
 
 // Degrees is an Action with the following description: pop 'a'; push the result
@@ -165,7 +165,7 @@ var Degrees = &Action{
 		so.Stack.Push(so.Stack.Pop() * 180 / math.Pi)
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the result of converting 'a' from radians to degrees",
+	"Pop 'a'; push the result of converting 'a' from radians to degrees.",
 }
 
 // Radians is an Action with the following description: pop 'a'; push the result
@@ -175,7 +175,7 @@ var Radians = &Action{
 		so.Stack.Push(so.Stack.Pop() * math.Pi / 180)
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the result of converting 'a' from degrees to radians",
+	"Pop 'a'; push the result of converting 'a' from degrees to radians.",
 }
 
 // Sine is an Action with the following description: pop 'a'; push the sine of
@@ -185,7 +185,7 @@ var Sine = &Action{
 		so.Stack.Push(math.Sin(so.Stack.Pop()))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the sine of 'a' in radians",
+	"Pop 'a'; push the sine of 'a' in radians.",
 }
 
 // Cosine is an Action with the following description: pop 'a'; push the cosine
@@ -195,7 +195,7 @@ var Cosine = &Action{
 		so.Stack.Push(math.Cos(so.Stack.Pop()))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the cosine of 'a' in radians",
+	"Pop 'a'; push the cosine of 'a' in radians.",
 }
 
 // Tangent is an Action with the following description: pop 'a'; push the
@@ -205,7 +205,45 @@ var Tangent = &Action{
 		so.Stack.Push(math.Tan(so.Stack.Pop()))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the tangent of 'a' in radians",
+	"Pop 'a'; push the tangent of 'a' in radians.",
+}
+
+// Arcsine is an Action with the following description: Pop 'a'; push the
+// arcsine of 'a' in radians.
+var Arcsine = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		f := so.Stack.Pop()
+		if f < -1 || f > 1 {
+			return "", so.Fail("cannot take arcsine of number less than -1 or greater than 1", f)
+		}
+		so.Stack.Push(math.Asin(f))
+		return so.Stack.Display(), nil
+	}, 1, 1,
+	"Pop 'a'; push the arcsine of 'a' in radians.",
+}
+
+// Arccosine is an Action with the following description: Pop 'a'; push the
+// arccosine of 'a' in radians.
+var Arccosine = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		f := so.Stack.Pop()
+		if f < -1 || f > 1 {
+			return "", so.Fail("cannot take arccosine of number less than -1 or greater than 1", f)
+		}
+		so.Stack.Push(math.Acos(f))
+		return so.Stack.Display(), nil
+	}, 1, 1,
+	"Pop 'a'; push the arccosine of 'a' in radians.",
+}
+
+// Arctangent is an Action with the following description: Pop 'a'; push the
+// argtangent of 'a' in radians.
+var Arctangent = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		so.Stack.Push(math.Atan(so.Stack.Pop()))
+		return so.Stack.Display(), nil
+	}, 1, 1,
+	"Pop 'a'; push the argtangent of 'a' in radians.",
 }
 
 // Floor is an Action with the following description: pop 'a'; push the greatest
@@ -215,7 +253,7 @@ var Floor = &Action{
 		so.Stack.Push(math.Floor(so.Stack.Pop()))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the greatest integer value less than or equal to 'a'",
+	"Pop 'a'; push the greatest integer value less than or equal to 'a'.",
 }
 
 // Ceiling is an Action with the following description: pop 'a'; push the least
@@ -225,7 +263,7 @@ var Ceiling = &Action{
 		so.Stack.Push(math.Ceil(so.Stack.Pop()))
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop 'a'; push the least integer value greater than or equal to 'a'",
+	"Pop 'a'; push the least integer value greater than or equal to 'a'.",
 }
 
 // Round is an Action with the following description: pop 'a', 'b'; push the
@@ -240,7 +278,7 @@ var Round = &Action{
 		so.Stack.Push(math.Round(so.Stack.Pop()*ratio) / ratio)
 		return so.Stack.Display(), nil
 	}, 2, 1,
-	"pop 'a', 'b'; push the result of rounding 'b' to 'a' decimal places",
+	"Pop 'a', 'b'; push the result of rounding 'b' to 'a' decimal places.",
 }
 
 // Random is an Action with the following description: push a random number
@@ -250,7 +288,7 @@ var Random = &Action{
 		so.Stack.Push(rand.Float64())
 		return so.Stack.Display(), nil
 	}, 0, 1,
-	"push a random number between 0 and 1",
+	"Push a random number between 0 and 1.",
 }
 
 // Stash is an Action with the following description: pop 'a'; stash 'a'.
@@ -259,7 +297,7 @@ var Stash = &Action{
 		so.Stack.Stash = so.Stack.Pop()
 		return so.Stack.Display(), nil
 	}, 1, 0,
-	"pop 'a'; stash 'a'",
+	"Pop 'a'; stash 'a'.",
 }
 
 // Pull is an Action with the following description: push the value in the
@@ -269,7 +307,7 @@ var Pull = &Action{
 		so.Stack.Push(so.Stack.Stash)
 		return so.Stack.Display(), nil
 	}, 0, 1,
-	"push the value in the stash",
+	"Push the value in the stash.",
 }
 
 // Display is an Action with the following description: display all values in
@@ -282,7 +320,7 @@ var Display = &Action{
 		}
 		return fmt.Sprintf("[ %s ]\n", strings.Join(sBuf, " ")), nil
 	}, 0, 0,
-	"display all values in the stack",
+	"Display all values in the stack.",
 }
 
 // Help is an Action with the following description: display this information
@@ -312,24 +350,36 @@ var Help = &Action{
 			}
 		}
 		pad = strings.Repeat(" ", maxLen-len("quit"))
-		sb.WriteString(fmt.Sprintf("%squit : exit goclacker\n", pad))
+		sb.WriteString(fmt.Sprintf("%squit : Exit goclacker.\n", pad))
 		return sb.String(), nil
 	}, 0, 0,
-	"display this information screen",
+	"Display this information screen.",
 }
 
 // Words is an Action with the following description: display all defined words.
 var Words = &Action{
 	func(so *StackOperator) (string, error) {
-		keys := make([]string, 0, len(so.Words))
-		header := "word"
-		maxLen := len(header)
+		keys := make([]string, len(so.Words)+len(so.valWords))
+		i := 0
 		for k := range so.Words {
-			keys = append(keys, k)
-			if len(k) > maxLen {
-				maxLen = len(k)
-			}
+			keys[i] = k
+			i++
 		}
+		for k := range so.valWords {
+			keys[i] = k
+			i++
+		}
+		maxLen := len(slices.MaxFunc(keys,
+			func(a string, b string) int {
+				if len(a) > len(b) {
+					return 1
+				}
+				if len(a) < len(b) {
+					return -1
+				}
+				return 0
+			},
+		))
 		slices.SortFunc(keys,
 			func(a string, b string) int {
 				if len(a) > len(b) {
@@ -348,15 +398,25 @@ var Words = &Action{
 			},
 		)
 		sb := new(strings.Builder)
-		pad := strings.Repeat(" ", maxLen-len(header))
-		sb.WriteString(fmt.Sprintf("%s%s | definition\n", pad, header))
 		for _, k := range keys {
 			pad := strings.Repeat(" ", maxLen-len(k))
-			sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, k, so.Words[k]))
+			val, sep := getWordVal(so, k)
+			sb.WriteString(fmt.Sprintf("%s%s %c %s\n", pad, k, sep, val))
 		}
 		return sb.String(), nil
 	}, 0, 0,
-	"display all defined words",
+	"Display all defined words.",
+}
+
+func getWordVal(so *StackOperator, word string) (val string, sep byte) {
+	if val, pres := so.Words[word]; pres {
+		return val, ':'
+	}
+	if f, pres := so.valWords[word]; pres {
+		val = fmt.Sprint(f)
+		return val, '='
+	}
+	return word, '|'
 }
 
 // Pop is an Action with the following description: pop 'a'.
@@ -365,7 +425,7 @@ var Pop = &Action{
 		so.Stack.Pop()
 		return so.Stack.Display(), nil
 	}, 1, 0,
-	"pop 'a'",
+	"Pop 'a'.",
 }
 
 // Clear is an Action with the following description: pop all values in the
@@ -380,7 +440,7 @@ var Clear = &Action{
 		so.Stack.Values = make([]float64, 0, cap(so.Stack.Values))
 		return fmt.Sprintf("cleared %d value%c\n", n, c), nil
 	}, 0, 0,
-	"pop all values in the stack",
+	"Pop all values in the stack.",
 }
 
 // ClearScreen is an Action with the following description: clear the terminal
@@ -389,7 +449,7 @@ var ClearScreen = &Action{
 	func(so *StackOperator) (string, error) {
 		return "\x1b[2J\x1b[H", nil
 	}, 0, 0,
-	"clear the terminal screen",
+	"Clear the terminal screen.",
 }
 
 // Swap is an Action with the following description: pop 'a', 'b'; push 'b',
@@ -402,7 +462,7 @@ var Swap = &Action{
 		so.Stack.Push(y)
 		return so.Stack.Display(), nil
 	}, 2, 2,
-	"pop 'a', 'b'; push 'b', 'a'",
+	"Pop 'a', 'b'; push 'b', 'a'.",
 }
 
 // Froll is an Action with the following description: roll the stack to the
@@ -418,7 +478,7 @@ var Froll = &Action{
 		so.Stack.Values = newVals
 		return so.Stack.Display(), nil
 	}, 2, 2,
-	"roll the stack to the right one position",
+	"Roll the stack to the right one position.",
 }
 
 // Rroll is an Action with the following description: roll the stack to the left
@@ -433,7 +493,7 @@ var Rroll = &Action{
 		so.Stack.Values = newVals
 		return so.Stack.Display(), nil
 	}, 2, 2,
-	"roll the stack to the left one position",
+	"Roll the stack to the left one position.",
 }
 
 // Sum is an Action with the following description: pop all values in the stack;
@@ -447,7 +507,7 @@ var Sum = &Action{
 		so.Stack.Push(sum)
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop all values in the stack; push their sum",
+	"Pop all values in the stack; push their sum.",
 }
 
 // Average is an Action with the following description: pop all values in the
@@ -459,7 +519,7 @@ var Average = &Action{
 		so.Stack.Push(so.Stack.Pop() / n)
 		return so.Stack.Display(), nil
 	}, 1, 1,
-	"pop all values in the stack; push their average",
+	"Pop all values in the stack; push their average.",
 }
 
 var Clip = &Action{
@@ -468,7 +528,7 @@ var Clip = &Action{
 		so.Stack.Values = slices.Clip(so.Stack.Values)
 		return fmt.Sprintf("clipped %d capacity\n", c-cap(so.Stack.Values)), nil
 	}, 0, 0,
-	"DEBUG; clip unused stack capacity",
+	"DEBUG; clip unused stack capacity.",
 }
 
 // Grow is an Action with the following description: DEBUG: pop 'a'; push 'a';
@@ -494,7 +554,7 @@ var Grow = &Action{
 		so.Stack.Values = slices.Grow(so.Stack.Values, int(n))
 		return fmt.Sprintf("new stack capacity is %d\n", cap(so.Stack.Values)), nil
 	}, 0, 0,
-	"DEBUG; pop 'a'; push 'a'; grow stack to accomadate 'a' more values",
+	"DEBUG; pop 'a'; push 'a'; grow stack to accomadate 'a' more values.",
 }
 
 // Fill is an Action with the following description: DEBUG: fill stack with
@@ -508,5 +568,5 @@ var Fill = &Action{
 		}
 		return so.Stack.Display(), nil
 	}, 0, 0,
-	"DEBUG; fill stack with random values",
+	"DEBUG; fill stack with random values.",
 }
