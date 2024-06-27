@@ -196,7 +196,7 @@ func ExecutePrograms(so *stack.StackOperator, programs []string) (eof error) {
 	return io.EOF
 }
 
-func run() error {
+func run() (err error) {
 	if PrintVersion {
 		fmt.Printf("goclacker %s\n", Version)
 		return io.EOF
@@ -222,11 +222,14 @@ func run() error {
 		return ExecutePrograms(so, flag.Args())
 	}
 
-	if err := so.MakePromptFunc(PromptFmt, FmtChar); err != nil {
+	if err = so.MakePromptFunc(PromptFmt, FmtChar); err != nil {
 		return err
 	}
+
 	fmt.Fprintf(os.Stderr, "goclacker %s\n", Version)
-	return interactive(so)
+	err = interactive(so)
+	fmt.Println()
+	return err
 }
 
 func main() {
@@ -254,5 +257,4 @@ func main() {
 	if err := run(); err != io.EOF {
 		log.Fatal(err)
 	}
-	fmt.Println()
 }
