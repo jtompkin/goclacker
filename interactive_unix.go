@@ -35,10 +35,13 @@ func interactive(so *stack.StackOperator) (err error) {
 			return err
 		}
 		err = so.ParseInput(line)
+		ot.Write(ot.Escape.Yellow)
 		ot.Write(so.PrintBuf)
 		if err != nil {
+			ot.Write(ot.Escape.Red)
 			et.Write([]byte(err.Error()))
 		}
+		ot.Write(ot.Escape.Reset)
 		it.SetPrompt(so.Prompt())
 	}
 }
