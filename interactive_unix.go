@@ -8,7 +8,6 @@ package main
 import (
 	"io"
 	"os"
-	"strings"
 
 	"github.com/jtompkin/goclacker/internal/stack"
 	"golang.org/x/term"
@@ -16,7 +15,7 @@ import (
 
 // interactive is the unix-like implementation of interactive mode. Returns an
 // io.EOF on graceful exit.
-func interactive(so *stack.StackOperator) (err error) {
+func interactive(so *stack.StackOperator, color bool) (err error) {
 	state, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		return err
@@ -26,22 +25,28 @@ func interactive(so *stack.StackOperator) (err error) {
 	it := term.NewTerminal(os.Stdin, so.Prompt())
 	ot := term.NewTerminal(os.Stdout, "")
 	et := term.NewTerminal(os.Stderr, "")
+	c := colors{}
+	if color {
+		c.out = ot.Escape.Yellow
+		c.err = ot.Escape.Red
+		c.reset = ot.Escape.Reset
+	}
 	for {
 		line, err := it.ReadLine()
-		if strings.TrimSpace(line) == "quit" {
-			return io.EOF
-		}
 		if err != nil {
 			return err
 		}
 		err = so.ParseInput(line)
-		ot.Write(ot.Escape.Yellow)
+		if err == io.EOF {
+			return io.EOF
+		}
+		ot.Write(c.out)
 		ot.Write(so.PrintBuf)
 		if err != nil {
-			ot.Write(ot.Escape.Red)
+			ot.Write(c.err)
 			et.Write([]byte(err.Error()))
 		}
-		ot.Write(ot.Escape.Reset)
+		ot.Write(c.reset)
 		it.SetPrompt(so.Prompt())
 	}
 }

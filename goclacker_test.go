@@ -61,6 +61,7 @@ type progParams struct {
 }
 
 func TestPrograms(t *testing.T) {
+	Display = true
 	StackLimit = 8
 	programs := map[string]progParams{
 		"":             {"", false, false},

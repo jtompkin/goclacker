@@ -188,8 +188,8 @@ func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
 // executing the token or the return value of Stack.Display and the error value
 // from pushing token to the stack.
 func (so *StackOperator) parseToken(token string) (toPrint string, err error) {
-	if word, pres := so.Words[token]; pres {
-		err = so.ParseInput(word)
+	if def, pres := so.Words[token]; pres {
+		err = so.ParseInput(def)
 		return string(so.PrintBuf), err
 	}
 	if val, pres := so.valWords[token]; pres {
@@ -218,15 +218,14 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 		return string(so.PrintBuf), err
 	}
 	stkLen := len(so.Stack.Values)
-	pops := a.Pops
 	var c byte
-	if pops != 1 {
+	if a.Pops != 1 {
 		c = 's'
 	}
-	if stkLen < pops {
-		return "", errors.New(fmt.Sprintf("operation error: %s needs %d value%c in stack\n", token, pops, c))
+	if stkLen < a.Pops {
+		return "", errors.New(fmt.Sprintf("operation error: %s needs %d value%c in stack\n", token, a.Pops, c))
 	}
-	if stkLen-pops+a.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
+	if stkLen-a.Pops+a.Pushes > cap(so.Stack.Values) && !so.Stack.Expandable {
 		return "", errors.New(fmt.Sprintf("operation error: %s would overflow stack\n", token))
 	}
 	return a.Call(so)
@@ -315,12 +314,12 @@ func (so *StackOperator) MakePromptFunc(format string, fmtChar byte) error {
 
 // NewStackOperator returns a pointer to a new StackOperator, initialized to
 // given arguments and a default set of defined words and formatters.
-func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, noDisplay bool, strict bool) *StackOperator {
+func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, interactive bool, Display bool, strict bool) *StackOperator {
 	displayFmt := "%s\n"
 	if interactive {
 		displayFmt = "[ %s ]\n"
 	}
-	if noDisplay {
+	if !Display {
 		displayFmt = ""
 	}
 	notFound := func(string) error { return nil }

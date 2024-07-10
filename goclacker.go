@@ -27,16 +27,21 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
     -h, --help
         Print usage information and exit.
     -s, --strict
-        Run in strict mode: entering something that is not a number, operator,
+        Run in strict mode: entering anything that is not a number, operator,
         or defined word will print an error instead of doing nothing.
-    -n, --no-display
-        Do not display stack after operations. Useful if '&Nt' is in prompt.
+    -d, --no-display
+        Do not display stack after operations: useful if '&Nt' is in prompt.
+    -r, --no-color
+        Do not color output in interactive mode.
     -l, --limit int
-        stack size limit, no limit if negative (default 8)
+        Provide the stack size limit. There is no limit if a negative number is
+        provided. (default 8)
     -c, --config string
-        path to config file, looks in default locations if not provided
+        Provide the path to the config file to use. Goclacker looks in the
+        default locations if not provided; provide empty string to not use
+        default config files.
     -p, --prompt string
-        format string for the interactive prompt (default " &c > ")
+        Provide the format string for the interactive prompt. (default " &c > ")
         format specifiers:
             &l  : stack limit
             &c  : current stack size
@@ -48,19 +53,25 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
         arguments are supplied.
 `
 	DefPrompt string = " &c > "
-	Version   string = "v1.4.0"
+	Version   string = "v1.4.1"
 	FmtChar   byte   = '&'
 	DefLimit  int    = 8
 )
 
 // Command line flag
 var (
-	PrintVersion, StrictMode, NoDisplay bool
-	ConfigPath, PromptFmt               string
-	StackLimit                          int
+	PrintVersion, StrictMode, Display, Color bool
+	ConfigPath, PromptFmt                    string
+	StackLimit                               int
 )
 
 var DefConfigPaths = make([]string, 0)
+
+type colors struct {
+	out   []byte
+	err   []byte
+	reset []byte
+}
 
 func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions := stack.NewOrderedMap[string, *stack.Action]()
@@ -98,10 +109,11 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions.Set("words", stack.Words)
 	actions.Set("help", stack.Help)
 	actions.Set("cls", stack.ClearScreen)
+	actions.Set("quit", stack.Quit)
 	actions.Set("Dclip", stack.Clip)
 	actions.Set("Dgrow", stack.Grow)
 	actions.Set("Dfill", stack.Fill)
-	so := stack.NewStackOperator(actions, StackLimit, interactive, NoDisplay, StrictMode)
+	so := stack.NewStackOperator(actions, StackLimit, interactive, Display, StrictMode)
 	for _, s := range []string{
 		"? help",
 		"randn rand * floor",
@@ -227,7 +239,7 @@ func run() (err error) {
 	}
 
 	fmt.Fprintf(os.Stderr, "goclacker %s\n", Version)
-	err = interactive(so)
+	err = interactive(so, Color)
 	fmt.Println()
 	return err
 }
@@ -236,11 +248,17 @@ func main() {
 	flag.BoolVar(&PrintVersion, "V", false, "")
 	flag.BoolVar(&PrintVersion, "version", false, "")
 
-	flag.IntVar(&StackLimit, "l", DefLimit, "")
-	flag.IntVar(&StackLimit, "limit", DefLimit, "")
-
 	flag.BoolVar(&StrictMode, "s", false, "")
 	flag.BoolVar(&StrictMode, "strict", false, "")
+
+	flag.BoolVar(&Display, "d", false, "")
+	flag.BoolVar(&Display, "no-display", false, "")
+
+	flag.BoolVar(&Color, "r", false, "")
+	flag.BoolVar(&Color, "no-color", false, "")
+
+	flag.IntVar(&StackLimit, "l", DefLimit, "")
+	flag.IntVar(&StackLimit, "limit", DefLimit, "")
 
 	flag.StringVar(&ConfigPath, "c", "\x00", "")
 	flag.StringVar(&ConfigPath, "config", "\x00", "")
@@ -248,11 +266,11 @@ func main() {
 	flag.StringVar(&PromptFmt, "p", "\x00", "")
 	flag.StringVar(&PromptFmt, "prompt", "\x00", "")
 
-	flag.BoolVar(&NoDisplay, "n", false, "")
-	flag.BoolVar(&NoDisplay, "no-display", false, "")
-
 	flag.Usage = func() { fmt.Printf(Usage, Version) }
 	flag.Parse()
+
+	Display = !Display
+	Color = !Color
 
 	if err := run(); err != io.EOF {
 		log.Fatal(err)
