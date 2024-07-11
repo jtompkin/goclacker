@@ -358,13 +358,13 @@ var Help = &Action{
 // Words is an Action with the following description: display all defined words.
 var Words = &Action{
 	func(so *StackOperator) (string, error) {
-		keys := make([]string, len(so.Words)+len(so.valWords))
+		keys := make([]string, len(so.Words)+len(so.ValWords))
 		i := 0
 		for k := range so.Words {
 			keys[i] = k
 			i++
 		}
-		for k := range so.valWords {
+		for k := range so.ValWords {
 			keys[i] = k
 			i++
 		}
@@ -411,7 +411,7 @@ func getWordVal(so *StackOperator, word string) (val string, sep byte) {
 	if val, pres := so.Words[word]; pres {
 		return val, ':'
 	}
-	if f, pres := so.valWords[word]; pres {
+	if f, pres := so.ValWords[word]; pres {
 		val = fmt.Sprint(f)
 		return val, '='
 	}

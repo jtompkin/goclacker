@@ -60,11 +60,11 @@ func newStack(values []float64, displayFmt string, expandable bool) *Stack {
 type StackOperator struct {
 	Actions     *OrderedMap[string, *Action]
 	Words       map[string]string
-	valWords    map[string]float64
+	ValWords    map[string]float64
 	Stack       *Stack
 	Interactive bool
 	Prompt      func() (prompt string)
-	PrintBuf    []byte
+	ToPrint     []byte
 	formatters  map[byte]func(*StackOperator) string
 	// notFound should return nil if the StackOperator does not care about
 	// entering missing input, or an error if it does.
@@ -81,14 +81,15 @@ func (so *StackOperator) ParseInput(input string) (err error) {
 	for i, token := range split {
 		if token == "=" || token == "==" {
 			s, err := so.ParseWordDef(split[i:])
-			so.PrintBuf = []byte(s)
+			so.ToPrint = []byte(s)
 			return err
 		}
 		s, err := so.parseToken(token)
 		if err != nil {
+			so.ToPrint = []byte(so.Stack.Display())
 			return err
 		}
-		so.PrintBuf = []byte(s)
+		so.ToPrint = []byte(s)
 	}
 	return err
 }
@@ -140,7 +141,7 @@ func (so *StackOperator) ParseWordDef(def []string) (message string, err error) 
 
 func (so *StackOperator) DefNormWord(def []string) (msg string, err error) {
 	word := def[0]
-	if _, pres := so.valWords[word]; pres {
+	if _, pres := so.ValWords[word]; pres {
 		return "", errors.New(fmt.Sprintf("could not define %s: already a defined value word\n", word))
 	}
 	if len(def) == 1 {
@@ -161,10 +162,10 @@ func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
 		return "", errors.New(fmt.Sprintf("could not define %s: already a defined word\n", word))
 	}
 	if len(def) == 1 {
-		if _, pres := so.valWords[word]; !pres {
+		if _, pres := so.ValWords[word]; !pres {
 			return "", errors.New(fmt.Sprintf("could not delete %s : not defined\n", word))
 		}
-		delete(so.valWords, word)
+		delete(so.ValWords, word)
 		return fmt.Sprintf("deleted value word: %s\n", word), nil
 	}
 	// TODO: Make so methods return calculated value so don't need temp so
@@ -179,7 +180,7 @@ func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
 		return "", nil
 	}
 	f := tmp.Stack.Values[len(tmp.Stack.Values)-1]
-	so.valWords[def[0]] = f
+	so.ValWords[def[0]] = f
 	return fmt.Sprintf("defined value word %s = %g\n", def[0], f), nil
 }
 
@@ -190,9 +191,9 @@ func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
 func (so *StackOperator) parseToken(token string) (toPrint string, err error) {
 	if def, pres := so.Words[token]; pres {
 		err = so.ParseInput(def)
-		return string(so.PrintBuf), err
+		return string(so.ToPrint), err
 	}
-	if val, pres := so.valWords[token]; pres {
+	if val, pres := so.ValWords[token]; pres {
 		err = so.Stack.Push(val)
 		return so.Stack.Display(), err
 	}
@@ -215,7 +216,7 @@ func (so *StackOperator) ExecuteToken(token string) (toPrint string, err error) 
 			return "", so.notFound(token)
 		}
 		err := so.ParseInput(def)
-		return string(so.PrintBuf), err
+		return string(so.ToPrint), err
 	}
 	stkLen := len(so.Stack.Values)
 	var c byte
@@ -337,7 +338,7 @@ func NewStackOperator(actions *OrderedMap[string, *Action], maxStack int, intera
 		notFound:    notFound,
 		Interactive: interactive,
 		Words:       make(map[string]string),
-		valWords:    make(map[string]float64),
+		ValWords:    make(map[string]float64),
 		formatters: map[byte]func(*StackOperator) string{
 			'l': func(so *StackOperator) string { return fmt.Sprint(cap(so.Stack.Values)) },
 			'c': func(so *StackOperator) string { return fmt.Sprint(len(so.Stack.Values)) },

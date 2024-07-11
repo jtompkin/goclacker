@@ -6,6 +6,7 @@
 package main
 
 import (
+	"bytes"
 	"io"
 	"os"
 
@@ -40,8 +41,10 @@ func interactive(so *stack.StackOperator, color bool) (err error) {
 		if err == io.EOF {
 			return io.EOF
 		}
-		ot.Write(c.out)
-		ot.Write(so.PrintBuf)
+		if bytes.Count(so.ToPrint, []byte{'\n'}) < 2 {
+			ot.Write(c.out)
+		}
+		ot.Write(so.ToPrint)
 		if err != nil {
 			ot.Write(c.err)
 			et.Write([]byte(err.Error()))

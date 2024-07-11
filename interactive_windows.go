@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -33,7 +34,9 @@ func interactive(so *stack.StackOperator, color bool) (err error) {
 		if err == io.EOF {
 			return io.EOF
 		}
-		fmt.Print(string(c.out))
+		if bytes.Count(so.PrintBuf, []byte{'\n'}) == 1 {
+			fmt.Print(string(c.out))
+		}
 		fmt.Print(string(so.PrintBuf))
 		if err != nil {
 			fmt.Print(string(c.err))

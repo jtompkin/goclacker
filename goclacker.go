@@ -38,7 +38,7 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
         provided. (default 8)
     -c, --config string
         Provide the path to the config file to use. Goclacker looks in the
-        default locations if not provided; provide empty string to not use
+        default locations if not provided; provide an empty string to not use
         default config files.
     -p, --prompt string
         Provide the format string for the interactive prompt. (default " &c > ")
@@ -58,7 +58,7 @@ goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
 	DefLimit  int    = 8
 )
 
-// Command line flag
+// Command line flags
 var (
 	PrintVersion, StrictMode, Display, Color bool
 	ConfigPath, PromptFmt                    string
@@ -114,20 +114,12 @@ func GetStackOperator(interactive bool) *stack.StackOperator {
 	actions.Set("Dgrow", stack.Grow)
 	actions.Set("Dfill", stack.Fill)
 	so := stack.NewStackOperator(actions, StackLimit, interactive, Display, StrictMode)
-	for _, s := range []string{
-		"? help",
-		"randn rand * floor",
-		"sqrt 0.5 ^",
-		"logb log swap log / -1 ^",
-	} {
-		so.DefNormWord(strings.Split(s, " "))
-	}
-	for _, s := range []string{
-		fmt.Sprintf("pi %g", math.Pi),
-		fmt.Sprintf("e %g", math.E),
-	} {
-		so.DefValWord(strings.Split(s, " "))
-	}
+	so.Words["?"] = "help"
+	so.Words["randn"] = "rand * floor"
+	so.Words["sqrt"] = "0.5 ^"
+	so.Words["logb"] = "log swap log / -1 ^"
+	so.ValWords["pi"] = math.Pi
+	so.ValWords["e"] = math.E
 	return so
 }
 
@@ -204,7 +196,7 @@ func ExecutePrograms(so *stack.StackOperator, programs []string) (eof error) {
 			fmt.Fprint(os.Stderr, err)
 		}
 	}
-	fmt.Print(string(so.PrintBuf))
+	fmt.Print(string(so.ToPrint))
 	return io.EOF
 }
 
