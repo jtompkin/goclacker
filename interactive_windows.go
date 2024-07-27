@@ -34,10 +34,10 @@ func interactive(so *stack.StackOperator, color bool) (err error) {
 		if err == io.EOF {
 			return io.EOF
 		}
-		if bytes.Count(so.PrintBuf, []byte{'\n'}) == 1 {
+		if bytes.Count(so.ToPrint, []byte{'\n'}) == 1 {
 			fmt.Print(string(c.out))
 		}
-		fmt.Print(string(so.PrintBuf))
+		fmt.Print(string(so.ToPrint))
 		if err != nil {
 			fmt.Print(string(c.err))
 			fmt.Fprint(os.Stderr, err)
