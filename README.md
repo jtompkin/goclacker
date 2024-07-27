@@ -7,6 +7,7 @@
   - [Interactive mode](#interactive-mode)
   - [Prompt](#prompt)
   - [Words](#words)
+    - [Value words](#value-words)
   - [Configuration](#configuration)
   - [License](#license)
 <!--toc:end-->
@@ -40,7 +41,7 @@ go build .
 Live, laugh, love with Go.
 
 If you are not familiar with [Go](https://go.dev), the binary will be in
-`~/go/bin` for Linux, `C:\users\<USER>\go\bin` for Windows (probably).
+`~/go/bin` for Linux, `C:\users\%username%\go\bin` for Windows (probably).
 
 Pre-built binaries are available on the
 [release](https://github.com/jtompkin/goclacker/releases/latest) page.
@@ -48,15 +49,15 @@ Pre-built binaries are available on the
 ## Usage
 
 ```
-goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program...]
+goclacker [-V] [-h] [-s] [-d] [-r] [-l] int [-c] string [-p] string [program]...
 ```
 
 If any positional arguments (`program...`) are supplied, they will be
 interpreted and executed by the calculator. To enter interactive mode, do not
 provide any arguments to `program...`. Run `goclacker -h` to see information
-about the other command line arguments. If the program does not start, you must
+about the other command line arguments. If the program does not work, you must
 first denounce [infix notation](https://en.wikipedia.org/wiki/Satan) and your
-god and it will then work as intended.
+god, and it will then work as intended.
 
 ## Interactive mode
 
@@ -104,13 +105,14 @@ lines at the interactive prompt:
 
 ```
   > = sqrt 0.5 ^
-  > = pi 3.14159265358979323846
+  > = logb log swap log / -1 ^
 ```
 
 Now, when `sqrt` is entered at the prompt, 0.5 is pushed to the stack, and the
 exponentiation operator is called. That is apparently the same thing as taking
-the square root. Math is crazy. Further, entering `pi` simply pushes the value
-of pi to the stack.
+the square root. Math is crazy. Similarly, when `logb` is entered at the prompt,
+all of the commands in its definition will be executed, effectively popping `a`
+and `b` and pushing the logarithm base `b` of `a`.
 
 These two words happen to be automagically defined whenever you start the
 program. If you hate them (or any other words you define) you can delete a
@@ -119,9 +121,28 @@ also freely redefine any currently defined word.
 
 ```
   > = sqrt
+  > = logb
 ```
 
-All currently defined words can be viewed by entering `words`.
+All currently defined words can be viewed by entering `words`. Words
+will be separated from their definition by a `:`.
+
+### Value words
+
+You can also define value words by beginning your command with `==`. Value words
+are essentially aliases for numerical values, so instead of executing the
+commands in the definition, they just push the defined value straight into the
+stack when entered after they are defined.
+
+```
+  > == pi 22 7 /
+```
+
+This would start a sub-stack, push 22 and 7 to it and call the division
+operator. It would then set the value of `pi` to the value at the top of this
+sub-stack---in this case the only value in the sub-stack.
+
+Value words are separated from their value in the `words` screen by an `=`.
 
 ## Configuration
 
@@ -129,11 +150,11 @@ If you have crafted a beautiful prompt or have a list of words that you can't
 live without, a config file is what you need. Provide the path to this text file
 with the `-c` flag, and it will set the prompt format and execute any additional
 programs you supply. Goclacker looks for default config files in the following
-locations and loads the first on it finds:
+locations and loads the first one it finds:
 
 - `./.goclacker`
 - `~/.goclacker`
-- `~/.config/goclacker/goclacker.conf`
+- `~/.config/goclacker/config`
 
 Passing anything---including an empty string---to `-c` will disable default config
 files.
@@ -157,15 +178,14 @@ you want certain values to be in your stack at start-up.
 
 A configuration file containing the following lines would set the prompt to look
 like `------> ` (notice the lack of `"` and the preserved whitespace), and
-define the same words as in the [interactive](#words) example. It would then
-push the square root of pi, push the value 2, and call the multiplication
-operator. These last three lines could all be put on the same line, just like in
-interactive mode.
+define the a word and a value word. It would then push the square root of pi,
+push the value 2, and call the multiplication operator. These last three lines
+could all be put on the same line, just like in interactive mode.
 
 ```
 ------> "
 = sqrt 0.5 ^
-= pi 3.14159265358979323846
+== pi 3.14159265358979323846
 pi sqrt
 2
 *
@@ -173,6 +193,4 @@ pi sqrt
 
 ## License
 
-Licensed under the
-[MIT](https://raw.githubusercontent.com/jtompkin/goclacker/main/LICENSE)
-license. See LICENSE file.
+Licensed under the MIT license. See LICENSE file.

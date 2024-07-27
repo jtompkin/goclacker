@@ -8,7 +8,7 @@
 - [1.3.1 - 2024-05-30](#131---2024-05-30)
 - [1.3.2 - 2024-06-14](#132---2024-06-14)
 - [1.4.0 - 2024-06-26](#140---2024-06-26)
-- [1.4.1 - TBD](#141---TBD)
+- [1.4.1 - 2024-07-27](#141---2024-07-27)
 
 ## TODO
 
@@ -114,7 +114,7 @@ Double value
 
 - `pi` is now a value word.
 
-## [1.4.1](https://github.com/jtompkin/goclacker/releases/tag/v1.4.1) - TBD
+## [1.4.1](https://github.com/jtompkin/goclacker/releases/tag/v1.4.1) - 2024-07-27
 
 Pretty colors
 
@@ -126,6 +126,8 @@ Pretty colors
 ### Fixed
 
 - Non-interactive mode no longer prints an extra newline.
+- Duct-taped infinite recursion in word definitions. Infinite recursion is still
+possible if you really put your heart into it.
 
 ### Changed
 

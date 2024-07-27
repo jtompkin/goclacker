@@ -21,7 +21,7 @@ const (
 by Josh Tompkin
 
 usage of goclacker:
-goclacker [-V] [-h] [-s] [-n] [-l] int [-c] string [-p] string [program]...
+goclacker [-V] [-h] [-s] [-d] [-r] [-l] int [-c] string [-p] string [program]...
     -V, --version
         Print version information and exit.
     -h, --help

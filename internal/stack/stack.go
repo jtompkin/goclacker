@@ -151,6 +151,11 @@ func (so *StackOperator) DefNormWord(def []string) (msg string, err error) {
 		delete(so.Words, word)
 		return fmt.Sprintf("deleted word: %s\n", word), nil
 	}
+	for _, s := range def[1:] {
+		if word == s {
+			return "", errors.New(fmt.Sprintf("could not define %s : cannot define recursive word\n", word))
+		}
+	}
 	s := strings.Join(def[1:], " ")
 	so.Words[def[0]] = s
 	return fmt.Sprintf("defined word %s : %s\n", def[0], s), nil
@@ -168,7 +173,8 @@ func (so *StackOperator) DefValWord(def []string) (msg string, err error) {
 		delete(so.ValWords, word)
 		return fmt.Sprintf("deleted value word: %s\n", word), nil
 	}
-	// TODO: Make so methods return calculated value so don't need temp so
+	// TODO: Make so methods return calculated value so don't need temporary
+	// StackOperator
 	tmp := NewStackOperator(so.Actions, -1, false, false, false)
 	tmp.Words = so.Words
 	tmp.Stack.Values = so.Stack.Values
