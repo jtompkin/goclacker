@@ -5,6 +5,7 @@ package stack
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"math/rand"
 	"slices"
@@ -349,8 +350,6 @@ var Help = &Action{
 				sb.WriteString(fmt.Sprintf("%s%s : %s\n", pad, k, v.Help))
 			}
 		}
-		pad = strings.Repeat(" ", maxLen-len("quit"))
-		sb.WriteString(fmt.Sprintf("%squit : Exit goclacker.\n", pad))
 		return sb.String(), nil
 	}, 0, 0,
 	"Display this information screen.",
@@ -359,13 +358,13 @@ var Help = &Action{
 // Words is an Action with the following description: display all defined words.
 var Words = &Action{
 	func(so *StackOperator) (string, error) {
-		keys := make([]string, len(so.Words)+len(so.valWords))
+		keys := make([]string, len(so.Words)+len(so.ValWords))
 		i := 0
 		for k := range so.Words {
 			keys[i] = k
 			i++
 		}
-		for k := range so.valWords {
+		for k := range so.ValWords {
 			keys[i] = k
 			i++
 		}
@@ -412,7 +411,7 @@ func getWordVal(so *StackOperator, word string) (val string, sep byte) {
 	if val, pres := so.Words[word]; pres {
 		return val, ':'
 	}
-	if f, pres := so.valWords[word]; pres {
+	if f, pres := so.ValWords[word]; pres {
 		val = fmt.Sprint(f)
 		return val, '='
 	}
@@ -520,6 +519,13 @@ var Average = &Action{
 		return so.Stack.Display(), nil
 	}, 1, 1,
 	"Pop all values in the stack; push their average.",
+}
+
+var Quit = &Action{
+	func(so *StackOperator) (toPrint string, err error) {
+		return "", io.EOF
+	}, 0, 0,
+	"Exit goclacker.",
 }
 
 var Clip = &Action{

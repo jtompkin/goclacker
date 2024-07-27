@@ -39,7 +39,7 @@ func TestPrompts(t *testing.T) {
 func prog(t *testing.T, program string, params progParams) {
 	so := GetStackOperator(false)
 	err := so.ParseInput(program)
-	s := string(so.PrintBuf)
+	s := string(so.ToPrint)
 	if err != nil {
 		if params.WantError {
 			return
@@ -61,6 +61,7 @@ type progParams struct {
 }
 
 func TestPrograms(t *testing.T) {
+	Display = true
 	StackLimit = 8
 	programs := map[string]progParams{
 		"":             {"", false, false},
