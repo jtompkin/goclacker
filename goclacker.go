@@ -5,6 +5,7 @@ package main
 
 import (
 	"bufio"
+	_ "embed"
 	"flag"
 	"fmt"
 	"io"
@@ -16,42 +17,10 @@ import (
 	"github.com/jtompkin/goclacker/internal/stack"
 )
 
-const (
-	Usage string = `goclacker %s
-by Josh Tompkin
+//go:embed usage.txt
+var usage string
 
-usage of goclacker:
-goclacker [-V] [-h] [-s] [-d] [-r] [-l] int [-c] string [-p] string [program]...
-    -V, --version
-        Print version information and exit.
-    -h, --help
-        Print usage information and exit.
-    -s, --strict
-        Run in strict mode: entering anything that is not a number, operator,
-        or defined word will print an error instead of doing nothing.
-    -d, --no-display
-        Do not display stack after operations: useful if '&Nt' is in prompt.
-    -r, --no-color
-        Do not color output in interactive mode.
-    -l, --limit int
-        Provide the stack size limit. There is no limit if a negative number is
-        provided. (default 8)
-    -c, --config string
-        Provide the path to the config file to use. Goclacker looks in the
-        default locations if not provided; provide an empty string to not use
-        default config files.
-    -p, --prompt string
-        Provide the format string for the interactive prompt. (default " &c > ")
-        format specifiers:
-            &l  : stack limit
-            &c  : current stack size
-            &Nt : top N stack values
-            &s  : current stash value
-    [program]...
-        Any positional arguments will be interpreted and executed by the
-        calculator. Interactive mode will not be entered if any positional
-        arguments are supplied.
-`
+const (
 	DefPrompt string = " &c > "
 	Version   string = "v1.4.1"
 	FmtChar   byte   = '&'
@@ -258,7 +227,7 @@ func main() {
 	flag.StringVar(&PromptFmt, "p", "\x00", "")
 	flag.StringVar(&PromptFmt, "prompt", "\x00", "")
 
-	flag.Usage = func() { fmt.Printf(Usage, Version) }
+	flag.Usage = func() { fmt.Print(strings.Replace(usage, "<version>", Version, 1)) }
 	flag.Parse()
 
 	Display = !Display

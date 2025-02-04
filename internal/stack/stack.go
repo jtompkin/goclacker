@@ -122,7 +122,7 @@ func (so *StackOperator) ParseWordDef(def []string) (message string, err error) 
 	}
 	word := noEmpty[0]
 	if _, err := strconv.ParseFloat(word, 64); err == nil {
-		return "", errors.New(fmt.Sprintf("counld not define %s : cannot redifine number\n", word))
+		return "", errors.New(fmt.Sprintf("could not define %s : cannot redifine number\n", word))
 	}
 	forbidden := []string{"=", "==", "quit"}
 	for _, s := range forbidden {
