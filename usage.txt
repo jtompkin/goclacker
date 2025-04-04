@@ -1,0 +1,34 @@
+goclacker <version>
+by Josh Tompkin
+
+usage of goclacker:
+goclacker [-V] [-h] [-s] [-d] [-r] [-l] int [-c] string [-p] string [program]...
+    -V, --version
+        Print version information and exit.
+    -h, --help
+        Print usage information and exit.
+    -s, --strict
+        Run in strict mode: entering anything that is not a number, operator,
+        or defined word will print an error instead of doing nothing.
+    -d, --no-display
+        Do not display stack after operations: useful if '&Nt' is in prompt.
+    -r, --no-color
+        Do not color output in interactive mode.
+    -l, --limit int
+        Provide the stack size limit. There is no limit if a negative number is
+        provided. (default 8)
+    -c, --config string
+        Provide the path to the config file to use. Goclacker looks in the
+        default locations if not provided; provide an empty string to not use
+        default config files.
+    -p, --prompt string
+        Provide the format string for the interactive prompt. (default " &c > ")
+        format specifiers:
+            &l  : stack limit
+            &c  : current stack size
+            &Nt : top N stack values
+            &s  : current stash value
+    [program]...
+        Any positional arguments will be interpreted and executed by the
+        calculator. Interactive mode will not be entered if any positional
+        arguments are supplied.
