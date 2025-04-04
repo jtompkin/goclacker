@@ -9,6 +9,7 @@
 - [1.3.2 - 2024-06-14](#132---2024-06-14)
 - [1.4.0 - 2024-06-26](#140---2024-06-26)
 - [1.4.1 - 2024-07-27](#141---2024-07-27)
+- [1.4.2 - 2025-04-04](#142---2025-04-04)
 
 ## TODO
 
@@ -132,3 +133,11 @@ possible if you really put your heart into it.
 ### Changed
 
 - `-n` flag now `-d`: Stops displaying stack after operation.
+
+## [1.4.2](https://github.com/jtompkin/goclacker/releases/tag/v1.4.2) - 2025-04-04
+
+Feelin' Nixy
+
+### Added
+
+- Nix build instructions (probably useless but fun).

@@ -22,7 +22,7 @@ var usage string
 
 const (
 	DefPrompt string = " &c > "
-	Version   string = "v1.4.1"
+	Version   string = "v1.4.2"
 	FmtChar   byte   = '&'
 	DefLimit  int    = 8
 )
