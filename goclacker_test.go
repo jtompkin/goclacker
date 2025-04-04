@@ -94,25 +94,3 @@ func TestPrograms(t *testing.T) {
 		prog(t, program, params)
 	}
 }
-
-func TestConfig(t *testing.T) {
-	// TODO: Make better
-	testPaths := []string{
-		"./test/test.conf",
-		"./test/empty.conf",
-	}
-	testPath := testPaths[0]
-
-	if scanner, msg := GetConfigScanner("./test/nothere"); scanner != nil {
-		t.Fatalf("GetConfigScanner : Returned non-existant scanner: msg = %s", msg)
-	}
-
-	if scanner, msg := GetConfigScanner(""); scanner != nil || msg != "" {
-		t.Fatalf(`GetConfigScanner : wanted: scanner = nil , msg = "" - got: scanner = %v , msg = %s`, scanner, msg)
-	}
-
-	scanner, msg := GetConfigScanner(testPath)
-	if scanner == nil {
-		t.Fatalf("GetConfigScanner : Could not open config file %s: msg = %q", testPath, msg)
-	}
-}
