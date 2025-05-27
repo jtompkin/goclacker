@@ -10,7 +10,7 @@ let
     ]
   );
 in
-buildGoModule rec {
+buildGoModule {
   pname = "goclacker";
   version = "1.4.2";
   src = fs.toSource {
