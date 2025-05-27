@@ -45,5 +45,26 @@
           default = self.devShells.${system}.goclacker;
         }
       );
+      homeModules = {
+        goclacker =
+          {
+            config,
+            pkgs,
+            lib,
+            ...
+          }:
+          let
+            cfg = config.programs.goclacker;
+            inherit (lib) mkIf;
+          in
+          {
+            options.programs.goclacker.enable = lib.mkEnableOption "goclacker RPN calculator";
+            config = mkIf cfg.enable {
+              nixpkgs.overlays = [ self.overlays.default ];
+              home.packages = [ pkgs.goclacker ];
+            };
+          };
+        default = self.homeModules.goclacker;
+      };
     };
 }
