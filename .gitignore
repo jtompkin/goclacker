@@ -1,6 +1,4 @@
 bin/
 release/
 test/
-.goclacker
-/goclacker
-/result
+.direnv
