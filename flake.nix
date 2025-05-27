@@ -25,7 +25,7 @@
       apps = forAllSystems (system: rec {
         goclacker = {
           type = "app";
-          program = "${self.packages.${system}.goclacker}/bin/goclacker";
+          program = lib.getExe self.packages.${system}.goclacker;
         };
         default = goclacker;
       });
