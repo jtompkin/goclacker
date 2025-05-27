@@ -17,5 +17,5 @@ buildGoModule {
     root = ./.;
     fileset = src;
   };
-  vendorHash = lib.fakeHash;
+  vendorHash = "sha256-rELkSYwqfMFX++w6e7/7suzPaB91GhbqFsLaYCeeIm4=";
 }
