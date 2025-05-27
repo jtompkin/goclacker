@@ -18,25 +18,31 @@
       forAllSystems = lib.genAttrs systems;
     in
     {
-      packages = forAllSystems (system: rec {
+      packages = forAllSystems (system: {
         goclacker = nixpkgs.legacyPackages.${system}.callPackage ./. { };
-        default = goclacker;
+        default = self.packages.${system}.goclacker;
       });
-      apps = forAllSystems (system: rec {
+      apps = forAllSystems (system: {
         goclacker = {
           type = "app";
           program = lib.getExe self.packages.${system}.goclacker;
         };
-        default = goclacker;
+        default = self.apps.${system}.goclacker;
       });
+      overlays = {
+        goclacker = final: prev: {
+          goclacker = final.callPackage ./. { };
+        };
+        default = self.overlays.goclacker;
+      };
       devShells = forAllSystems (
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
         in
-        rec {
+        {
           goclacker = pkgs.mkShell { packages = [ pkgs.go ]; };
-          default = goclacker;
+          default = self.devShells.${system}.goclacker;
         }
       );
     };
