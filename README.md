@@ -46,7 +46,9 @@ If you are not familiar with [Go](https://go.dev), the binary will be in
 Pre-built binaries are available on the
 [release](https://github.com/jtompkin/goclacker/releases/latest) page.
 
-A Nix flake is also available for all you functional bros out there.
+A Nix flake is also available for all you functional bros out there. To align
+myself with Nix's goal of not documenting anything, I will not provide
+instructions on how to use it.
 
 ## Usage
 
@@ -158,8 +160,8 @@ locations and loads the first one it finds:
 - `~/.goclacker`
 - `~/.config/goclacker/config`
 
-Passing anything---including an empty string---to `-c` will disable default config
-files.
+Passing anything---including an empty string---to `-c` will disable default 
+config files.
 
 The format is as follows:
 
@@ -195,4 +197,7 @@ pi sqrt
 
 ## License
 
-Licensed under the MIT license. See LICENSE file.
+Licensed under the [MIT](https://spdx.org/licenses/MIT.html) license. See 
+LICENSE file.
+
+SPDX-License-Identifier: MIT
