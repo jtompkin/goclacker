@@ -46,6 +46,8 @@ If you are not familiar with [Go](https://go.dev), the binary will be in
 Pre-built binaries are available on the
 [release](https://github.com/jtompkin/goclacker/releases/latest) page.
 
+A Nix flake is also available for all you functional bros out there.
+
 ## Usage
 
 ```
