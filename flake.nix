@@ -47,22 +47,13 @@
       );
       homeModules = {
         goclacker =
-          {
-            config,
-            pkgs,
-            lib,
-            ...
-          }:
+          { pkgs, ... }:
           let
-            cfg = config.programs.goclacker;
-            inherit (lib) mkIf;
+            inherit (pkgs.stdenv.hostPlatform) system;
           in
           {
-            options.programs.goclacker.enable = lib.mkEnableOption "goclacker RPN calculator";
-            config = mkIf cfg.enable {
-              nixpkgs.overlays = [ self.overlays.default ];
-              home.packages = [ pkgs.goclacker ];
-            };
+            imports = [ ./modules/home-module.nix ];
+            programs.goclacker.package = self.packages.${system}.goclacker;
           };
         default = self.homeModules.goclacker;
       };
