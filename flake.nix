@@ -26,6 +26,7 @@
         goclacker = {
           type = "app";
           program = lib.getExe self.packages.${system}.goclacker;
+          meta.description = "Command line reverse Polish notation calculator";
         };
         default = self.apps.${system}.goclacker;
       });
