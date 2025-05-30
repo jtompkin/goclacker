@@ -6,12 +6,12 @@
 }:
 buildGoModule rec {
   pname = "goclacker";
-  version = "1.4.2";
+  version = "1.4.3";
   src = fetchFromGitHub {
     owner = "jtompkin";
     repo = pname;
     tag = "v${version}";
-    hash = "sha256-3jELTnPFDpB5vJ+mCTV6drYIvhiPIhmQmsn2MlvaNz0=";
+    hash = lib.fakeHash;
   };
   vendorHash = "sha256-rELkSYwqfMFX++w6e7/7suzPaB91GhbqFsLaYCeeIm4=";
   meta = {

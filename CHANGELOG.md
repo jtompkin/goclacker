@@ -10,6 +10,7 @@
 - [1.4.0 - 2024-06-26](#140---2024-06-26)
 - [1.4.1 - 2024-07-27](#141---2024-07-27)
 - [1.4.2 - 2025-04-04](#142---2025-04-04)
+- [1.4.3 - 2025-05-30](#142---2025-05-30)
 
 ## TODO
 
@@ -141,3 +142,12 @@ Feelin' Nixy
 ### Added
 
 - Nix build instructions (probably useless but fun).
+
+## [1.4.3](https://github.com/jtompkin/goclacker/releases/tag/v1.4.3) - 2025-05-30
+
+Extra Nixy
+
+### Added
+
+- Nix flake (definitely useless but lotsa' fun). Comes with package, app,
+dev-shell, and home-manager module!
