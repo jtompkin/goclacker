@@ -1,17 +1,14 @@
 {
   lib,
   buildGoModule,
-  fetchFromGitHub,
   ...
 }:
-buildGoModule rec {
+buildGoModule {
   pname = "goclacker";
   version = "1.4.3";
-  src = fetchFromGitHub {
-    owner = "jtompkin";
-    repo = pname;
-    tag = "v${version}";
-    hash = "sha256-4rdZ9MX9NJFLmhfWM70XdU0tALRusb+xMJEADlyE+Vs=";
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.gitTracked ./.;
   };
   vendorHash = "sha256-rELkSYwqfMFX++w6e7/7suzPaB91GhbqFsLaYCeeIm4=";
   meta = {
