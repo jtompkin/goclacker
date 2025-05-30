@@ -11,7 +11,7 @@ buildGoModule rec {
     owner = "jtompkin";
     repo = pname;
     tag = "v${version}";
-    hash = lib.fakeHash;
+    hash = "sha256-4rdZ9MX9NJFLmhfWM70XdU0tALRusb+xMJEADlyE+Vs=";
   };
   vendorHash = "sha256-rELkSYwqfMFX++w6e7/7suzPaB91GhbqFsLaYCeeIm4=";
   meta = {
