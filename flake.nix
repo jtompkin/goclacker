@@ -47,7 +47,13 @@
       devShells = forAllSystems (
         { pkgs, system }:
         {
-          goclacker = pkgs.mkShell { packages = [ pkgs.go ]; };
+          goclacker = pkgs.mkShell {
+            packages = [
+              pkgs.go
+              pkgs.just
+              pkgs.just-lsp
+            ];
+          };
           default = self.devShells.${system}.goclacker;
         }
       );
