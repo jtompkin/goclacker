@@ -2,3 +2,4 @@ bin/
 release/
 test/
 .direnv
+.envrc
